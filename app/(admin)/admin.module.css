@@ -1,0 +1,192 @@
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.primaryBtn {
+  background-color: var(--primary-color);
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  border: none;
+  font-weight: 500;
+  transition: opacity 0.2s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.primaryBtn:hover {
+  opacity: 0.9;
+  text-decoration: none;
+}
+
+.card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.table th, .table td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.table th {
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.table tbody tr:hover {
+  background-color: var(--bg-secondary);
+}
+
+.badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: var(--bg-secondary);
+  color: var(--text-secondary);
+}
+
+.badge.active {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--success-color);
+}
+
+.formGroup {
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.input {
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+  font-size: 0.9375rem;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.statCard {
+  composes: card;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.statLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.statValue {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.statHint {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.badgePass {
+  composes: badge;
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--success-color);
+}
+
+.badgeFail {
+  composes: badge;
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--error-color);
+}
+
+.error {
+  color: var(--error-color);
+  padding: 1rem;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: var(--radius-md);
+  margin-bottom: 1rem;
+}
+
+.secondaryBtn {
+  background: transparent;
+  color: var(--primary-color);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--primary-color);
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.secondaryBtn:hover {
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.filterGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  align-items: end;
+}
+
+.filterActions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
