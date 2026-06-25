@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { publicFetch } from "@/lib/publicApi";
 import type { SessionStart, SessionQuestion } from "@/lib/types";
-import styles from "../../../../employee/employee.module.css";
+import styles from "../../../../../employee/employee.module.css";
 
 type AnswerState = Record<number, { selectedOptionId?: number; textAnswer?: string }>;
 

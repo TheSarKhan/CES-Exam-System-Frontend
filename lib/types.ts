@@ -95,6 +95,7 @@ export interface User {
   firstName: string;
   lastName: string;
   departmentName: string | null;
+  departmentId?: number | null;
   status: string;
   roles: { id: number; name: string }[];
 }

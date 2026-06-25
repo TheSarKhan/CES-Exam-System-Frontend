@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { publicFetch } from "@/lib/publicApi";
 import type { TokenAssignment } from "@/lib/types";
 import type { SessionStart } from "@/lib/types";
-import styles from "../../employee/employee.module.css";
+import styles from "../../../employee/employee.module.css";
 
 function formatDate(iso: string | null) {
   if (!iso) return "—";

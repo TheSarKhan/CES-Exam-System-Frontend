@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { publicFetch } from "@/lib/publicApi";
 import type { SessionResult } from "@/lib/types";
-import styles from "../../../../employee/employee.module.css";
+import styles from "../../../../../employee/employee.module.css";
 
 export default function CandidateResultPage() {
   const params = useParams();

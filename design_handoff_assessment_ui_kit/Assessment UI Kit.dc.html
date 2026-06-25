@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { font-family: 'Geist', system-ui, sans-serif; -webkit-font-smoothing: antialiased; color: #0F172A; background: #EEF1F6; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 8px; border: 2px solid #EEF1F6; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .45; } }
+</style>
+</helmet>
+<div style="display:flex; min-height:100vh; background:#EEF1F6;">
+
+  <aside style="width:264px; flex:none; background:#0E1B33; color:#CBD5E1; position:sticky; top:0; height:100vh; display:flex; flex-direction:column; padding:0;">
+    <div style="padding:22px 22px 18px; display:flex; align-items:center; gap:11px; border-bottom:1px solid rgba(255,255,255,0.07);">
+      <div style="width:34px; height:34px; border-radius:9px; background:linear-gradient(135deg,#3B82F6,#1D4ED8); display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(37,99,235,0.45);">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+      </div>
+      <div>
+        <div style="font-size:14px; font-weight:700; color:#fff; letter-spacing:-0.2px;">Assessment</div>
+        <div style="font-size:11px; color:#64748B; font-weight:500; letter-spacing:0.3px;">UI KIT · v1.0</div>
+      </div>
+    </div>
+    <nav style="flex:1; overflow-y:auto; padding:14px 12px 24px;">
+      <sc-for list="{{ navItems }}" as="it" hint-placeholder-count="16">
+        <sc-if value="{{ it.isHeader }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:16px 10px 7px; font-size:10.5px; font-weight:700; letter-spacing:1.4px; color:#475569; text-transform:uppercase;">{{ it.label }}</div>
+        </sc-if>
+        <sc-if value="{{ it.isItem }}" hint-placeholder-val="{{ true }}">
+          <div onClick="{{ it.onClick }}" style="{{ it.style }}">
+            <span>{{ it.label }}</span>
+            <sc-if value="{{ it.active }}" hint-placeholder-val="{{ false }}"><span style="width:5px; height:5px; border-radius:50%; background:#60A5FA;"></span></sc-if>
+          </div>
+        </sc-if>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 20px; border-top:1px solid rgba(255,255,255,0.07); font-size:11px; color:#475569;">Corporate Assessment Platform</div>
+  </aside>
+
+  <main style="flex:1; min-width:0; height:100vh; overflow-y:auto;">
+    <sc-if value="{{ isOverview }}" hint-placeholder-val="{{ true }}">
+<section style="padding:0 0 64px;">
+  <div style="padding:52px 52px 44px; background:linear-gradient(135deg,#0E1B33 0%,#16294A 55%,#1D3A6B 100%); color:#fff; position:relative; overflow:hidden;">
+    <div style="position:absolute; right:-80px; top:-80px; width:340px; height:340px; border-radius:50%; background:radial-gradient(circle,rgba(59,130,246,0.35),transparent 70%);"></div>
+    <div style="position:relative; max-width:920px;">
+      <div style="display:inline-flex; align-items:center; gap:8px; padding:6px 13px; border-radius:99px; background:rgba(255,255,255,0.09); border:1px solid rgba(255,255,255,0.14); font-size:12px; font-weight:600; letter-spacing:0.4px; margin-bottom:22px;">
+        <span style="width:7px; height:7px; border-radius:50%; background:#4ADE80;"></span> Design System · Corporate Assessment Platform
+      </div>
+      <h1 style="margin:0 0 16px; font-size:42px; font-weight:700; letter-spacing:-1.2px; line-height:1.08;">A complete UI kit for exams,<br>assessments &amp; surveys.</h1>
+      <p style="margin:0 0 30px; font-size:16px; line-height:1.6; color:#9FB3D1; max-width:640px;">Bir vahid platforma — bilik imtahanları, namizəd qiymətləndirmələri və sorğular üçün. Minimalist, məlumat-yönlü SaaS interfeysi; klassik korporativ mavi sistemi üzərində qurulub.</p>
+      <div style="display:flex; gap:32px; flex-wrap:wrap;">
+        <div><div style="font-family:'Geist Mono',monospace; font-size:30px; font-weight:600; color:#fff;">11</div><div style="font-size:12.5px; color:#7E93B5; margin-top:2px;">Sual növü</div></div>
+        <div style="width:1px; background:rgba(255,255,255,0.12);"></div>
+        <div><div style="font-family:'Geist Mono',monospace; font-size:30px; font-weight:600; color:#fff;">3</div><div style="font-size:12.5px; color:#7E93B5; margin-top:2px;">İstifadəçi rolu</div></div>
+        <div style="width:1px; background:rgba(255,255,255,0.12);"></div>
+        <div><div style="font-family:'Geist Mono',monospace; font-size:30px; font-weight:600; color:#fff;">16</div><div style="font-size:12.5px; color:#7E93B5; margin-top:2px;">UI bölməsi</div></div>
+        <div style="width:1px; background:rgba(255,255,255,0.12);"></div>
+        <div><div style="font-family:'Geist Mono',monospace; font-size:30px; font-weight:600; color:#fff;">5</div><div style="font-size:12.5px; color:#7E93B5; margin-top:2px;">Ekran mockup</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:40px 52px 0;">
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:18px;">
+      <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:24px; box-shadow:0 1px 2px rgba(15,23,42,0.04);">
+        <div style="width:42px; height:42px; border-radius:11px; background:#EAF1FE; display:flex; align-items:center; justify-content:center; margin-bottom:16px;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="2.5"></circle><circle cx="6.5" cy="17.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle></svg></div>
+        <div style="font-size:16px; font-weight:650; margin-bottom:6px;">Foundations</div>
+        <div style="font-size:13.5px; color:#64748B; line-height:1.55;">Rəng sistemi, tipografiya şkalası, boşluq, radius və kölgə tokenləri — bütün interfeysin əsası.</div>
+      </div>
+      <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:24px; box-shadow:0 1px 2px rgba(15,23,42,0.04);">
+        <div style="width:42px; height:42px; border-radius:11px; background:#EAF1FE; display:flex; align-items:center; justify-content:center; margin-bottom:16px;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg></div>
+        <div style="font-size:16px; font-weight:650; margin-bottom:6px;">Components</div>
+        <div style="font-size:13.5px; color:#64748B; line-height:1.55;">Düymələr, formalar, badge-lər, kartlar, cədvəllər, tablar, modallar və 11 sual növü.</div>
+      </div>
+      <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:24px; box-shadow:0 1px 2px rgba(15,23,42,0.04);">
+        <div style="width:42px; height:42px; border-radius:11px; background:#EAF1FE; display:flex; align-items:center; justify-content:center; margin-bottom:16px;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"></rect><path d="M8 21h8M12 17v4"></path></svg></div>
+        <div style="font-size:16px; font-weight:650; margin-bottom:6px;">Screens</div>
+        <div style="font-size:13.5px; color:#64748B; line-height:1.55;">Admin Dashboard, Analitika, Sual Bankı, İmtahan ekranı və Employee paneli — tam mockuplar.</div>
+      </div>
+    </div>
+    <div style="margin-top:28px; padding:22px 26px; background:#fff; border:1px solid #E6EAF1; border-radius:14px; display:flex; align-items:center; gap:18px; box-shadow:0 1px 2px rgba(15,23,42,0.04);">
+      <div style="font-size:13.5px; color:#475569; line-height:1.6;"><b style="color:#0F172A;">Necə naviqasiya etmək olar →</b> Sol paneldən istənilən bölməni seçin. Hər komponent canlı vəziyyətlər (hover, focus, disabled) və real istifadə nümunələri ilə təqdim olunub.</div>
+    </div>
+  </div>
+</section>
+</sc-if>
+<sc-if value="{{ isColors }}" hint-placeholder-val="{{ true }}">
+<section style="padding:42px 52px 64px;">
+  <div style="color:#2563EB; font-size:12px; font-weight:650; letter-spacing:1.6px; text-transform:uppercase; margin-bottom:10px;">Foundations</div>
+  <h2 style="margin:0 0 8px; font-size:30px; font-weight:700; letter-spacing:-0.7px;">Color System</h2>
+  <p style="margin:0 0 34px; font-size:15px; color:#64748B; max-width:620px; line-height:1.6;">Klassik korporativ mavi əsas aksent kimi, neytral slate şkalası isə struktur və mətn üçün. Hər ton WCAG kontrast tələblərinə uyğun seçilib.</p>
+
+  <div style="font-size:13px; font-weight:650; color:#334155; margin-bottom:12px;">Primary — Corporate Blue</div>
+  <div style="display:grid; grid-template-columns:repeat(10,1fr); gap:8px; margin-bottom:36px;">
+    <div><div style="height:64px; border-radius:9px 9px 0 0; background:#EFF5FF; border:1px solid #E6EAF1; border-bottom:none;"></div><div style="padding:7px 8px; background:#fff; border:1px solid #E6EAF1; border-top:none; border-radius:0 0 9px 9px;"><div style="font-size:11px; font-weight:600;">50</div><div style="font-family:'Geist Mono',monospace; font-size:9.5px; color:#94A3B8;">EFF5FF</div></div></div>
+    <div><div style="height:64px; border-radius:9px 9px 0 0; background:#DBEAFE;"></div><div style="padding:7px 8px; background:#fff; border:1px solid #E6EAF1; border-top:none; border-radius:0 0 9px 9px;"><div style="font-size:11px; font-weight:600;">100</div><div style="font-family:'Geist Mono',monospace; font-size:9.5px; color:#94A3B8;">DBEAFE</div></div></div>
+    <div><div style="height:64px; border-radius:9px 9px 0 0; background:#BFDBFE;"></div><div style="padding:7px 8px; background:#fff; border:1px solid #E6EAF1; border-top:none; border-radius:0 0 9px 9px;"><div style="font-size:11px; font-weight:600;">200</div><div style="font-family:'Geist Mono',monospace; font-size:9.5px; color:#94A3B8;">BFDBFE</div></div></div>
+    <div><div style="height:64px; border-radius:9px 9px 0 0; background:#93C5FD;"></div><div style="padding:7px 8px; background:#fff; border:1px solid #E6EAF1; border-top:none; border-radius:0 0 9px 9px;"><div style="font-size:11px; font-weight:600;">300</div><div style="font-family:'Geist Mono',monospace; font-size:9.5px; color:#94A3B8;">93C5FD</div></div></div>
+    <div><div style="height:64px; border-radius:9px 9px 0 0; background:#60A5FA;"></div><div style="padding:7px 8px; background:#fff; border:1px solid #E6EAF1; border-top:none; border-radius:0 0 9px 9px;"><div style="font-size:11px; font-weight:600;">400</div><div style="font-family:'Geist Mono',monospace; font-size:9.5px; color:#94A3B8;">60A5FA</div></div></div>
+    <div><div style="height:64px; border-radius:9px 9px 0 0; background:#3B82F6;"></div><div style="padding:7px 8px; background:#fff; border:1px solid #E6EAF1; border-top:none; border-radius:0 0 9px 9px;"><div style="font-size:11px; font-weight:600;">500</div><div style="font-family:'Geist Mono',monospace; font-size:9.5px; color:#94A3B8;">3B82F6</div></div></div>
+    <div><div style="height:64px; border-radius:9px 9px 0 0; background:#2563EB; box-shadow:0 0 0 2px #2563EB, 0 6px 14px rgba(37,99,235,0.4);"></div><div style="padding:7px 8px; background:#fff; border:1px solid #2563EB; border-top:none; border-radius:0 0 9px 9px;"><div style="font-size:11px; font-weight:700; color:#2563EB;">600 ●</div><div style="font-family:'Geist Mono',monospace; font-size:9.5px; color:#2563EB;">2563EB</div></div></div>
+    <div><div style="height:64px; border-radius:9px 9px 0 0; background:#1D4ED8;"></div><div style="padding:7px 8px; background:#fff; border:1px solid #E6EAF1; border-top:none; border-radius:0 0 9px 9px;"><div style="font-size:11px; font-weight:600;">700</div><div style="font-family:'Geist Mono',monospace; font-size:9.5px; color:#94A3B8;">1D4ED8</div></div></div>
+    <div><div style="height:64px; border-radius:9px 9px 0 0; background:#1E40AF;"></div><div style="padding:7px 8px; background:#fff; border:1px solid #E6EAF1; border-top:none; border-radius:0 0 9px 9px;"><div style="font-size:11px; font-weight:600;">800</div><div style="font-family:'Geist Mono',monospace; font-size:9.5px; color:#94A3B8;">1E40AF</div></div></div>
+    <div><div style="height:64px; border-radius:9px 9px 0 0; background:#1E3A8A;"></div><div style="padding:7px 8px; background:#fff; border:1px solid #E6EAF1; border-top:none; border-radius:0 0 9px 9px;"><div style="font-size:11px; font-weight:600;">900</div><div style="font-family:'Geist Mono',monospace; font-size:9.5px; color:#94A3B8;">1E3A8A</div></div></div>
+  </div>
+
+  <div style="font-size:13px; font-weight:650; color:#334155; margin-bottom:12px;">Neutral — Slate</div>
+  <div style="display:grid; grid-template-columns:repeat(10,1fr); gap:8px; margin-bottom:36px;">
+    <div><div style="height:64px; border-radius:9px 9px 0 0; background:#F8FAFC; border:1px solid #E6EAF1; border-bottom:none;"></div><div style="padding:7px 8px; background:#fff; border:1px solid #E6EAF1; border-top:none; border-radius:0 0 9px 9px;"><div style="font-size:11px; font-weight:600;">50</div><div style="font-family:'Geist Mono',monospace; font-size:9.5px; color:#94A3B8;">F8FAFC</div></div></div>
+    <div><div style="height:64px; border-radius:9px 9px 0 0; background:#F1F5F9;"></div><div style="padding:7px 8px; background:#fff; border:1px solid #E6EAF1; border-top:none; border-radius:0 0 9px 9px;"><div style="font-size:11px; font-weight:600;">100</div><div style="font-family:'Geist Mono',monospace; font-size:9.5px; color:#94A3B8;">F1F5F9</div></div></div>
+    <div><div style="height:64px; border-radius:9px 9px 0 0; background:#E2E8F0;"></div><div style="padding:7px 8px; background:#fff; border:1px solid #E6EAF1; border-top:none; border-radius:0 0 9px 9px;"><div style="font-size:11px; font-weight:600;">200</div><div style="font-family:'Geist Mono',monospace; font-size:9.5px; color:#94A3B8;">E2E8F0</div></div></div>
+    <div><div style="height:64px; border-radius:9px 9px 0 0; background:#CBD5E1;"></div><div style="padding:7px 8px; background:#fff; border:1px solid #E6EAF1; border-top:none; border-radius:0 0 9px 9px;"><div style="font-size:11px; font-weight:600;">300</div><div style="font-family:'Geist Mono',monospace; font-size:9.5px; color:#94A3B8;">CBD5E1</div></div></div>
+    <div><div style="height:64px; border-radius:9px 9px 0 0; background:#94A3B8;"></div><div style="padding:7px 8px; background:#fff; border:1px solid #E6EAF1; border-top:none; border-radius:0 0 9px 9px;"><div style="font-size:11px; font-weight:600;">400</div><div style="font-family:'Geist Mono',monospace; font-size:9.5px; color:#94A3B8;">94A3B8</div></div></div>
+    <div><div style="height:64px; border-radius:9px 9px 0 0; background:#64748B;"></div><div style="padding:7px 8px; background:#fff; border:1px solid #E6EAF1; border-top:none; border-radius:0 0 9px 9px;"><div style="font-size:11px; font-weight:600;">500</div><div style="font-family:'Geist Mono',monospace; font-size:9.5px; color:#94A3B8;">64748B</div></div></div>
+    <div><div style="height:64px; border-radius:9px 9px 0 0; background:#475569;"></div><div style="padding:7px 8px; background:#fff; border:1px solid #E6EAF1; border-top:none; border-radius:0 0 9px 9px;"><div style="font-size:11px; font-weight:600;">600</div><div style="font-family:'Geist Mono',monospace; font-size:9.5px; color:#94A3B8;">475569</div></div></div>
+    <div><div style="height:64px; border-radius:9px 9px 0 0; background:#334155;"></div><div style="padding:7px 8px; background:#fff; border:1px solid #E6EAF1; border-top:none; border-radius:0 0 9px 9px;"><div style="font-size:11px; font-weight:600;">700</div><div style="font-family:'Geist Mono',monospace; font-size:9.5px; color:#94A3B8;">334155</div></div></div>
+    <div><div style="height:64px; border-radius:9px 9px 0 0; background:#1E293B;"></div><div style="padding:7px 8px; background:#fff; border:1px solid #E6EAF1; border-top:none; border-radius:0 0 9px 9px;"><div style="font-size:11px; font-weight:600;">800</div><div style="font-family:'Geist Mono',monospace; font-size:9.5px; color:#94A3B8;">1E293B</div></div></div>
+    <div><div style="height:64px; border-radius:9px 9px 0 0; background:#0F172A;"></div><div style="padding:7px 8px; background:#fff; border:1px solid #E6EAF1; border-top:none; border-radius:0 0 9px 9px;"><div style="font-size:11px; font-weight:600;">900</div><div style="font-family:'Geist Mono',monospace; font-size:9.5px; color:#94A3B8;">0F172A</div></div></div>
+  </div>
+
+  <div style="font-size:13px; font-weight:650; color:#334155; margin-bottom:12px;">Semantic</div>
+  <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:36px;">
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:12px; overflow:hidden;"><div style="height:54px; background:#16A34A;"></div><div style="padding:14px 15px;"><div style="font-size:13.5px; font-weight:650;">Success · Pass</div><div style="font-family:'Geist Mono',monospace; font-size:11px; color:#94A3B8; margin:3px 0 8px;">16A34A</div><div style="display:flex; gap:6px;"><span style="font-size:10.5px; padding:3px 7px; border-radius:5px; background:#DCFCE7; color:#15803D; font-weight:600;">DCFCE7 bg</span></div></div></div>
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:12px; overflow:hidden;"><div style="height:54px; background:#DC2626;"></div><div style="padding:14px 15px;"><div style="font-size:13.5px; font-weight:650;">Danger · Fail</div><div style="font-family:'Geist Mono',monospace; font-size:11px; color:#94A3B8; margin:3px 0 8px;">DC2626</div><div style="display:flex; gap:6px;"><span style="font-size:10.5px; padding:3px 7px; border-radius:5px; background:#FEE2E2; color:#B91C1C; font-weight:600;">FEE2E2 bg</span></div></div></div>
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:12px; overflow:hidden;"><div style="height:54px; background:#D97706;"></div><div style="padding:14px 15px;"><div style="font-size:13.5px; font-weight:650;">Warning · Flag</div><div style="font-family:'Geist Mono',monospace; font-size:11px; color:#94A3B8; margin:3px 0 8px;">D97706</div><div style="display:flex; gap:6px;"><span style="font-size:10.5px; padding:3px 7px; border-radius:5px; background:#FEF3C7; color:#B45309; font-weight:600;">FEF3C7 bg</span></div></div></div>
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:12px; overflow:hidden;"><div style="height:54px; background:#0891B2;"></div><div style="padding:14px 15px;"><div style="font-size:13.5px; font-weight:650;">Info · Review</div><div style="font-family:'Geist Mono',monospace; font-size:11px; color:#94A3B8; margin:3px 0 8px;">0891B2</div><div style="display:flex; gap:6px;"><span style="font-size:10.5px; padding:3px 7px; border-radius:5px; background:#CFFAFE; color:#0E7490; font-weight:600;">CFFAFE bg</span></div></div></div>
+  </div>
+
+  <div style="font-size:13px; font-weight:650; color:#334155; margin-bottom:12px;">Surfaces</div>
+  <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px;">
+    <div style="background:#EEF1F6; border:1px solid #E6EAF1; border-radius:12px; padding:18px; height:96px; display:flex; flex-direction:column; justify-content:flex-end;"><div style="font-size:13px; font-weight:650;">App Background</div><div style="font-family:'Geist Mono',monospace; font-size:11px; color:#94A3B8;">EEF1F6</div></div>
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:12px; padding:18px; height:96px; display:flex; flex-direction:column; justify-content:flex-end; box-shadow:0 1px 2px rgba(15,23,42,0.05);"><div style="font-size:13px; font-weight:650;">Card / Surface</div><div style="font-family:'Geist Mono',monospace; font-size:11px; color:#94A3B8;">FFFFFF</div></div>
+    <div style="background:#fff; border:2px solid #E6EAF1; border-radius:12px; padding:18px; height:96px; display:flex; flex-direction:column; justify-content:flex-end;"><div style="font-size:13px; font-weight:650;">Border</div><div style="font-family:'Geist Mono',monospace; font-size:11px; color:#94A3B8;">E6EAF1</div></div>
+    <div style="background:#0E1B33; border:1px solid #0E1B33; border-radius:12px; padding:18px; height:96px; display:flex; flex-direction:column; justify-content:flex-end;"><div style="font-size:13px; font-weight:650; color:#fff;">Sidebar / Dark</div><div style="font-family:'Geist Mono',monospace; font-size:11px; color:#64748B;">0E1B33</div></div>
+  </div>
+</section>
+</sc-if>
+<sc-if value="{{ isType }}" hint-placeholder-val="{{ true }}">
+<section style="padding:42px 52px 64px;">
+  <div style="color:#2563EB; font-size:12px; font-weight:650; letter-spacing:1.6px; text-transform:uppercase; margin-bottom:10px;">Foundations</div>
+  <h2 style="margin:0 0 8px; font-size:30px; font-weight:700; letter-spacing:-0.7px;">Typography</h2>
+  <p style="margin:0 0 30px; font-size:15px; color:#64748B; max-width:620px; line-height:1.6;">Geist — geometrik, neytral qrotesk — bütün interfeys mətni üçün. Geist Mono isə ballar, faizlər, taymer və cədvəl rəqəmləri üçün tabular rəqəm dəqiqliyi verir.</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:32px;">
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:26px;">
+      <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;"><span style="font-size:12px; font-weight:650; color:#2563EB;">Geist</span><span style="font-size:11.5px; color:#94A3B8;">UI / Sans</span></div>
+      <div style="font-size:52px; font-weight:700; letter-spacing:-1px; line-height:1;">Aa</div>
+      <div style="margin-top:14px; font-size:13px; color:#475569; line-height:1.4;">ABCDEFGHIJKLMNOPQRSTUVWXYZ<br>abcdefghijklmnopqrstuvwxyz 0123456789</div>
+    </div>
+    <div style="background:#0E1B33; border:1px solid #0E1B33; border-radius:14px; padding:26px; color:#fff;">
+      <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;"><span style="font-size:12px; font-weight:650; color:#60A5FA; font-family:'Geist Mono',monospace;">Geist Mono</span><span style="font-size:11.5px; color:#64748B;">Data / Numeric</span></div>
+      <div style="font-family:'Geist Mono',monospace; font-size:52px; font-weight:600; letter-spacing:-1px; line-height:1;">Aa</div>
+      <div style="margin-top:14px; font-family:'Geist Mono',monospace; font-size:12.5px; color:#94A3B8; line-height:1.5;">00:14:32 · 87% · 24/30 · +12.4</div>
+    </div>
+  </div>
+
+  <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; overflow:hidden;">
+    <div style="display:flex; align-items:baseline; gap:24px; padding:20px 26px; border-bottom:1px solid #F1F5F9;"><div style="width:130px; flex:none; font-size:11.5px; color:#94A3B8; font-family:'Geist Mono',monospace;">Display · 42/700</div><div style="font-size:42px; font-weight:700; letter-spacing:-1.2px;">Qiymətləndirmə nəticələri</div></div>
+    <div style="display:flex; align-items:baseline; gap:24px; padding:20px 26px; border-bottom:1px solid #F1F5F9;"><div style="width:130px; flex:none; font-size:11.5px; color:#94A3B8; font-family:'Geist Mono',monospace;">H1 · 30/700</div><div style="font-size:30px; font-weight:700; letter-spacing:-0.7px;">Admin Dashboard</div></div>
+    <div style="display:flex; align-items:baseline; gap:24px; padding:20px 26px; border-bottom:1px solid #F1F5F9;"><div style="width:130px; flex:none; font-size:11.5px; color:#94A3B8; font-family:'Geist Mono',monospace;">H2 · 22/650</div><div style="font-size:22px; font-weight:650; letter-spacing:-0.4px;">Sual bankının strukturu</div></div>
+    <div style="display:flex; align-items:baseline; gap:24px; padding:20px 26px; border-bottom:1px solid #F1F5F9;"><div style="width:130px; flex:none; font-size:11.5px; color:#94A3B8; font-family:'Geist Mono',monospace;">H3 · 16/600</div><div style="font-size:16px; font-weight:600;">Fire Safety mövzusu</div></div>
+    <div style="display:flex; align-items:baseline; gap:24px; padding:20px 26px; border-bottom:1px solid #F1F5F9;"><div style="width:130px; flex:none; font-size:11.5px; color:#94A3B8; font-family:'Geist Mono',monospace;">Body · 15/400</div><div style="font-size:15px; line-height:1.6; color:#334155; max-width:560px;">Sistem hər iştirakçı üçün mövzulardan təsadüfi suallar seçəcək və köçürmənin qarşısını alacaq.</div></div>
+    <div style="display:flex; align-items:baseline; gap:24px; padding:20px 26px; border-bottom:1px solid #F1F5F9;"><div style="width:130px; flex:none; font-size:11.5px; color:#94A3B8; font-family:'Geist Mono',monospace;">Small · 13/400</div><div style="font-size:13px; color:#64748B;">Cavablar avtomatik olaraq müəyyən intervallarla yadda saxlanılır.</div></div>
+    <div style="display:flex; align-items:baseline; gap:24px; padding:20px 26px;"><div style="width:130px; flex:none; font-size:11.5px; color:#94A3B8; font-family:'Geist Mono',monospace;">Caption · 11/600</div><div style="font-size:11px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:#94A3B8;">Manual Review Required</div></div>
+  </div>
+</section>
+</sc-if>
+<sc-if value="{{ isElevation }}" hint-placeholder-val="{{ true }}">
+<section style="padding:42px 52px 64px;">
+  <div style="color:#2563EB; font-size:12px; font-weight:650; letter-spacing:1.6px; text-transform:uppercase; margin-bottom:10px;">Foundations</div>
+  <h2 style="margin:0 0 8px; font-size:30px; font-weight:700; letter-spacing:-0.7px;">Spacing &amp; Elevation</h2>
+  <p style="margin:0 0 32px; font-size:15px; color:#64748B; max-width:620px; line-height:1.6;">4px əsaslı boşluq şkalası, ardıcıl radius dəyərləri və zərif kölgə səviyyələri — sıx dashboard interfeysi üçün nizamlı ritm.</p>
+
+  <div style="font-size:13px; font-weight:650; color:#334155; margin-bottom:14px;">Spacing scale · 4px base</div>
+  <div style="display:flex; align-items:flex-end; gap:18px; margin-bottom:38px; flex-wrap:wrap;">
+    <div style="text-align:center;"><div style="width:4px; height:4px; background:#2563EB; margin:0 auto 8px;"></div><div style="font-family:'Geist Mono',monospace; font-size:11px; color:#475569;">4</div></div>
+    <div style="text-align:center;"><div style="width:8px; height:8px; background:#2563EB; margin:0 auto 8px;"></div><div style="font-family:'Geist Mono',monospace; font-size:11px; color:#475569;">8</div></div>
+    <div style="text-align:center;"><div style="width:12px; height:12px; background:#2563EB; margin:0 auto 8px;"></div><div style="font-family:'Geist Mono',monospace; font-size:11px; color:#475569;">12</div></div>
+    <div style="text-align:center;"><div style="width:16px; height:16px; background:#2563EB; margin:0 auto 8px;"></div><div style="font-family:'Geist Mono',monospace; font-size:11px; color:#475569;">16</div></div>
+    <div style="text-align:center;"><div style="width:24px; height:24px; background:#2563EB; margin:0 auto 8px;"></div><div style="font-family:'Geist Mono',monospace; font-size:11px; color:#475569;">24</div></div>
+    <div style="text-align:center;"><div style="width:32px; height:32px; background:#2563EB; margin:0 auto 8px;"></div><div style="font-family:'Geist Mono',monospace; font-size:11px; color:#475569;">32</div></div>
+    <div style="text-align:center;"><div style="width:48px; height:48px; background:#2563EB; margin:0 auto 8px;"></div><div style="font-family:'Geist Mono',monospace; font-size:11px; color:#475569;">48</div></div>
+    <div style="text-align:center;"><div style="width:64px; height:64px; background:#2563EB; margin:0 auto 8px;"></div><div style="font-family:'Geist Mono',monospace; font-size:11px; color:#475569;">64</div></div>
+  </div>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:32px;">
+    <div>
+      <div style="font-size:13px; font-weight:650; color:#334155; margin-bottom:14px;">Border radius</div>
+      <div style="display:flex; gap:14px; flex-wrap:wrap;">
+        <div style="text-align:center;"><div style="width:74px; height:60px; background:#EAF1FE; border:1px solid #BFDBFE; border-radius:6px;"></div><div style="font-family:'Geist Mono',monospace; font-size:11px; color:#475569; margin-top:7px;">6 · sm</div></div>
+        <div style="text-align:center;"><div style="width:74px; height:60px; background:#EAF1FE; border:1px solid #BFDBFE; border-radius:10px;"></div><div style="font-family:'Geist Mono',monospace; font-size:11px; color:#475569; margin-top:7px;">10 · md</div></div>
+        <div style="text-align:center;"><div style="width:74px; height:60px; background:#EAF1FE; border:1px solid #BFDBFE; border-radius:14px;"></div><div style="font-family:'Geist Mono',monospace; font-size:11px; color:#475569; margin-top:7px;">14 · lg</div></div>
+        <div style="text-align:center;"><div style="width:74px; height:60px; background:#EAF1FE; border:1px solid #BFDBFE; border-radius:99px;"></div><div style="font-family:'Geist Mono',monospace; font-size:11px; color:#475569; margin-top:7px;">full</div></div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:13px; font-weight:650; color:#334155; margin-bottom:14px;">Elevation</div>
+      <div style="display:flex; gap:18px; flex-wrap:wrap;">
+        <div style="text-align:center;"><div style="width:84px; height:60px; background:#fff; border-radius:11px; box-shadow:0 1px 2px rgba(15,23,42,0.05);"></div><div style="font-family:'Geist Mono',monospace; font-size:11px; color:#475569; margin-top:9px;">sm · card</div></div>
+        <div style="text-align:center;"><div style="width:84px; height:60px; background:#fff; border-radius:11px; box-shadow:0 4px 12px rgba(15,23,42,0.08);"></div><div style="font-family:'Geist Mono',monospace; font-size:11px; color:#475569; margin-top:9px;">md · pop</div></div>
+        <div style="text-align:center;"><div style="width:84px; height:60px; background:#fff; border-radius:11px; box-shadow:0 12px 32px rgba(15,23,42,0.16);"></div><div style="font-family:'Geist Mono',monospace; font-size:11px; color:#475569; margin-top:9px;">lg · modal</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+</sc-if>
+<sc-if value="{{ isButtons }}" hint-placeholder-val="{{ true }}">
+<section style="padding:42px 52px 64px;">
+  <div style="color:#2563EB; font-size:12px; font-weight:650; letter-spacing:1.6px; text-transform:uppercase; margin-bottom:10px;">Components</div>
+  <h2 style="margin:0 0 8px; font-size:30px; font-weight:700; letter-spacing:-0.7px;">Buttons</h2>
+  <p style="margin:0 0 32px; font-size:15px; color:#64748B; max-width:620px; line-height:1.6;">Bir əsas (primary) aksiya hər ekranda. İkincil və ghost variantlar dəstəkləyici aksiyalar üçün. Bütün düymələrin minimum hündürlüyü 36px-dir.</p>
+
+  <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:30px; margin-bottom:18px;">
+    <div style="font-size:12px; font-weight:650; color:#94A3B8; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:18px;">Variants</div>
+    <div style="display:flex; gap:14px; flex-wrap:wrap; align-items:center;">
+      <button style="border:none; cursor:pointer; font-family:inherit; font-size:14px; font-weight:600; padding:0 18px; height:42px; border-radius:9px; background:#2563EB; color:#fff; box-shadow:0 1px 2px rgba(37,99,235,0.4); transition:all .15s;" style-hover="background:#1D4ED8; box-shadow:0 4px 12px rgba(37,99,235,0.45); transform:translateY(-1px);" style-active="transform:translateY(0);">İmtahan yarat</button>
+      <button style="cursor:pointer; font-family:inherit; font-size:14px; font-weight:600; padding:0 18px; height:42px; border-radius:9px; background:#F1F5F9; color:#334155; border:1px solid #E2E8F0; transition:all .15s;" style-hover="background:#E2E8F0;">Ləğv et</button>
+      <button style="cursor:pointer; font-family:inherit; font-size:14px; font-weight:600; padding:0 18px; height:42px; border-radius:9px; background:#fff; color:#2563EB; border:1px solid #BFDBFE; transition:all .15s;" style-hover="background:#EFF5FF; border-color:#2563EB;">Önizləmə</button>
+      <button style="cursor:pointer; font-family:inherit; font-size:14px; font-weight:600; padding:0 14px; height:42px; border-radius:9px; background:transparent; color:#475569; border:none; transition:all .15s;" style-hover="background:#F1F5F9;">Ghost</button>
+      <button style="border:none; cursor:pointer; font-family:inherit; font-size:14px; font-weight:600; padding:0 18px; height:42px; border-radius:9px; background:#DC2626; color:#fff; box-shadow:0 1px 2px rgba(220,38,38,0.35); transition:all .15s;" style-hover="background:#B91C1C;">Sil</button>
+      <button style="border:none; cursor:pointer; font-family:inherit; font-size:14px; font-weight:600; padding:0 18px; height:42px; border-radius:9px; background:#16A34A; color:#fff; box-shadow:0 1px 2px rgba(22,163,74,0.3); transition:all .15s;" style-hover="background:#15803D;">Təsdiqlə</button>
+    </div>
+  </div>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:18px;">
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:30px;">
+      <div style="font-size:12px; font-weight:650; color:#94A3B8; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:18px;">Sizes</div>
+      <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+        <button style="border:none; cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:600; padding:0 12px; height:30px; border-radius:7px; background:#2563EB; color:#fff;">Small</button>
+        <button style="border:none; cursor:pointer; font-family:inherit; font-size:14px; font-weight:600; padding:0 18px; height:42px; border-radius:9px; background:#2563EB; color:#fff;">Medium</button>
+        <button style="border:none; cursor:pointer; font-family:inherit; font-size:15px; font-weight:600; padding:0 24px; height:50px; border-radius:11px; background:#2563EB; color:#fff;">Large</button>
+      </div>
+    </div>
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:30px;">
+      <div style="font-size:12px; font-weight:650; color:#94A3B8; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:18px;">With icon &amp; icon-only</div>
+      <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+        <button style="cursor:pointer; font-family:inherit; font-size:14px; font-weight:600; padding:0 18px; height:42px; border-radius:9px; background:#2563EB; color:#fff; border:none; display:inline-flex; align-items:center; gap:8px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg> Sual əlavə et</button>
+        <button style="cursor:pointer; font-family:inherit; font-size:14px; font-weight:600; padding:0 16px; height:42px; border-radius:9px; background:#fff; color:#334155; border:1px solid #E2E8F0; display:inline-flex; align-items:center; gap:8px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg> Export</button>
+        <button style="cursor:pointer; width:42px; height:42px; border-radius:9px; background:#fff; color:#475569; border:1px solid #E2E8F0; display:inline-flex; align-items:center; justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:30px;">
+    <div style="font-size:12px; font-weight:650; color:#94A3B8; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:18px;">States</div>
+    <div style="display:flex; gap:14px; flex-wrap:wrap; align-items:center;">
+      <button style="border:none; font-family:inherit; font-size:14px; font-weight:600; padding:0 18px; height:42px; border-radius:9px; background:#2563EB; color:#fff;">Default</button>
+      <button style="border:none; font-family:inherit; font-size:14px; font-weight:600; padding:0 18px; height:42px; border-radius:9px; background:#1D4ED8; color:#fff; box-shadow:0 4px 12px rgba(37,99,235,0.45);">Hover</button>
+      <button style="border:2px solid #93C5FD; font-family:inherit; font-size:14px; font-weight:600; padding:0 17px; height:42px; border-radius:9px; background:#2563EB; color:#fff; box-shadow:0 0 0 4px rgba(37,99,235,0.18);">Focus</button>
+      <button style="border:none; font-family:inherit; font-size:14px; font-weight:600; padding:0 18px; height:42px; border-radius:9px; background:#CBD5E1; color:#fff; cursor:not-allowed; opacity:0.75;">Disabled</button>
+      <button style="border:none; font-family:inherit; font-size:14px; font-weight:600; padding:0 18px; height:42px; border-radius:9px; background:#2563EB; color:#fff; display:inline-flex; align-items:center; gap:9px;"><span style="width:15px; height:15px; border:2px solid rgba(255,255,255,0.4); border-top-color:#fff; border-radius:50%; display:inline-block; animation:spin .7s linear infinite;"></span> Yüklənir…</button>
+    </div>
+  </div>
+</section>
+</sc-if>
+<sc-if value="{{ isForms }}" hint-placeholder-val="{{ true }}">
+<section style="padding:42px 52px 64px;">
+  <div style="color:#2563EB; font-size:12px; font-weight:650; letter-spacing:1.6px; text-transform:uppercase; margin-bottom:10px;">Components</div>
+  <h2 style="margin:0 0 8px; font-size:30px; font-weight:700; letter-spacing:-0.7px;">Forms &amp; Inputs</h2>
+  <p style="margin:0 0 32px; font-size:15px; color:#64748B; max-width:620px; line-height:1.6;">Sual yaratma, işçi əlavə etmə və imtahan konfiqurasiyası üçün giriş elementləri. Aydın labellar, köməkçi mətn və xəta vəziyyətləri.</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:18px;">
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:28px;">
+      <div style="margin-bottom:20px;">
+        <label style="display:block; font-size:13px; font-weight:600; color:#334155; margin-bottom:7px;">Mövzu adı</label>
+        <input value="Fire Safety" style="width:100%; height:42px; padding:0 13px; border:1px solid #D6DEE9; border-radius:9px; font-family:inherit; font-size:14px; color:#0F172A; outline:none; transition:all .15s;" style-focus="border-color:#2563EB; box-shadow:0 0 0 3px rgba(37,99,235,0.14);">
+        <div style="font-size:12px; color:#94A3B8; margin-top:6px;">Bu mövzu Safety kateqoriyasına aid olacaq.</div>
+      </div>
+      <div style="margin-bottom:20px;">
+        <label style="display:block; font-size:13px; font-weight:600; color:#334155; margin-bottom:7px;">Axtarış</label>
+        <div style="position:relative;">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" style="position:absolute; left:13px; top:50%; transform:translateY(-50%);"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
+          <input placeholder="Sual axtar…" style="width:100%; height:42px; padding:0 13px 0 38px; border:1px solid #D6DEE9; border-radius:9px; font-family:inherit; font-size:14px; outline:none;" style-focus="border-color:#2563EB; box-shadow:0 0 0 3px rgba(37,99,235,0.14);">
+        </div>
+      </div>
+      <div>
+        <label style="display:block; font-size:13px; font-weight:600; color:#334155; margin-bottom:7px;">Keçid balı</label>
+        <input value="50" style="width:100%; height:42px; padding:0 13px; border:1.5px solid #DC2626; border-radius:9px; font-family:inherit; font-size:14px; color:#0F172A; outline:none; box-shadow:0 0 0 3px rgba(220,38,38,0.12);">
+        <div style="font-size:12px; color:#DC2626; margin-top:6px; display:flex; align-items:center; gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4M12 16h.01"></path></svg> Keçid balı 0–100 aralığında olmalıdır.</div>
+      </div>
+    </div>
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:28px;">
+      <div style="margin-bottom:20px;">
+        <label style="display:block; font-size:13px; font-weight:600; color:#334155; margin-bottom:7px;">Sual növü</label>
+        <div style="position:relative;">
+          <select style="width:100%; height:42px; padding:0 38px 0 13px; border:1px solid #D6DEE9; border-radius:9px; font-family:inherit; font-size:14px; color:#0F172A; outline:none; appearance:none; background:#fff; cursor:pointer;"><option>Single Choice</option><option>Multiple Choice</option><option>True / False</option><option>Likert Scale</option></select>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute; right:13px; top:50%; transform:translateY(-50%); pointer-events:none;"><path d="M6 9l6 6 6-6"></path></svg>
+        </div>
+      </div>
+      <div style="margin-bottom:20px;">
+        <label style="display:block; font-size:13px; font-weight:600; color:#334155; margin-bottom:7px;">Sual mətni</label>
+        <textarea rows="3" style="width:100%; padding:11px 13px; border:1px solid #D6DEE9; border-radius:9px; font-family:inherit; font-size:14px; color:#0F172A; outline:none; resize:vertical; line-height:1.5;" style-focus="border-color:#2563EB; box-shadow:0 0 0 3px rgba(37,99,235,0.14);">Yanğın zamanı ilk növbədə nə edilməlidir?</textarea>
+      </div>
+      <div>
+        <label style="display:block; font-size:13px; font-weight:600; color:#94A3B8; margin-bottom:7px;">Disabled</label>
+        <input value="Avtomatik təyin olunub" disabled style="width:100%; height:42px; padding:0 13px; border:1px solid #E6EAF1; border-radius:9px; font-family:inherit; font-size:14px; color:#94A3B8; background:#F8FAFC; cursor:not-allowed;">
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:18px;">
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:26px;">
+      <div style="font-size:12px; font-weight:650; color:#94A3B8; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:16px;">Checkbox</div>
+      <label style="display:flex; align-items:center; gap:10px; margin-bottom:13px; cursor:pointer;"><span style="width:20px; height:20px; border-radius:6px; background:#2563EB; display:flex; align-items:center; justify-content:center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></span><span style="font-size:14px; color:#334155;">Çoxlu cavab seçimi</span></label>
+      <label style="display:flex; align-items:center; gap:10px; margin-bottom:13px; cursor:pointer;"><span style="width:20px; height:20px; border-radius:6px; border:1.5px solid #CBD5E1; background:#fff;"></span><span style="font-size:14px; color:#334155;">Şəkilli sual</span></label>
+      <label style="display:flex; align-items:center; gap:10px; cursor:not-allowed;"><span style="width:20px; height:20px; border-radius:6px; border:1.5px solid #E2E8F0; background:#F1F5F9;"></span><span style="font-size:14px; color:#94A3B8;">File upload (tezliklə)</span></label>
+    </div>
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:26px;">
+      <div style="font-size:12px; font-weight:650; color:#94A3B8; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:16px;">Radio</div>
+      <label style="display:flex; align-items:center; gap:10px; margin-bottom:13px; cursor:pointer;"><span style="width:20px; height:20px; border-radius:50%; border:5px solid #2563EB; background:#fff;"></span><span style="font-size:14px; color:#334155;">Ballı qiymətləndirmə</span></label>
+      <label style="display:flex; align-items:center; gap:10px; margin-bottom:13px; cursor:pointer;"><span style="width:20px; height:20px; border-radius:50%; border:1.5px solid #CBD5E1; background:#fff;"></span><span style="font-size:14px; color:#334155;">Balsız (sorğu)</span></label>
+      <label style="display:flex; align-items:center; gap:10px; cursor:pointer;"><span style="width:20px; height:20px; border-radius:50%; border:1.5px solid #CBD5E1; background:#fff;"></span><span style="font-size:14px; color:#334155;">Periodik</span></label>
+    </div>
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:26px;">
+      <div style="font-size:12px; font-weight:650; color:#94A3B8; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:16px;">Toggle</div>
+      <label style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; cursor:pointer;"><span style="font-size:14px; color:#334155;">Anti-cheat</span><span style="width:42px; height:24px; border-radius:99px; background:#2563EB; position:relative;"><span style="position:absolute; top:2px; right:2px; width:20px; height:20px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,0.2);"></span></span></label>
+      <label style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; cursor:pointer;"><span style="font-size:14px; color:#334155;">Dark Mode</span><span style="width:42px; height:24px; border-radius:99px; background:#CBD5E1; position:relative;"><span style="position:absolute; top:2px; left:2px; width:20px; height:20px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,0.2);"></span></span></label>
+      <label style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;"><span style="font-size:14px; color:#334155;">Auto-save</span><span style="width:42px; height:24px; border-radius:99px; background:#2563EB; position:relative;"><span style="position:absolute; top:2px; right:2px; width:20px; height:20px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,0.2);"></span></span></label>
+    </div>
+  </div>
+</section>
+</sc-if>
+<sc-if value="{{ isBadges }}" hint-placeholder-val="{{ true }}">
+<section style="padding:42px 52px 64px;">
+  <div style="color:#2563EB; font-size:12px; font-weight:650; letter-spacing:1.6px; text-transform:uppercase; margin-bottom:10px;">Components</div>
+  <h2 style="margin:0 0 8px; font-size:30px; font-weight:700; letter-spacing:-0.7px;">Badges &amp; Status</h2>
+  <p style="margin:0 0 32px; font-size:15px; color:#64748B; max-width:620px; line-height:1.6;">Nəticələr, imtahan statusları və kateqoriyalar üçün vahid status dili. Rəng + ikon birlikdə mənanı gücləndirir.</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:18px;">
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:28px;">
+      <div style="font-size:12px; font-weight:650; color:#94A3B8; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:18px;">Nəticə statusu</div>
+      <div style="display:flex; gap:11px; flex-wrap:wrap;">
+        <span style="display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:99px; background:#DCFCE7; color:#15803D; font-size:12.5px; font-weight:650;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg> Pass</span>
+        <span style="display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:99px; background:#FEE2E2; color:#B91C1C; font-size:12.5px; font-weight:650;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"></path></svg> Fail</span>
+        <span style="display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:99px; background:#CFFAFE; color:#0E7490; font-size:12.5px; font-weight:650;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg> Manual Review</span>
+      </div>
+    </div>
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:28px;">
+      <div style="font-size:12px; font-weight:650; color:#94A3B8; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:18px;">İmtahan statusu</div>
+      <div style="display:flex; gap:11px; flex-wrap:wrap;">
+        <span style="display:inline-flex; align-items:center; gap:7px; padding:5px 12px; border-radius:99px; background:#EFF5FF; color:#1D4ED8; font-size:12.5px; font-weight:650;"><span style="width:7px; height:7px; border-radius:50%; background:#2563EB; animation:pulse 1.6s ease infinite;"></span> Active</span>
+        <span style="display:inline-flex; align-items:center; gap:7px; padding:5px 12px; border-radius:99px; background:#F1F5F9; color:#475569; font-size:12.5px; font-weight:650;"><span style="width:7px; height:7px; border-radius:50%; background:#94A3B8;"></span> Draft</span>
+        <span style="display:inline-flex; align-items:center; gap:7px; padding:5px 12px; border-radius:99px; background:#FEF3C7; color:#B45309; font-size:12.5px; font-weight:650;"><span style="width:7px; height:7px; border-radius:50%; background:#D97706;"></span> Scheduled</span>
+        <span style="display:inline-flex; align-items:center; gap:7px; padding:5px 12px; border-radius:99px; background:#F1F5F9; color:#94A3B8; font-size:12.5px; font-weight:650;"><span style="width:7px; height:7px; border-radius:50%; background:#CBD5E1;"></span> Expired</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid; grid-template-columns:1.3fr 1fr; gap:18px; margin-bottom:18px;">
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:28px;">
+      <div style="font-size:12px; font-weight:650; color:#94A3B8; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:18px;">Kateqoriya / Mövzu tagları</div>
+      <div style="display:flex; gap:9px; flex-wrap:wrap;">
+        <span style="padding:5px 11px; border-radius:7px; background:#EAF1FE; color:#1D4ED8; font-size:12.5px; font-weight:600;">Safety</span>
+        <span style="padding:5px 11px; border-radius:7px; background:#F3E8FF; color:#7E22CE; font-size:12.5px; font-weight:600;">HR</span>
+        <span style="padding:5px 11px; border-radius:7px; background:#DCFCE7; color:#15803D; font-size:12.5px; font-weight:600;">Accounting</span>
+        <span style="padding:5px 11px; border-radius:7px; background:#FEF3C7; color:#B45309; font-size:12.5px; font-weight:600;">Fire Safety</span>
+        <span style="padding:5px 11px; border-radius:7px; background:#FFE4E6; color:#BE123C; font-size:12.5px; font-weight:600;">First Aid</span>
+        <span style="display:inline-flex; align-items:center; gap:5px; padding:5px 11px; border-radius:7px; background:#F1F5F9; color:#475569; font-size:12.5px; font-weight:600;">PPE <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"></path></svg></span>
+      </div>
+    </div>
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:28px;">
+      <div style="font-size:12px; font-weight:650; color:#94A3B8; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:18px;">Rol badge-ləri</div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <span style="display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:99px; background:#0E1B33; color:#fff; font-size:12px; font-weight:600;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"></path></svg> Admin</span>
+        <span style="display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:99px; background:#EAF1FE; color:#1D4ED8; font-size:12px; font-weight:600;">Employee</span>
+        <span style="display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:99px; background:#FEF3C7; color:#B45309; font-size:12px; font-weight:600;">Candidate</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px;">
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:28px;">
+      <div style="font-size:12px; font-weight:650; color:#94A3B8; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:18px;">Anti-cheat severity</div>
+      <div style="display:flex; flex-direction:column; gap:11px;">
+        <div style="display:flex; align-items:center; justify-content:space-between;"><span style="font-size:13.5px; color:#334155;">Tab dəyişdirmə</span><span style="padding:3px 10px; border-radius:6px; background:#FEF3C7; color:#B45309; font-size:11.5px; font-weight:700;">WARNING</span></div>
+        <div style="display:flex; align-items:center; justify-content:space-between;"><span style="font-size:13.5px; color:#334155;">DevTools cəhdi</span><span style="padding:3px 10px; border-radius:6px; background:#FEE2E2; color:#B91C1C; font-size:11.5px; font-weight:700;">CRITICAL</span></div>
+        <div style="display:flex; align-items:center; justify-content:space-between;"><span style="font-size:13.5px; color:#334155;">Copy əməliyyatı</span><span style="padding:3px 10px; border-radius:6px; background:#F1F5F9; color:#475569; font-size:11.5px; font-weight:700;">LOGGED</span></div>
+      </div>
+    </div>
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:28px;">
+      <div style="font-size:12px; font-weight:650; color:#94A3B8; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:18px;">Count &amp; notification</div>
+      <div style="display:flex; gap:22px; align-items:center; flex-wrap:wrap;">
+        <div style="position:relative; display:inline-flex;"><div style="width:42px; height:42px; border-radius:11px; background:#F1F5F9; display:flex; align-items:center; justify-content:center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"></path></svg></div><span style="position:absolute; top:-5px; right:-5px; min-width:19px; height:19px; padding:0 5px; border-radius:99px; background:#DC2626; color:#fff; font-size:10.5px; font-weight:700; display:flex; align-items:center; justify-content:center; border:2px solid #fff;">5</span></div>
+        <span style="padding:3px 9px; border-radius:99px; background:#EFF5FF; color:#1D4ED8; font-size:12px; font-weight:700; font-family:'Geist Mono',monospace;">24</span>
+        <span style="padding:3px 9px; border-radius:99px; background:#DCFCE7; color:#15803D; font-size:12px; font-weight:700; font-family:'Geist Mono',monospace;">+12%</span>
+        <span style="padding:3px 9px; border-radius:99px; background:#FEE2E2; color:#B91C1C; font-size:12px; font-weight:700; font-family:'Geist Mono',monospace;">−4%</span>
+      </div>
+    </div>
+  </div>
+</section>
+</sc-if>
+<sc-if value="{{ isCards }}" hint-placeholder-val="{{ true }}">
+<section style="padding:42px 52px 64px;">
+  <div style="color:#2563EB; font-size:12px; font-weight:650; letter-spacing:1.6px; text-transform:uppercase; margin-bottom:10px;">Components</div>
+  <h2 style="margin:0 0 8px; font-size:30px; font-weight:700; letter-spacing:-0.7px;">Cards &amp; Stats</h2>
+  <p style="margin:0 0 32px; font-size:15px; color:#64748B; max-width:620px; line-height:1.6;">KPI kartları, gauge-lər və progress göstəriciləri — dashboard və analitikanın əsas tikinti blokları.</p>
+
+  <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:18px;">
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:20px; box-shadow:0 1px 2px rgba(15,23,42,0.04);">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;"><div style="width:38px; height:38px; border-radius:10px; background:#EAF1FE; display:flex; align-items:center; justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M9 13h6M9 17h4"></path></svg></div><span style="padding:2px 8px; border-radius:6px; background:#DCFCE7; color:#15803D; font-size:11px; font-weight:700; font-family:'Geist Mono',monospace;">+8%</span></div>
+      <div style="font-family:'Geist Mono',monospace; font-size:28px; font-weight:600; letter-spacing:-0.5px;">248</div>
+      <div style="font-size:13px; color:#64748B; margin-top:2px;">Ümumi imtahan</div>
+    </div>
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:20px; box-shadow:0 1px 2px rgba(15,23,42,0.04);">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;"><div style="width:38px; height:38px; border-radius:10px; background:#DCFCE7; display:flex; align-items:center; justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg></div><span style="padding:2px 8px; border-radius:6px; background:#EFF5FF; color:#1D4ED8; font-size:11px; font-weight:700; font-family:'Geist Mono',monospace;">live</span></div>
+      <div style="font-family:'Geist Mono',monospace; font-size:28px; font-weight:600; letter-spacing:-0.5px;">17</div>
+      <div style="font-size:13px; color:#64748B; margin-top:2px;">Aktiv qiymətləndirmə</div>
+    </div>
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:20px; box-shadow:0 1px 2px rgba(15,23,42,0.04);">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;"><div style="width:38px; height:38px; border-radius:10px; background:#F3E8FF; display:flex; align-items:center; justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7E22CE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M7 14l3-3 3 2 5-6"></path></svg></div><span style="padding:2px 8px; border-radius:6px; background:#DCFCE7; color:#15803D; font-size:11px; font-weight:700; font-family:'Geist Mono',monospace;">+3.2</span></div>
+      <div style="font-family:'Geist Mono',monospace; font-size:28px; font-weight:600; letter-spacing:-0.5px;">74<span style="font-size:18px; color:#94A3B8;">%</span></div>
+      <div style="font-size:13px; color:#64748B; margin-top:2px;">Orta nəticə</div>
+    </div>
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:20px; box-shadow:0 1px 2px rgba(15,23,42,0.04);">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;"><div style="width:38px; height:38px; border-radius:10px; background:#FEF3C7; display:flex; align-items:center; justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><path d="M22 4L12 14.01l-3-3"></path></svg></div><span style="padding:2px 8px; border-radius:6px; background:#FEE2E2; color:#B91C1C; font-size:11px; font-weight:700; font-family:'Geist Mono',monospace;">−2%</span></div>
+      <div style="font-family:'Geist Mono',monospace; font-size:28px; font-weight:600; letter-spacing:-0.5px;">68<span style="font-size:18px; color:#94A3B8;">%</span></div>
+      <div style="font-size:13px; color:#64748B; margin-top:2px;">Keçid faizi</div>
+    </div>
+  </div>
+
+  <div style="display:grid; grid-template-columns:1fr 1.4fr; gap:18px;">
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:26px; box-shadow:0 1px 2px rgba(15,23,42,0.04); display:flex; align-items:center; gap:24px;">
+      <div style="position:relative; width:120px; height:120px; flex:none;">
+        <svg width="120" height="120" viewBox="0 0 120 120">
+          <circle cx="60" cy="60" r="52" fill="none" stroke="#EEF2F7" stroke-width="14"></circle>
+          <circle cx="60" cy="60" r="52" fill="none" stroke="#16A34A" stroke-width="14" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="62" transform="rotate(-90 60 60)"></circle>
+        </svg>
+        <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;"><div style="font-family:'Geist Mono',monospace; font-size:26px; font-weight:600;">81%</div><div style="font-size:10.5px; color:#94A3B8; font-weight:600;">SCORE</div></div>
+      </div>
+      <div>
+        <div style="font-size:13px; color:#94A3B8; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Score Gauge</div>
+        <div style="font-size:15px; font-weight:600; margin-bottom:4px;">Fire Safety — Q3</div>
+        <div style="display:inline-flex; align-items:center; gap:6px; padding:4px 11px; border-radius:99px; background:#DCFCE7; color:#15803D; font-size:12.5px; font-weight:650; margin-top:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg> Passed · 24/30</div>
+      </div>
+    </div>
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:26px; box-shadow:0 1px 2px rgba(15,23,42,0.04);">
+      <div style="font-size:13px; color:#94A3B8; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:18px;">Şöbələr üzrə orta nəticə</div>
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <div><div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span style="font-size:13.5px; color:#334155; font-weight:500;">Safety</span><span style="font-family:'Geist Mono',monospace; font-size:13px; font-weight:600;">88%</span></div><div style="height:8px; border-radius:99px; background:#F1F5F9; overflow:hidden;"><div style="height:100%; width:88%; border-radius:99px; background:#16A34A;"></div></div></div>
+        <div><div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span style="font-size:13.5px; color:#334155; font-weight:500;">HR</span><span style="font-family:'Geist Mono',monospace; font-size:13px; font-weight:600;">76%</span></div><div style="height:8px; border-radius:99px; background:#F1F5F9; overflow:hidden;"><div style="height:100%; width:76%; border-radius:99px; background:#2563EB;"></div></div></div>
+        <div><div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span style="font-size:13.5px; color:#334155; font-weight:500;">Accounting</span><span style="font-family:'Geist Mono',monospace; font-size:13px; font-weight:600;">63%</span></div><div style="height:8px; border-radius:99px; background:#F1F5F9; overflow:hidden;"><div style="height:100%; width:63%; border-radius:99px; background:#D97706;"></div></div></div>
+        <div><div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span style="font-size:13.5px; color:#334155; font-weight:500;">IT</span><span style="font-family:'Geist Mono',monospace; font-size:13px; font-weight:600;">48%</span></div><div style="height:8px; border-radius:99px; background:#F1F5F9; overflow:hidden;"><div style="height:100%; width:48%; border-radius:99px; background:#DC2626;"></div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+</sc-if>
+<sc-if value="{{ isTables }}" hint-placeholder-val="{{ true }}">
+<section style="padding:42px 52px 64px;">
+  <div style="color:#2563EB; font-size:12px; font-weight:650; letter-spacing:1.6px; text-transform:uppercase; margin-bottom:10px;">Components</div>
+  <h2 style="margin:0 0 8px; font-size:30px; font-weight:700; letter-spacing:-0.7px;">Data Tables</h2>
+  <p style="margin:0 0 32px; font-size:15px; color:#64748B; max-width:620px; line-height:1.6;">Nəticələr, işçilər və sual bankı üçün sıx, oxunaqlı cədvəllər. Sıralama, seçim, status sütunları və səhifələmə daxildir.</p>
+
+  <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; overflow:hidden; box-shadow:0 1px 2px rgba(15,23,42,0.04);">
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:18px 22px; border-bottom:1px solid #F1F5F9;">
+      <div style="display:flex; align-items:center; gap:12px;"><span style="font-size:15px; font-weight:650;">İmtahan nəticələri</span><span style="padding:2px 9px; border-radius:99px; background:#F1F5F9; color:#475569; font-size:12px; font-weight:600; font-family:'Geist Mono',monospace;">142</span></div>
+      <div style="display:flex; gap:10px;">
+        <div style="position:relative;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" style="position:absolute; left:11px; top:50%; transform:translateY(-50%);"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg><input placeholder="Axtar…" style="height:36px; width:200px; padding:0 12px 0 34px; border:1px solid #E2E8F0; border-radius:8px; font-family:inherit; font-size:13px; outline:none;"></div>
+        <button style="height:36px; padding:0 14px; border-radius:8px; border:1px solid #E2E8F0; background:#fff; font-family:inherit; font-size:13px; font-weight:600; color:#475569; cursor:pointer; display:inline-flex; align-items:center; gap:7px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.5V19l4 2v-8.5z"></path></svg> Filter</button>
+      </div>
+    </div>
+    <table style="width:100%; border-collapse:collapse;">
+      <thead>
+        <tr style="background:#F8FAFC;">
+          <th style="width:44px; padding:11px 0 11px 22px;"><span style="width:18px; height:18px; border-radius:5px; border:1.5px solid #CBD5E1; display:inline-block; vertical-align:middle;"></span></th>
+          <th style="text-align:left; padding:11px 16px; font-size:11.5px; font-weight:650; color:#94A3B8; text-transform:uppercase; letter-spacing:0.6px;">İşçi</th>
+          <th style="text-align:left; padding:11px 16px; font-size:11.5px; font-weight:650; color:#94A3B8; text-transform:uppercase; letter-spacing:0.6px;">Şöbə</th>
+          <th style="text-align:left; padding:11px 16px; font-size:11.5px; font-weight:650; color:#94A3B8; text-transform:uppercase; letter-spacing:0.6px;">İmtahan</th>
+          <th style="text-align:left; padding:11px 16px; font-size:11.5px; font-weight:650; color:#2563EB; text-transform:uppercase; letter-spacing:0.6px; cursor:pointer;">Nəticə <span style="font-size:9px;">▼</span></th>
+          <th style="text-align:left; padding:11px 16px; font-size:11.5px; font-weight:650; color:#94A3B8; text-transform:uppercase; letter-spacing:0.6px;">Status</th>
+          <th style="width:50px;"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-top:1px solid #F1F5F9;">
+          <td style="padding:13px 0 13px 22px;"><span style="width:18px; height:18px; border-radius:5px; background:#2563EB; display:inline-flex; align-items:center; justify-content:center; vertical-align:middle;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></span></td>
+          <td style="padding:13px 16px;"><div style="display:flex; align-items:center; gap:11px;"><span style="width:34px; height:34px; border-radius:50%; background:#1D4ED8; color:#fff; font-size:12.5px; font-weight:600; display:flex; align-items:center; justify-content:center;">RM</span><div><div style="font-size:13.5px; font-weight:600;">Rəşad Məmmədov</div><div style="font-size:11.5px; color:#94A3B8;">rmammadov@corp.az</div></div></div></td>
+          <td style="padding:13px 16px;"><span style="padding:4px 10px; border-radius:7px; background:#EAF1FE; color:#1D4ED8; font-size:12px; font-weight:600;">Safety</span></td>
+          <td style="padding:13px 16px; font-size:13.5px; color:#334155;">Fire Safety Q3</td>
+          <td style="padding:13px 16px;"><span style="font-family:'Geist Mono',monospace; font-size:14px; font-weight:600;">88%</span> <span style="font-size:11.5px; color:#94A3B8;">26/30</span></td>
+          <td style="padding:13px 16px;"><span style="display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:99px; background:#DCFCE7; color:#15803D; font-size:12px; font-weight:650;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg> Pass</span></td>
+          <td style="text-align:center;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1.2"></circle><circle cx="12" cy="12" r="1.2"></circle><circle cx="12" cy="19" r="1.2"></circle></svg></td>
+        </tr>
+        <tr style="border-top:1px solid #F1F5F9; background:#FBFCFE;">
+          <td style="padding:13px 0 13px 22px;"><span style="width:18px; height:18px; border-radius:5px; border:1.5px solid #CBD5E1; display:inline-block; vertical-align:middle;"></span></td>
+          <td style="padding:13px 16px;"><div style="display:flex; align-items:center; gap:11px;"><span style="width:34px; height:34px; border-radius:50%; background:#7E22CE; color:#fff; font-size:12.5px; font-weight:600; display:flex; align-items:center; justify-content:center;">LƏ</span><div><div style="font-size:13.5px; font-weight:600;">Leyla Əliyeva</div><div style="font-size:11.5px; color:#94A3B8;">laliyeva@corp.az</div></div></div></td>
+          <td style="padding:13px 16px;"><span style="padding:4px 10px; border-radius:7px; background:#F3E8FF; color:#7E22CE; font-size:12px; font-weight:600;">HR</span></td>
+          <td style="padding:13px 16px; font-size:13.5px; color:#334155;">Labor Law</td>
+          <td style="padding:13px 16px;"><span style="font-family:'Geist Mono',monospace; font-size:14px; font-weight:600;">42%</span> <span style="font-size:11.5px; color:#94A3B8;">11/26</span></td>
+          <td style="padding:13px 16px;"><span style="display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:99px; background:#FEE2E2; color:#B91C1C; font-size:12px; font-weight:650;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"></path></svg> Fail</span></td>
+          <td style="text-align:center;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1.2"></circle><circle cx="12" cy="12" r="1.2"></circle><circle cx="12" cy="19" r="1.2"></circle></svg></td>
+        </tr>
+        <tr style="border-top:1px solid #F1F5F9;">
+          <td style="padding:13px 0 13px 22px;"><span style="width:18px; height:18px; border-radius:5px; border:1.5px solid #CBD5E1; display:inline-block; vertical-align:middle;"></span></td>
+          <td style="padding:13px 16px;"><div style="display:flex; align-items:center; gap:11px;"><span style="width:34px; height:34px; border-radius:50%; background:#0891B2; color:#fff; font-size:12.5px; font-weight:600; display:flex; align-items:center; justify-content:center;">KH</span><div><div style="font-size:13.5px; font-weight:600;">Kamran Hüseynov</div><div style="font-size:11.5px; color:#94A3B8;">Candidate · birdəfəlik</div></div></div></td>
+          <td style="padding:13px 16px;"><span style="padding:4px 10px; border-radius:7px; background:#F1F5F9; color:#475569; font-size:12px; font-weight:600;">—</span></td>
+          <td style="padding:13px 16px; font-size:13.5px; color:#334155;">Tax Basics</td>
+          <td style="padding:13px 16px; font-size:13.5px; color:#94A3B8;">Açıq cavablar</td>
+          <td style="padding:13px 16px;"><span style="display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:99px; background:#CFFAFE; color:#0E7490; font-size:12px; font-weight:650;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg> Review</span></td>
+          <td style="text-align:center;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1.2"></circle><circle cx="12" cy="12" r="1.2"></circle><circle cx="12" cy="19" r="1.2"></circle></svg></td>
+        </tr>
+        <tr style="border-top:1px solid #F1F5F9; background:#FBFCFE;">
+          <td style="padding:13px 0 13px 22px;"><span style="width:18px; height:18px; border-radius:5px; border:1.5px solid #CBD5E1; display:inline-block; vertical-align:middle;"></span></td>
+          <td style="padding:13px 16px;"><div style="display:flex; align-items:center; gap:11px;"><span style="width:34px; height:34px; border-radius:50%; background:#16A34A; color:#fff; font-size:12.5px; font-weight:600; display:flex; align-items:center; justify-content:center;">NQ</span><div><div style="font-size:13.5px; font-weight:600;">Nigar Quliyeva</div><div style="font-size:11.5px; color:#94A3B8;">nquliyeva@corp.az</div></div></div></td>
+          <td style="padding:13px 16px;"><span style="padding:4px 10px; border-radius:7px; background:#DCFCE7; color:#15803D; font-size:12px; font-weight:600;">Accounting</span></td>
+          <td style="padding:13px 16px; font-size:13.5px; color:#334155;">Reporting</td>
+          <td style="padding:13px 16px;"><span style="font-family:'Geist Mono',monospace; font-size:14px; font-weight:600;">71%</span> <span style="font-size:11.5px; color:#94A3B8;">18/25</span></td>
+          <td style="padding:13px 16px;"><span style="display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:99px; background:#DCFCE7; color:#15803D; font-size:12px; font-weight:650;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg> Pass</span></td>
+          <td style="text-align:center;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1.2"></circle><circle cx="12" cy="12" r="1.2"></circle><circle cx="12" cy="19" r="1.2"></circle></svg></td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 22px; border-top:1px solid #F1F5F9;">
+      <span style="font-size:12.5px; color:#94A3B8;">1–4 / 142 nəticə</span>
+      <div style="display:flex; gap:6px; align-items:center;">
+        <button style="width:32px; height:32px; border-radius:7px; border:1px solid #E2E8F0; background:#fff; color:#94A3B8; cursor:not-allowed;">‹</button>
+        <button style="width:32px; height:32px; border-radius:7px; border:none; background:#2563EB; color:#fff; font-size:13px; font-weight:600; cursor:pointer;">1</button>
+        <button style="width:32px; height:32px; border-radius:7px; border:1px solid #E2E8F0; background:#fff; color:#475569; font-size:13px; cursor:pointer;">2</button>
+        <button style="width:32px; height:32px; border-radius:7px; border:1px solid #E2E8F0; background:#fff; color:#475569; font-size:13px; cursor:pointer;">3</button>
+        <button style="width:32px; height:32px; border-radius:7px; border:1px solid #E2E8F0; background:#fff; color:#475569; cursor:pointer;">›</button>
+      </div>
+    </div>
+  </div>
+</section>
+</sc-if>
+<sc-if value="{{ isFeedback }}" hint-placeholder-val="{{ true }}">
+<section style="padding:42px 52px 64px;">
+  <div style="color:#2563EB; font-size:12px; font-weight:650; letter-spacing:1.6px; text-transform:uppercase; margin-bottom:10px;">Components</div>
+  <h2 style="margin:0 0 8px; font-size:30px; font-weight:700; letter-spacing:-0.7px;">Tabs &amp; Feedback</h2>
+  <p style="margin:0 0 32px; font-size:15px; color:#64748B; max-width:620px; line-height:1.6;">Naviqasiya tabları, segment kontrolları və istifadəçi rəyi elementləri — alert, toast, modal və boş vəziyyət.</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:18px;">
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:26px;">
+      <div style="font-size:12px; font-weight:650; color:#94A3B8; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:18px;">Underline tabs</div>
+      <div style="display:flex; gap:26px; border-bottom:1px solid #E6EAF1;">
+        <div style="padding-bottom:12px; font-size:14px; font-weight:600; color:#2563EB; border-bottom:2px solid #2563EB; margin-bottom:-1px; cursor:pointer;">Ümumi</div>
+        <div style="padding-bottom:12px; font-size:14px; font-weight:500; color:#64748B; cursor:pointer;">Suallar</div>
+        <div style="padding-bottom:12px; font-size:14px; font-weight:500; color:#64748B; cursor:pointer;">Nəticələr</div>
+        <div style="padding-bottom:12px; font-size:14px; font-weight:500; color:#64748B; cursor:pointer;">Anti-cheat</div>
+      </div>
+    </div>
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:26px;">
+      <div style="font-size:12px; font-weight:650; color:#94A3B8; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:18px;">Segmented control</div>
+      <div style="display:inline-flex; padding:4px; background:#F1F5F9; border-radius:10px;">
+        <div style="padding:8px 18px; border-radius:7px; font-size:13.5px; font-weight:600; background:#fff; color:#0F172A; box-shadow:0 1px 2px rgba(15,23,42,0.08); cursor:pointer;">Exam</div>
+        <div style="padding:8px 18px; border-radius:7px; font-size:13.5px; font-weight:500; color:#64748B; cursor:pointer;">Survey</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:18px;">
+    <div style="display:flex; align-items:flex-start; gap:13px; padding:15px 18px; border-radius:11px; background:#EFF5FF; border:1px solid #BFDBFE;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none; margin-top:1px;"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4M12 8h.01"></path></svg><div><div style="font-size:13.5px; font-weight:650; color:#1E40AF;">Avtomatik təyinat</div><div style="font-size:13px; color:#1D4ED8; margin-top:2px;">Bu imtahan hər 3 ayda bir avtomatik olaraq Safety şöbəsinə təyin olunacaq.</div></div></div>
+    <div style="display:flex; align-items:flex-start; gap:13px; padding:15px 18px; border-radius:11px; background:#F0FDF4; border:1px solid #BBF7D0;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none; margin-top:1px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><path d="M22 4L12 14.01l-3-3"></path></svg><div><div style="font-size:13.5px; font-weight:650; color:#15803D;">Cavablar göndərildi</div><div style="font-size:13px; color:#16A34A; margin-top:2px;">Sorğu cavablarınız uğurla yadda saxlanıldı. Təşəkkür edirik.</div></div></div>
+    <div style="display:flex; align-items:flex-start; gap:13px; padding:15px 18px; border-radius:11px; background:#FFFBEB; border:1px solid #FDE68A;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none; margin-top:1px;"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path><path d="M12 9v4M12 17h.01"></path></svg><div><div style="font-size:13.5px; font-weight:650; color:#B45309;">Diqqət — tab dəyişdirildi</div><div style="font-size:13px; color:#D97706; margin-top:2px;">Bu 2-ci xəbərdarlıqdır. 3-cü dəfədən sonra imtahan avtomatik sonlandırılacaq.</div></div></div>
+    <div style="display:flex; align-items:flex-start; gap:13px; padding:15px 18px; border-radius:11px; background:#FEF2F2; border:1px solid #FECACA;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none; margin-top:1px;"><circle cx="12" cy="12" r="10"></circle><path d="M15 9l-6 6M9 9l6 6"></path></svg><div><div style="font-size:13.5px; font-weight:650; color:#B91C1C;">İmtahan sonlandırıldı</div><div style="font-size:13px; color:#DC2626; margin-top:2px;">Anti-cheat limiti aşıldı (3/3 pozuntu). Nəticə HR-a göndərildi.</div></div></div>
+  </div>
+
+  <div style="display:grid; grid-template-columns:1.3fr 1fr; gap:18px;">
+    <div style="background:#EEF1F6; border:1px solid #E6EAF1; border-radius:14px; padding:30px; display:flex; align-items:center; justify-content:center;">
+      <div style="width:100%; max-width:380px; background:#fff; border-radius:16px; box-shadow:0 12px 32px rgba(15,23,42,0.16); overflow:hidden;">
+        <div style="padding:24px 24px 0;">
+          <div style="width:44px; height:44px; border-radius:12px; background:#FEE2E2; display:flex; align-items:center; justify-content:center; margin-bottom:16px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></div>
+          <div style="font-size:17px; font-weight:650; margin-bottom:6px;">Sualı silmək?</div>
+          <div style="font-size:13.5px; color:#64748B; line-height:1.55;">"Fire Safety — Q12" sualı sual bankından silinəcək. Bu əməliyyat geri qaytarıla bilməz.</div>
+        </div>
+        <div style="display:flex; gap:10px; padding:22px 24px;">
+          <button style="flex:1; height:42px; border-radius:9px; border:1px solid #E2E8F0; background:#fff; font-family:inherit; font-size:14px; font-weight:600; color:#475569; cursor:pointer;">Ləğv et</button>
+          <button style="flex:1; height:42px; border-radius:9px; border:none; background:#DC2626; color:#fff; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer;">Sil</button>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:18px;">
+      <div style="background:#0E1B33; border-radius:13px; padding:16px 18px; display:flex; align-items:center; gap:13px; box-shadow:0 8px 24px rgba(14,27,51,0.3);"><span style="width:32px; height:32px; border-radius:8px; background:#16A34A; display:flex; align-items:center; justify-content:center; flex:none;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></span><div style="flex:1;"><div style="font-size:13.5px; font-weight:600; color:#fff;">İmtahan yaradıldı</div><div style="font-size:12px; color:#94A3B8;">Fire Safety Q3 · 30 sual</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"></path></svg></div>
+      <div style="flex:1; background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:30px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;">
+        <div style="width:54px; height:54px; border-radius:14px; background:#F1F5F9; display:flex; align-items:center; justify-content:center; margin-bottom:16px;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg></div>
+        <div style="font-size:15px; font-weight:650; margin-bottom:5px;">Hələ nəticə yoxdur</div>
+        <div style="font-size:13px; color:#64748B; line-height:1.5; max-width:240px;">Bu imtahan heç kimə təyin edilməyib. İlk təyinatı yaratmaqla başlayın.</div>
+        <button style="margin-top:16px; height:38px; padding:0 16px; border-radius:9px; border:none; background:#2563EB; color:#fff; font-family:inherit; font-size:13.5px; font-weight:600; cursor:pointer;">Təyin et</button>
+      </div>
+    </div>
+  </div>
+</section>
+</sc-if>
+<sc-if value="{{ isQuestions }}" hint-placeholder-val="{{ true }}">
+<section style="padding:42px 52px 64px;">
+  <div style="color:#2563EB; font-size:12px; font-weight:650; letter-spacing:1.6px; text-transform:uppercase; margin-bottom:10px;">Components</div>
+  <h2 style="margin:0 0 8px; font-size:30px; font-weight:700; letter-spacing:-0.7px;">Question Types</h2>
+  <p style="margin:0 0 32px; font-size:15px; color:#64748B; max-width:640px; line-height:1.6;">Platformanın dəstəklədiyi 11 sual formatı — hər biri imtahan ekranında necə görünəcəyi ilə. File Upload gələcəkdə əlavə olunacaq.</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px;">
+
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:22px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;"><span style="font-size:11px; font-weight:700; letter-spacing:0.6px; color:#2563EB; text-transform:uppercase;">Single Choice</span><span style="font-family:'Geist Mono',monospace; font-size:11px; color:#CBD5E1;">01</span></div>
+      <div style="font-size:14.5px; font-weight:600; margin-bottom:14px;">Yanğın zamanı ilk növbədə nə edilməlidir?</div>
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <label style="display:flex; align-items:center; gap:11px; padding:11px 13px; border:1.5px solid #2563EB; border-radius:9px; background:#EFF5FF; cursor:pointer;"><span style="width:18px; height:18px; border-radius:50%; border:5px solid #2563EB; flex:none;"></span><span style="font-size:13.5px; color:#1E40AF; font-weight:500;">Həyəcan siqnalını işə salmaq</span></label>
+        <label style="display:flex; align-items:center; gap:11px; padding:11px 13px; border:1px solid #E2E8F0; border-radius:9px; cursor:pointer;"><span style="width:18px; height:18px; border-radius:50%; border:1.5px solid #CBD5E1; flex:none;"></span><span style="font-size:13.5px; color:#334155;">Əşyaları yığışdırmaq</span></label>
+        <label style="display:flex; align-items:center; gap:11px; padding:11px 13px; border:1px solid #E2E8F0; border-radius:9px; cursor:pointer;"><span style="width:18px; height:18px; border-radius:50%; border:1.5px solid #CBD5E1; flex:none;"></span><span style="font-size:13.5px; color:#334155;">Liftdən istifadə etmək</span></label>
+      </div>
+    </div>
+
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:22px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;"><span style="font-size:11px; font-weight:700; letter-spacing:0.6px; color:#2563EB; text-transform:uppercase;">Multiple Choice</span><span style="font-family:'Geist Mono',monospace; font-size:11px; color:#CBD5E1;">02</span></div>
+      <div style="font-size:14.5px; font-weight:600; margin-bottom:14px;">PPE-yə hansılar aiddir? <span style="font-size:12px; color:#94A3B8; font-weight:500;">(çoxlu seçim)</span></div>
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <label style="display:flex; align-items:center; gap:11px; padding:11px 13px; border:1.5px solid #2563EB; border-radius:9px; background:#EFF5FF; cursor:pointer;"><span style="width:18px; height:18px; border-radius:5px; background:#2563EB; display:flex; align-items:center; justify-content:center; flex:none;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></span><span style="font-size:13.5px; color:#1E40AF; font-weight:500;">Qoruyucu eynək</span></label>
+        <label style="display:flex; align-items:center; gap:11px; padding:11px 13px; border:1.5px solid #2563EB; border-radius:9px; background:#EFF5FF; cursor:pointer;"><span style="width:18px; height:18px; border-radius:5px; background:#2563EB; display:flex; align-items:center; justify-content:center; flex:none;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></span><span style="font-size:13.5px; color:#1E40AF; font-weight:500;">Təhlükəsizlik dəbilqəsi</span></label>
+        <label style="display:flex; align-items:center; gap:11px; padding:11px 13px; border:1px solid #E2E8F0; border-radius:9px; cursor:pointer;"><span style="width:18px; height:18px; border-radius:5px; border:1.5px solid #CBD5E1; flex:none;"></span><span style="font-size:13.5px; color:#334155;">Noutbuk</span></label>
+      </div>
+    </div>
+
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:22px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;"><span style="font-size:11px; font-weight:700; letter-spacing:0.6px; color:#2563EB; text-transform:uppercase;">True / False</span><span style="font-family:'Geist Mono',monospace; font-size:11px; color:#CBD5E1;">03</span></div>
+      <div style="font-size:14.5px; font-weight:600; margin-bottom:14px;">İş yerində dəbilqə taxmaq məcburidir.</div>
+      <div style="display:flex; gap:10px;">
+        <label style="flex:1; display:flex; align-items:center; justify-content:center; gap:8px; padding:14px; border:1.5px solid #16A34A; border-radius:10px; background:#F0FDF4; cursor:pointer;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg><span style="font-size:14px; font-weight:600; color:#15803D;">Doğru</span></label>
+        <label style="flex:1; display:flex; align-items:center; justify-content:center; gap:8px; padding:14px; border:1px solid #E2E8F0; border-radius:10px; cursor:pointer;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"></path></svg><span style="font-size:14px; font-weight:600; color:#64748B;">Yanlış</span></label>
+      </div>
+    </div>
+
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:22px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;"><span style="font-size:11px; font-weight:700; letter-spacing:0.6px; color:#0E7490; text-transform:uppercase;">Açıq mətn · Manual</span><span style="font-family:'Geist Mono',monospace; font-size:11px; color:#CBD5E1;">04</span></div>
+      <div style="font-size:14.5px; font-weight:600; margin-bottom:14px;">First Aid-də ABC nəyi ifadə edir?</div>
+      <input placeholder="Qısa cavabınızı yazın…" style="width:100%; height:42px; padding:0 13px; border:1px solid #D6DEE9; border-radius:9px; font-family:inherit; font-size:14px; outline:none;" style-focus="border-color:#2563EB; box-shadow:0 0 0 3px rgba(37,99,235,0.14);">
+      <div style="margin-top:11px; display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:99px; background:#CFFAFE; color:#0E7490; font-size:11.5px; font-weight:600;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg> HR tərəfindən yoxlanılacaq</div>
+    </div>
+
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:22px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;"><span style="font-size:11px; font-weight:700; letter-spacing:0.6px; color:#0E7490; text-transform:uppercase;">Uzun mətn · Manual</span><span style="font-family:'Geist Mono',monospace; font-size:11px; color:#CBD5E1;">05</span></div>
+      <div style="font-size:14.5px; font-weight:600; margin-bottom:14px;">Yanğın təxliyə prosedurunu izah edin.</div>
+      <textarea rows="4" placeholder="Cavabınızı ətraflı yazın…" style="width:100%; padding:11px 13px; border:1px solid #D6DEE9; border-radius:9px; font-family:inherit; font-size:14px; outline:none; resize:vertical; line-height:1.5;" style-focus="border-color:#2563EB; box-shadow:0 0 0 3px rgba(37,99,235,0.14);"></textarea>
+      <div style="text-align:right; font-size:11.5px; color:#94A3B8; margin-top:5px;">0 / 1000</div>
+    </div>
+
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:22px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;"><span style="font-size:11px; font-weight:700; letter-spacing:0.6px; color:#2563EB; text-transform:uppercase;">Şəkilli sual</span><span style="font-family:'Geist Mono',monospace; font-size:11px; color:#CBD5E1;">06</span></div>
+      <div style="height:110px; border-radius:10px; background:linear-gradient(135deg,#1E293B,#334155); display:flex; align-items:center; justify-content:center; margin-bottom:13px; position:relative; overflow:hidden;"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="M21 15l-5-5L5 21"></path></svg><span style="position:absolute; bottom:8px; left:10px; font-size:11px; color:#94A3B8; font-family:'Geist Mono',monospace;">təhlükə işarəsi.jpg</span></div>
+      <div style="font-size:14.5px; font-weight:600; margin-bottom:12px;">Bu işarə nəyi bildirir?</div>
+      <input placeholder="Cavab…" style="width:100%; height:40px; padding:0 13px; border:1px solid #D6DEE9; border-radius:9px; font-family:inherit; font-size:14px; outline:none;">
+    </div>
+
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:22px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;"><span style="font-size:11px; font-weight:700; letter-spacing:0.6px; color:#2563EB; text-transform:uppercase;">Şəkil seçimli sual</span><span style="font-family:'Geist Mono',monospace; font-size:11px; color:#CBD5E1;">07</span></div>
+      <div style="font-size:14.5px; font-weight:600; margin-bottom:13px;">Düzgün PPE dəstini seçin.</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <div style="border:2px solid #2563EB; border-radius:10px; overflow:hidden; position:relative; cursor:pointer;"><div style="height:74px; background:linear-gradient(135deg,#DBEAFE,#93C5FD); display:flex; align-items:center; justify-content:center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1D4ED8" stroke-width="1.8"><circle cx="9" cy="9" r="2"></circle><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M21 15l-5-5L5 21"></path></svg></div><span style="position:absolute; top:6px; right:6px; width:20px; height:20px; border-radius:50%; background:#2563EB; display:flex; align-items:center; justify-content:center;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></span></div>
+        <div style="border:1px solid #E2E8F0; border-radius:10px; overflow:hidden; cursor:pointer;"><div style="height:74px; background:linear-gradient(135deg,#F1F5F9,#E2E8F0); display:flex; align-items:center; justify-content:center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.8"><circle cx="9" cy="9" r="2"></circle><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M21 15l-5-5L5 21"></path></svg></div></div>
+      </div>
+    </div>
+
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:22px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;"><span style="font-size:11px; font-weight:700; letter-spacing:0.6px; color:#2563EB; text-transform:uppercase;">Tarix &amp; Ədəd</span><span style="font-family:'Geist Mono',monospace; font-size:11px; color:#CBD5E1;">08·09</span></div>
+      <div style="font-size:13.5px; font-weight:600; margin-bottom:8px;">Son təlimin tarixi?</div>
+      <div style="position:relative; margin-bottom:16px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute; left:13px; top:50%; transform:translateY(-50%);"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg><input value="2026-03-14" style="width:100%; height:42px; padding:0 13px 0 38px; border:1px solid #D6DEE9; border-radius:9px; font-family:'Geist Mono',monospace; font-size:14px; outline:none;"></div>
+      <div style="font-size:13.5px; font-weight:600; margin-bottom:8px;">Neçə il iş təcrübəniz var?</div>
+      <div style="display:flex; align-items:center; gap:0; border:1px solid #D6DEE9; border-radius:9px; overflow:hidden; width:150px;"><button style="width:42px; height:42px; border:none; background:#F8FAFC; color:#475569; font-size:18px; cursor:pointer;">−</button><input value="7" style="flex:1; height:42px; border:none; border-left:1px solid #E2E8F0; border-right:1px solid #E2E8F0; text-align:center; font-family:'Geist Mono',monospace; font-size:15px; font-weight:600; outline:none; width:100%;"><button style="width:42px; height:42px; border:none; background:#F8FAFC; color:#475569; font-size:18px; cursor:pointer;">+</button></div>
+    </div>
+
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:22px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;"><span style="font-size:11px; font-weight:700; letter-spacing:0.6px; color:#D97706; text-transform:uppercase;">Rating · Survey</span><span style="font-family:'Geist Mono',monospace; font-size:11px; color:#CBD5E1;">10</span></div>
+      <div style="font-size:14.5px; font-weight:600; margin-bottom:16px;">Təlimin keyfiyyətini qiymətləndirin.</div>
+      <div style="display:flex; gap:7px;">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="#F59E0B" stroke="#F59E0B" stroke-width="1.5" stroke-linejoin="round"><path d="M12 2l3 6.5 7 .9-5 4.8 1.3 7-6.3-3.4-6.3 3.4 1.3-7-5-4.8 7-.9z"></path></svg>
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="#F59E0B" stroke="#F59E0B" stroke-width="1.5" stroke-linejoin="round"><path d="M12 2l3 6.5 7 .9-5 4.8 1.3 7-6.3-3.4-6.3 3.4 1.3-7-5-4.8 7-.9z"></path></svg>
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="#F59E0B" stroke="#F59E0B" stroke-width="1.5" stroke-linejoin="round"><path d="M12 2l3 6.5 7 .9-5 4.8 1.3 7-6.3-3.4-6.3 3.4 1.3-7-5-4.8 7-.9z"></path></svg>
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="#F59E0B" stroke="#F59E0B" stroke-width="1.5" stroke-linejoin="round"><path d="M12 2l3 6.5 7 .9-5 4.8 1.3 7-6.3-3.4-6.3 3.4 1.3-7-5-4.8 7-.9z"></path></svg>
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="1.8" stroke-linejoin="round"><path d="M12 2l3 6.5 7 .9-5 4.8 1.3 7-6.3-3.4-6.3 3.4 1.3-7-5-4.8 7-.9z"></path></svg>
+      </div>
+      <div style="font-size:12.5px; color:#94A3B8; margin-top:10px;">4 / 5 ulduz</div>
+    </div>
+
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:22px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;"><span style="font-size:11px; font-weight:700; letter-spacing:0.6px; color:#D97706; text-transform:uppercase;">Likert Scale · Survey</span><span style="font-family:'Geist Mono',monospace; font-size:11px; color:#CBD5E1;">11</span></div>
+      <div style="font-size:14.5px; font-weight:600; margin-bottom:16px;">"Platforma istifadəsi asandır."</div>
+      <div style="display:flex; gap:7px;">
+        <div style="flex:1; text-align:center; cursor:pointer;"><div style="height:38px; border-radius:8px; border:1px solid #E2E8F0; display:flex; align-items:center; justify-content:center; font-size:13px; color:#94A3B8;">😠</div><div style="font-size:10px; color:#94A3B8; margin-top:5px;">Tam yox</div></div>
+        <div style="flex:1; text-align:center; cursor:pointer;"><div style="height:38px; border-radius:8px; border:1px solid #E2E8F0; display:flex; align-items:center; justify-content:center; font-size:13px;">🙁</div><div style="font-size:10px; color:#94A3B8; margin-top:5px;">Yox</div></div>
+        <div style="flex:1; text-align:center; cursor:pointer;"><div style="height:38px; border-radius:8px; border:1px solid #E2E8F0; display:flex; align-items:center; justify-content:center; font-size:13px;">😐</div><div style="font-size:10px; color:#94A3B8; margin-top:5px;">Neytral</div></div>
+        <div style="flex:1; text-align:center; cursor:pointer;"><div style="height:38px; border-radius:8px; border:2px solid #2563EB; background:#EFF5FF; display:flex; align-items:center; justify-content:center; font-size:13px;">🙂</div><div style="font-size:10px; color:#1D4ED8; font-weight:600; margin-top:5px;">Razı</div></div>
+        <div style="flex:1; text-align:center; cursor:pointer;"><div style="height:38px; border-radius:8px; border:1px solid #E2E8F0; display:flex; align-items:center; justify-content:center; font-size:13px;">😀</div><div style="font-size:10px; color:#94A3B8; margin-top:5px;">Tam bəli</div></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+</sc-if>
+<sc-if value="{{ isDashboard }}" hint-placeholder-val="{{ true }}">
+<section data-screen-label="Admin Dashboard" style="min-height:840px; display:flex; background:#EEF1F6;">
+  <div style="width:62px; flex:none; background:#0E1B33; display:flex; flex-direction:column; align-items:center; padding:18px 0; gap:6px;">
+    <div style="width:36px; height:36px; border-radius:9px; background:linear-gradient(135deg,#3B82F6,#1D4ED8); display:flex; align-items:center; justify-content:center; margin-bottom:14px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg></div>
+    <div style="width:40px; height:40px; border-radius:10px; background:rgba(59,130,246,0.18); display:flex; align-items:center; justify-content:center; color:#60A5FA;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg></div>
+    <div style="width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#64748B;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg></div>
+    <div style="width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#64748B;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div>
+    <div style="width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#64748B;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M7 14l3-3 3 2 5-6"></path></svg></div>
+    <div style="margin-top:auto; width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#64748B;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-2.82 1.17V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15H4.5a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 6 9.4l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 11 4.6V4.5a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 2.82 1.17l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 11H21a2 2 0 1 1 0 4h-.09z"></path></svg></div>
+  </div>
+
+  <div style="flex:1; min-width:0; display:flex; flex-direction:column;">
+    <div style="height:62px; flex:none; background:#fff; border-bottom:1px solid #E6EAF1; display:flex; align-items:center; justify-content:space-between; padding:0 26px;">
+      <div style="font-size:17px; font-weight:700; letter-spacing:-0.3px;">Dashboard</div>
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="position:relative;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" style="position:absolute; left:11px; top:50%; transform:translateY(-50%);"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg><input placeholder="Axtar…" style="height:38px; width:220px; padding:0 12px 0 34px; border:1px solid #E2E8F0; border-radius:9px; font-family:inherit; font-size:13px; outline:none; background:#F8FAFC;"></div>
+        <div style="position:relative;"><div style="width:38px; height:38px; border-radius:9px; background:#F8FAFC; border:1px solid #E2E8F0; display:flex; align-items:center; justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"></path></svg></div><span style="position:absolute; top:-4px; right:-4px; min-width:17px; height:17px; padding:0 4px; border-radius:99px; background:#DC2626; color:#fff; font-size:10px; font-weight:700; display:flex; align-items:center; justify-content:center; border:2px solid #fff;">3</span></div>
+        <div style="display:flex; align-items:center; gap:9px; padding-left:6px;"><span style="width:36px; height:36px; border-radius:50%; background:#1D4ED8; color:#fff; font-size:13px; font-weight:600; display:flex; align-items:center; justify-content:center;">AÇ</span><div><div style="font-size:13px; font-weight:600; line-height:1.2;">Aysel Çıraqova</div><div style="font-size:11px; color:#94A3B8;">HR Admin</div></div></div>
+      </div>
+    </div>
+
+    <div style="flex:1; overflow:hidden; padding:26px;">
+      <div style="display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:22px;">
+        <div><div style="font-size:22px; font-weight:700; letter-spacing:-0.4px;">Xoş gəldin, Aysel 👋</div><div style="font-size:13.5px; color:#64748B; margin-top:3px;">26 İyun 2026 · Bu həftə 17 aktiv qiymətləndirmə var</div></div>
+        <button style="height:42px; padding:0 18px; border-radius:10px; border:none; background:#2563EB; color:#fff; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:8px; box-shadow:0 1px 2px rgba(37,99,235,0.4);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg> Yeni imtahan</button>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:18px;">
+        <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:18px;"><div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;"><div style="width:36px; height:36px; border-radius:10px; background:#EAF1FE; display:flex; align-items:center; justify-content:center;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg></div><span style="padding:2px 7px; border-radius:6px; background:#DCFCE7; color:#15803D; font-size:10.5px; font-weight:700; font-family:'Geist Mono',monospace;">+8%</span></div><div style="font-family:'Geist Mono',monospace; font-size:26px; font-weight:600;">248</div><div style="font-size:12.5px; color:#64748B;">Ümumi imtahan</div></div>
+        <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:18px;"><div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;"><div style="width:36px; height:36px; border-radius:10px; background:#DCFCE7; display:flex; align-items:center; justify-content:center;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg></div><span style="padding:2px 7px; border-radius:6px; background:#EFF5FF; color:#1D4ED8; font-size:10.5px; font-weight:700; font-family:'Geist Mono',monospace;">live</span></div><div style="font-family:'Geist Mono',monospace; font-size:26px; font-weight:600;">17</div><div style="font-size:12.5px; color:#64748B;">Aktiv qiymətləndirmə</div></div>
+        <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:18px;"><div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;"><div style="width:36px; height:36px; border-radius:10px; background:#F3E8FF; display:flex; align-items:center; justify-content:center;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7E22CE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M7 14l3-3 3 2 5-6"></path></svg></div><span style="padding:2px 7px; border-radius:6px; background:#DCFCE7; color:#15803D; font-size:10.5px; font-weight:700; font-family:'Geist Mono',monospace;">+3.2</span></div><div style="font-family:'Geist Mono',monospace; font-size:26px; font-weight:600;">74%</div><div style="font-size:12.5px; color:#64748B;">Orta nəticə</div></div>
+        <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:18px;"><div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;"><div style="width:36px; height:36px; border-radius:10px; background:#FEE2E2; display:flex; align-items:center; justify-content:center;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path><path d="M12 9v4M12 17h.01"></path></svg></div><span style="padding:2px 7px; border-radius:6px; background:#FEE2E2; color:#B91C1C; font-size:10.5px; font-weight:700; font-family:'Geist Mono',monospace;">12</span></div><div style="font-family:'Geist Mono',monospace; font-size:26px; font-weight:600;">12</div><div style="font-size:12.5px; color:#64748B;">Anti-cheat pozuntu</div></div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1.6fr 1fr; gap:18px; margin-bottom:18px;">
+        <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:22px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:22px;"><div style="font-size:15px; font-weight:650;">İmtahan iştirakı</div><div style="display:inline-flex; padding:3px; background:#F1F5F9; border-radius:8px;"><span style="padding:5px 12px; border-radius:6px; font-size:12px; font-weight:600; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,0.06);">6 ay</span><span style="padding:5px 12px; border-radius:6px; font-size:12px; font-weight:500; color:#64748B;">İl</span></div></div>
+          <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:14px; height:180px; padding-top:10px;">
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:8px; height:100%; justify-content:flex-end;"><div style="width:100%; max-width:38px; height:48%; border-radius:7px 7px 0 0; background:#DBEAFE;"></div><span style="font-size:11.5px; color:#94A3B8;">Yan</span></div>
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:8px; height:100%; justify-content:flex-end;"><div style="width:100%; max-width:38px; height:64%; border-radius:7px 7px 0 0; background:#BFDBFE;"></div><span style="font-size:11.5px; color:#94A3B8;">Fev</span></div>
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:8px; height:100%; justify-content:flex-end;"><div style="width:100%; max-width:38px; height:52%; border-radius:7px 7px 0 0; background:#DBEAFE;"></div><span style="font-size:11.5px; color:#94A3B8;">Mar</span></div>
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:8px; height:100%; justify-content:flex-end;"><div style="width:100%; max-width:38px; height:78%; border-radius:7px 7px 0 0; background:#93C5FD;"></div><span style="font-size:11.5px; color:#94A3B8;">Apr</span></div>
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:8px; height:100%; justify-content:flex-end;"><div style="width:100%; max-width:38px; height:66%; border-radius:7px 7px 0 0; background:#BFDBFE;"></div><span style="font-size:11.5px; color:#94A3B8;">May</span></div>
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:8px; height:100%; justify-content:flex-end;"><div style="width:100%; max-width:38px; height:92%; border-radius:7px 7px 0 0; background:#2563EB;"></div><span style="font-size:11.5px; color:#2563EB; font-weight:600;">İyun</span></div>
+          </div>
+        </div>
+        <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:22px;">
+          <div style="font-size:15px; font-weight:650; margin-bottom:16px;">Pass / Fail nisbəti</div>
+          <div style="display:flex; align-items:center; gap:20px;">
+            <div style="position:relative; width:118px; height:118px; flex:none;">
+              <svg width="118" height="118" viewBox="0 0 118 118">
+                <circle cx="59" cy="59" r="50" fill="none" stroke="#FEE2E2" stroke-width="16"></circle>
+                <circle cx="59" cy="59" r="50" fill="none" stroke="#16A34A" stroke-width="16" stroke-linecap="round" stroke-dasharray="314.2" stroke-dashoffset="100" transform="rotate(-90 59 59)"></circle>
+              </svg>
+              <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;"><div style="font-family:'Geist Mono',monospace; font-size:23px; font-weight:600;">68%</div><div style="font-size:10px; color:#94A3B8;">PASS</div></div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:13px;">
+              <div><div style="display:flex; align-items:center; gap:8px;"><span style="width:11px; height:11px; border-radius:3px; background:#16A34A;"></span><span style="font-size:13px; color:#334155; font-weight:500;">Pass</span></div><div style="font-family:'Geist Mono',monospace; font-size:18px; font-weight:600; margin-left:19px;">96</div></div>
+              <div><div style="display:flex; align-items:center; gap:8px;"><span style="width:11px; height:11px; border-radius:3px; background:#FCA5A5;"></span><span style="font-size:13px; color:#334155; font-weight:500;">Fail</span></div><div style="font-family:'Geist Mono',monospace; font-size:18px; font-weight:600; margin-left:19px;">46</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:0; overflow:hidden;">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 22px; border-bottom:1px solid #F1F5F9;"><div style="font-size:15px; font-weight:650;">Yaxınlaşan periodik imtahanlar</div><span style="font-size:13px; color:#2563EB; font-weight:600; cursor:pointer;">Hamısı →</span></div>
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 22px; border-bottom:1px solid #F8FAFC;"><div style="display:flex; align-items:center; gap:13px;"><span style="width:38px; height:38px; border-radius:10px; background:#EAF1FE; display:flex; align-items:center; justify-content:center;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg></span><div><div style="font-size:13.5px; font-weight:600;">Safety — Q3 Bilik Yoxlaması</div><div style="font-size:12px; color:#94A3B8;">Safety şöbəsi · 42 işçi</div></div></div><div style="display:flex; align-items:center; gap:14px;"><span style="display:inline-flex; align-items:center; gap:7px; padding:5px 12px; border-radius:99px; background:#FEF3C7; color:#B45309; font-size:12px; font-weight:650;"><span style="width:6px; height:6px; border-radius:50%; background:#D97706;"></span> 3 gün sonra</span></div></div>
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 22px; border-bottom:1px solid #F8FAFC;"><div style="display:flex; align-items:center; gap:13px;"><span style="width:38px; height:38px; border-radius:10px; background:#F3E8FF; display:flex; align-items:center; justify-content:center;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7E22CE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg></span><div><div style="font-size:13.5px; font-weight:600;">HR — Labor Law Refresher</div><div style="font-size:12px; color:#94A3B8;">HR şöbəsi · 18 işçi</div></div></div><span style="display:inline-flex; align-items:center; gap:7px; padding:5px 12px; border-radius:99px; background:#F1F5F9; color:#475569; font-size:12px; font-weight:650;"><span style="width:6px; height:6px; border-radius:50%; background:#94A3B8;"></span> 1 həftə sonra</span></div>
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 22px;"><div style="display:flex; align-items:center; gap:13px;"><span style="width:38px; height:38px; border-radius:10px; background:#DCFCE7; display:flex; align-items:center; justify-content:center;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg></span><div><div style="font-size:13.5px; font-weight:600;">Accounting — IFRS Update</div><div style="font-size:12px; color:#94A3B8;">Accounting şöbəsi · 11 işçi</div></div></div><span style="display:inline-flex; align-items:center; gap:7px; padding:5px 12px; border-radius:99px; background:#F1F5F9; color:#475569; font-size:12px; font-weight:650;"><span style="width:6px; height:6px; border-radius:50%; background:#94A3B8;"></span> 2 həftə sonra</span></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+</sc-if>
+<sc-if value="{{ isExam }}" hint-placeholder-val="{{ true }}">
+<section data-screen-label="Exam Screen" style="min-height:840px; background:#F4F6FA; display:flex; flex-direction:column;">
+  <div style="height:64px; flex:none; background:#fff; border-bottom:1px solid #E6EAF1; display:flex; align-items:center; justify-content:space-between; padding:0 28px;">
+    <div style="display:flex; align-items:center; gap:14px;">
+      <div style="width:36px; height:36px; border-radius:9px; background:linear-gradient(135deg,#3B82F6,#1D4ED8); display:flex; align-items:center; justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg></div>
+      <div><div style="font-size:14.5px; font-weight:650; letter-spacing:-0.2px;">Fire Safety — Q3 Bilik Yoxlaması</div><div style="font-size:12px; color:#94A3B8;">Rəşad Məmmədov · Safety</div></div>
+    </div>
+    <div style="display:flex; align-items:center; gap:16px;">
+      <div style="display:inline-flex; align-items:center; gap:7px; padding:6px 12px; border-radius:9px; background:#FFFBEB; border:1px solid #FDE68A;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"></path><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path></svg><span style="font-size:12px; font-weight:650; color:#B45309;">2/3 xəbərdarlıq</span></div>
+      <div style="display:inline-flex; align-items:center; gap:9px; padding:8px 16px; border-radius:11px; background:#0E1B33;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg><span style="font-family:'Geist Mono',monospace; font-size:18px; font-weight:600; color:#fff; letter-spacing:0.5px;">14:32</span></div>
+    </div>
+  </div>
+
+  <div style="height:5px; flex:none; background:#E6EAF1;"><div style="height:100%; width:46%; background:linear-gradient(90deg,#2563EB,#3B82F6);"></div></div>
+
+  <div style="flex:1; display:flex; gap:24px; padding:28px; max-width:1280px; margin:0 auto; width:100%; box-sizing:border-box;">
+    <div style="flex:1; min-width:0;">
+      <div style="background:#fff; border:1px solid #E6EAF1; border-radius:16px; padding:34px; box-shadow:0 1px 3px rgba(15,23,42,0.05);">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;">
+          <div style="display:flex; align-items:center; gap:12px;"><span style="font-family:'Geist Mono',monospace; font-size:13px; font-weight:600; color:#2563EB;">Sual 14 / 30</span><span style="padding:3px 10px; border-radius:99px; background:#EAF1FE; color:#1D4ED8; font-size:11.5px; font-weight:600;">Fire Safety</span><span style="padding:3px 10px; border-radius:99px; background:#F1F5F9; color:#475569; font-size:11.5px; font-weight:600;">Single Choice · 2 bal</span></div>
+          <button style="display:inline-flex; align-items:center; gap:7px; height:34px; padding:0 13px; border-radius:8px; border:1px solid #FDE68A; background:#FFFBEB; color:#B45309; font-family:inherit; font-size:12.5px; font-weight:600; cursor:pointer;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><path d="M4 22v-7"></path></svg> İşarələ</button>
+        </div>
+        <div style="font-size:21px; font-weight:650; line-height:1.4; letter-spacing:-0.3px; margin-bottom:26px;">Bina daxilində yanğın baş verdikdə təxliyə zamanı liftdən istifadə etmək olarmı, və niyə?</div>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <label style="display:flex; align-items:center; gap:14px; padding:16px 18px; border:1px solid #E2E8F0; border-radius:12px; cursor:pointer; transition:all .15s;" style-hover="border-color:#93C5FD; background:#F8FAFF;"><span style="width:26px; height:26px; border-radius:8px; background:#F1F5F9; color:#475569; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; flex:none;">A</span><span style="font-size:15px; color:#334155;">Bəli, lift daha sürətlidir</span></label>
+          <label style="display:flex; align-items:center; gap:14px; padding:16px 18px; border:2px solid #2563EB; border-radius:12px; background:#EFF5FF; cursor:pointer;"><span style="width:26px; height:26px; border-radius:8px; background:#2563EB; color:#fff; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; flex:none;">B</span><span style="font-size:15px; color:#1E40AF; font-weight:500;">Xeyr, lift dayana və ya tüstü ilə dolu ola bilər — pilləkəndən istifadə edilməlidir</span></label>
+          <label style="display:flex; align-items:center; gap:14px; padding:16px 18px; border:1px solid #E2E8F0; border-radius:12px; cursor:pointer; transition:all .15s;" style-hover="border-color:#93C5FD; background:#F8FAFF;"><span style="width:26px; height:26px; border-radius:8px; background:#F1F5F9; color:#475569; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; flex:none;">C</span><span style="font-size:15px; color:#334155;">Yalnız yük lifti ilə</span></label>
+          <label style="display:flex; align-items:center; gap:14px; padding:16px 18px; border:1px solid #E2E8F0; border-radius:12px; cursor:pointer; transition:all .15s;" style-hover="border-color:#93C5FD; background:#F8FAFF;"><span style="width:26px; height:26px; border-radius:8px; background:#F1F5F9; color:#475569; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; flex:none;">D</span><span style="font-size:15px; color:#334155;">Fərqi yoxdur</span></label>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-top:20px;">
+        <button style="height:46px; padding:0 22px; border-radius:11px; border:1px solid #E2E8F0; background:#fff; color:#475569; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:8px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg> Əvvəlki</button>
+        <div style="display:flex; align-items:center; gap:7px; font-size:12.5px; color:#94A3B8;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg> Avtomatik yadda saxlanıldı</div>
+        <button style="height:46px; padding:0 24px; border-radius:11px; border:none; background:#2563EB; color:#fff; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:8px; box-shadow:0 1px 2px rgba(37,99,235,0.4);">Növbəti <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></button>
+      </div>
+    </div>
+
+    <div style="width:268px; flex:none;">
+      <div style="background:#fff; border:1px solid #E6EAF1; border-radius:16px; padding:20px; box-shadow:0 1px 3px rgba(15,23,42,0.05);">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;"><span style="font-size:13.5px; font-weight:650;">Suallar</span><span style="font-family:'Geist Mono',monospace; font-size:12px; color:#94A3B8;">13/30</span></div>
+        <div style="display:grid; grid-template-columns:repeat(6,1fr); gap:7px; margin-bottom:18px;">
+          <span style="aspect-ratio:1; border-radius:8px; background:#2563EB; color:#fff; font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center; font-family:'Geist Mono',monospace;">1</span>
+          <span style="aspect-ratio:1; border-radius:8px; background:#2563EB; color:#fff; font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center; font-family:'Geist Mono',monospace;">2</span>
+          <span style="aspect-ratio:1; border-radius:8px; background:#2563EB; color:#fff; font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center; font-family:'Geist Mono',monospace;">3</span>
+          <span style="aspect-ratio:1; border-radius:8px; background:#FEF3C7; color:#B45309; font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center; font-family:'Geist Mono',monospace; border:1.5px solid #FCD34D;">4</span>
+          <span style="aspect-ratio:1; border-radius:8px; background:#2563EB; color:#fff; font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center; font-family:'Geist Mono',monospace;">5</span>
+          <span style="aspect-ratio:1; border-radius:8px; background:#2563EB; color:#fff; font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center; font-family:'Geist Mono',monospace;">6</span>
+          <span style="aspect-ratio:1; border-radius:8px; background:#2563EB; color:#fff; font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center; font-family:'Geist Mono',monospace;">7</span>
+          <span style="aspect-ratio:1; border-radius:8px; background:#2563EB; color:#fff; font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center; font-family:'Geist Mono',monospace;">8</span>
+          <span style="aspect-ratio:1; border-radius:8px; background:#F1F5F9; color:#94A3B8; font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center; font-family:'Geist Mono',monospace;">9</span>
+          <span style="aspect-ratio:1; border-radius:8px; background:#2563EB; color:#fff; font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center; font-family:'Geist Mono',monospace;">10</span>
+          <span style="aspect-ratio:1; border-radius:8px; background:#2563EB; color:#fff; font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center; font-family:'Geist Mono',monospace;">11</span>
+          <span style="aspect-ratio:1; border-radius:8px; background:#2563EB; color:#fff; font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center; font-family:'Geist Mono',monospace;">12</span>
+          <span style="aspect-ratio:1; border-radius:8px; background:#2563EB; color:#fff; font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center; font-family:'Geist Mono',monospace;">13</span>
+          <span style="aspect-ratio:1; border-radius:8px; background:#fff; color:#1D4ED8; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; font-family:'Geist Mono',monospace; border:2px solid #2563EB;">14</span>
+          <span style="aspect-ratio:1; border-radius:8px; background:#F1F5F9; color:#94A3B8; font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center; font-family:'Geist Mono',monospace;">15</span>
+          <span style="aspect-ratio:1; border-radius:8px; background:#F1F5F9; color:#94A3B8; font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center; font-family:'Geist Mono',monospace;">16</span>
+          <span style="aspect-ratio:1; border-radius:8px; background:#F1F5F9; color:#94A3B8; font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center; font-family:'Geist Mono',monospace;">17</span>
+          <span style="aspect-ratio:1; border-radius:8px; background:#F1F5F9; color:#94A3B8; font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center; font-family:'Geist Mono',monospace;">18</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:8px; padding-top:16px; border-top:1px solid #F1F5F9; margin-bottom:18px;">
+          <div style="display:flex; align-items:center; gap:9px; font-size:12px; color:#64748B;"><span style="width:13px; height:13px; border-radius:4px; background:#2563EB;"></span> Cavablanıb (13)</div>
+          <div style="display:flex; align-items:center; gap:9px; font-size:12px; color:#64748B;"><span style="width:13px; height:13px; border-radius:4px; background:#FEF3C7; border:1.5px solid #FCD34D;"></span> İşarələnib (1)</div>
+          <div style="display:flex; align-items:center; gap:9px; font-size:12px; color:#64748B;"><span style="width:13px; height:13px; border-radius:4px; background:#F1F5F9;"></span> Boş (16)</div>
+        </div>
+        <button style="width:100%; height:46px; border-radius:11px; border:none; background:#16A34A; color:#fff; font-family:inherit; font-size:14px; font-weight:650; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:8px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg> İmtahanı bitir</button>
+      </div>
+    </div>
+  </div>
+</section>
+</sc-if>
+<sc-if value="{{ isBank }}" hint-placeholder-val="{{ true }}">
+<section data-screen-label="Question Bank" style="min-height:840px; display:flex; background:#EEF1F6;">
+  <div style="width:62px; flex:none; background:#0E1B33; display:flex; flex-direction:column; align-items:center; padding:18px 0; gap:6px;">
+    <div style="width:36px; height:36px; border-radius:9px; background:linear-gradient(135deg,#3B82F6,#1D4ED8); display:flex; align-items:center; justify-content:center; margin-bottom:14px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg></div>
+    <div style="width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#64748B;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg></div>
+    <div style="width:40px; height:40px; border-radius:10px; background:rgba(59,130,246,0.18); display:flex; align-items:center; justify-content:center; color:#60A5FA;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg></div>
+    <div style="width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#64748B;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg></div>
+    <div style="width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#64748B;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M7 14l3-3 3 2 5-6"></path></svg></div>
+  </div>
+
+  <div style="flex:1; min-width:0; display:flex; flex-direction:column;">
+    <div style="height:62px; flex:none; background:#fff; border-bottom:1px solid #E6EAF1; display:flex; align-items:center; justify-content:space-between; padding:0 26px;">
+      <div style="display:flex; align-items:center; gap:9px;"><span style="font-size:17px; font-weight:700; letter-spacing:-0.3px;">Sual Bankı</span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"></path></svg><span style="font-size:15px; font-weight:600; color:#64748B;">Safety</span></div>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <button style="height:38px; padding:0 14px; border-radius:9px; border:1px solid #E2E8F0; background:#fff; font-family:inherit; font-size:13px; font-weight:600; color:#475569; cursor:pointer; display:inline-flex; align-items:center; gap:7px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path></svg> Import</button>
+        <button style="height:38px; padding:0 16px; border-radius:9px; border:none; background:#2563EB; color:#fff; font-family:inherit; font-size:13px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:7px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg> Yeni sual</button>
+      </div>
+    </div>
+
+    <div style="flex:1; display:flex; min-height:0;">
+      <div style="width:248px; flex:none; background:#fff; border-right:1px solid #E6EAF1; padding:18px 14px; overflow-y:auto;">
+        <div style="font-size:11px; font-weight:700; letter-spacing:0.8px; color:#94A3B8; text-transform:uppercase; padding:0 8px 10px;">Kateqoriyalar</div>
+        <div style="margin-bottom:4px;">
+          <div style="display:flex; align-items:center; gap:8px; padding:9px 10px; border-radius:8px; background:#EFF5FF; cursor:pointer;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7l8 4v11l-8-4z"></path><path d="M10 11l8-4M10 22l8-4V7M2 7l8-4 8 4"></path></svg><span style="font-size:13.5px; font-weight:650; color:#1D4ED8; flex:1;">Safety</span><span style="font-family:'Geist Mono',monospace; font-size:11px; color:#60A5FA;">42</span></div>
+          <div style="padding-left:14px; margin-top:2px;">
+            <div style="display:flex; align-items:center; gap:9px; padding:8px 10px; border-radius:8px; background:#2563EB; cursor:pointer; margin:2px 0;"><span style="width:5px; height:5px; border-radius:50%; background:#fff;"></span><span style="font-size:13px; color:#fff; font-weight:500; flex:1;">PPE</span><span style="font-family:'Geist Mono',monospace; font-size:11px; color:#BFDBFE;">14</span></div>
+            <div style="display:flex; align-items:center; gap:9px; padding:8px 10px; border-radius:8px; cursor:pointer; margin:2px 0;"><span style="width:5px; height:5px; border-radius:50%; background:#CBD5E1;"></span><span style="font-size:13px; color:#475569; flex:1;">Fire Safety</span><span style="font-family:'Geist Mono',monospace; font-size:11px; color:#94A3B8;">18</span></div>
+            <div style="display:flex; align-items:center; gap:9px; padding:8px 10px; border-radius:8px; cursor:pointer; margin:2px 0;"><span style="width:5px; height:5px; border-radius:50%; background:#CBD5E1;"></span><span style="font-size:13px; color:#475569; flex:1;">First Aid</span><span style="font-family:'Geist Mono',monospace; font-size:11px; color:#94A3B8;">10</span></div>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px; padding:9px 10px; border-radius:8px; cursor:pointer;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7E22CE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7l8 4v11l-8-4z"></path><path d="M10 11l8-4M10 22l8-4V7M2 7l8-4 8 4"></path></svg><span style="font-size:13.5px; font-weight:500; color:#334155; flex:1;">HR</span><span style="font-family:'Geist Mono',monospace; font-size:11px; color:#94A3B8;">31</span></div>
+        <div style="display:flex; align-items:center; gap:8px; padding:9px 10px; border-radius:8px; cursor:pointer;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7l8 4v11l-8-4z"></path><path d="M10 11l8-4M10 22l8-4V7M2 7l8-4 8 4"></path></svg><span style="font-size:13.5px; font-weight:500; color:#334155; flex:1;">Accounting</span><span style="font-family:'Geist Mono',monospace; font-size:11px; color:#94A3B8;">27</span></div>
+      </div>
+
+      <div style="flex:1; min-width:0; padding:22px 26px; overflow-y:auto;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;">
+          <div><div style="font-size:18px; font-weight:700; letter-spacing:-0.3px;">PPE</div><div style="font-size:13px; color:#64748B; margin-top:2px;">14 sual · Safety kateqoriyası</div></div>
+          <div style="position:relative;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" style="position:absolute; left:11px; top:50%; transform:translateY(-50%);"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg><input placeholder="Sual axtar…" style="height:38px; width:240px; padding:0 12px 0 34px; border:1px solid #E2E8F0; border-radius:9px; font-family:inherit; font-size:13px; outline:none; background:#fff;"></div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:11px;">
+          <div style="background:#fff; border:1px solid #E6EAF1; border-radius:13px; padding:18px 20px; box-shadow:0 1px 2px rgba(15,23,42,0.04);">
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px;">
+              <div style="flex:1;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:9px;"><span style="font-family:'Geist Mono',monospace; font-size:11.5px; color:#94A3B8;">#PPE-014</span><span style="padding:2px 8px; border-radius:6px; background:#EAF1FE; color:#1D4ED8; font-size:11px; font-weight:600;">Single Choice</span><span style="padding:2px 8px; border-radius:6px; background:#DCFCE7; color:#15803D; font-size:11px; font-weight:600;">2 bal</span></div>
+                <div style="font-size:14.5px; font-weight:600; line-height:1.4;">PPE-yə hansı qoruyucu vasitə aiddir?</div>
+              </div>
+              <div style="display:flex; gap:6px; flex:none;"><button style="width:34px; height:34px; border-radius:8px; border:1px solid #E2E8F0; background:#fff; color:#475569; cursor:pointer; display:flex; align-items:center; justify-content:center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z"></path></svg></button><button style="width:34px; height:34px; border-radius:8px; border:1px solid #FECACA; background:#FEF2F2; color:#DC2626; cursor:pointer; display:flex; align-items:center; justify-content:center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button></div>
+            </div>
+          </div>
+          <div style="background:#fff; border:1px solid #E6EAF1; border-radius:13px; padding:18px 20px; box-shadow:0 1px 2px rgba(15,23,42,0.04);">
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px;">
+              <div style="flex:1;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:9px;"><span style="font-family:'Geist Mono',monospace; font-size:11.5px; color:#94A3B8;">#PPE-013</span><span style="padding:2px 8px; border-radius:6px; background:#F3E8FF; color:#7E22CE; font-size:11px; font-weight:600;">Multiple Choice</span><span style="padding:2px 8px; border-radius:6px; background:#DCFCE7; color:#15803D; font-size:11px; font-weight:600;">3 bal</span></div>
+                <div style="font-size:14.5px; font-weight:600; line-height:1.4;">Hansı hallarda təhlükəsizlik dəbilqəsi mütləqdir? (çoxlu)</div>
+              </div>
+              <div style="display:flex; gap:6px; flex:none;"><button style="width:34px; height:34px; border-radius:8px; border:1px solid #E2E8F0; background:#fff; color:#475569; cursor:pointer; display:flex; align-items:center; justify-content:center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z"></path></svg></button><button style="width:34px; height:34px; border-radius:8px; border:1px solid #FECACA; background:#FEF2F2; color:#DC2626; cursor:pointer; display:flex; align-items:center; justify-content:center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button></div>
+            </div>
+          </div>
+          <div style="background:#fff; border:1px solid #E6EAF1; border-radius:13px; padding:18px 20px; box-shadow:0 1px 2px rgba(15,23,42,0.04);">
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px;">
+              <div style="flex:1;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:9px;"><span style="font-family:'Geist Mono',monospace; font-size:11.5px; color:#94A3B8;">#PPE-012</span><span style="padding:2px 8px; border-radius:6px; background:#F1F5F9; color:#475569; font-size:11px; font-weight:600;">True / False</span><span style="padding:2px 8px; border-radius:6px; background:#DCFCE7; color:#15803D; font-size:11px; font-weight:600;">1 bal</span></div>
+                <div style="font-size:14.5px; font-weight:600; line-height:1.4;">Qoruyucu eynək yalnız laboratoriyada lazımdır.</div>
+              </div>
+              <div style="display:flex; gap:6px; flex:none;"><button style="width:34px; height:34px; border-radius:8px; border:1px solid #E2E8F0; background:#fff; color:#475569; cursor:pointer; display:flex; align-items:center; justify-content:center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z"></path></svg></button><button style="width:34px; height:34px; border-radius:8px; border:1px solid #FECACA; background:#FEF2F2; color:#DC2626; cursor:pointer; display:flex; align-items:center; justify-content:center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:20px; padding:18px 20px; border:1px dashed #BFDBFE; border-radius:13px; background:#F8FAFF; display:flex; align-items:center; gap:14px;">
+          <div style="width:40px; height:40px; border-radius:10px; background:#EAF1FE; display:flex; align-items:center; justify-content:center; flex:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18"></path></svg></div>
+          <div style="flex:1;"><div style="font-size:13.5px; font-weight:650; color:#1E40AF;">İmtahan formalaşdırma</div><div style="font-size:12.5px; color:#1D4ED8;">Mövzudan neçə sual seçiləcəyini təyin edin — sistem hər iştirakçı üçün təsadüfi seçəcək.</div></div>
+          <div style="display:flex; align-items:center; gap:8px; flex:none;"><span style="font-size:12.5px; color:#475569;">PPE-dən</span><div style="display:flex; align-items:center; border:1px solid #BFDBFE; border-radius:8px; overflow:hidden; background:#fff;"><button style="width:30px; height:34px; border:none; background:transparent; color:#475569; font-size:16px; cursor:pointer;">−</button><span style="width:34px; text-align:center; font-family:'Geist Mono',monospace; font-size:14px; font-weight:600;">5</span><button style="width:30px; height:34px; border:none; background:transparent; color:#475569; font-size:16px; cursor:pointer;">+</button></div><span style="font-size:12.5px; color:#475569;">sual</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</sc-if>
+<sc-if value="{{ isAnalytics }}" hint-placeholder-val="{{ true }}">
+<section data-screen-label="Analytics" style="min-height:840px; display:flex; flex-direction:column; background:#EEF1F6;">
+  <div style="height:62px; flex:none; background:#fff; border-bottom:1px solid #E6EAF1; display:flex; align-items:center; justify-content:space-between; padding:0 30px;">
+    <div style="font-size:17px; font-weight:700; letter-spacing:-0.3px;">Analitika</div>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <div style="display:inline-flex; align-items:center; gap:8px; height:38px; padding:0 14px; border:1px solid #E2E8F0; border-radius:9px; background:#fff; font-size:13px; font-weight:600; color:#475569; cursor:pointer;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg> Son 6 ay <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></div>
+      <button style="height:38px; padding:0 16px; border-radius:9px; border:none; background:#2563EB; color:#fff; font-family:inherit; font-size:13px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:7px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg> Hesabat (PDF)</button>
+    </div>
+  </div>
+
+  <div style="flex:1; padding:26px 30px;">
+    <div style="display:grid; grid-template-columns:1.7fr 1fr; gap:18px; margin-bottom:18px;">
+      <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:24px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;"><div style="font-size:15px; font-weight:650;">Keçid faizinin dinamikası</div><div style="display:flex; gap:14px;"><span style="display:inline-flex; align-items:center; gap:6px; font-size:12px; color:#64748B;"><span style="width:10px; height:3px; border-radius:2px; background:#2563EB;"></span> Keçid %</span><span style="display:inline-flex; align-items:center; gap:6px; font-size:12px; color:#64748B;"><span style="width:10px; height:3px; border-radius:2px; background:#CBD5E1;"></span> Orta bal</span></div></div>
+        <svg viewBox="0 0 560 200" style="width:100%; height:200px; overflow:visible;">
+          <line x1="20" y1="40" x2="560" y2="40" stroke="#F1F5F9" stroke-width="1"></line>
+          <line x1="20" y1="90" x2="560" y2="90" stroke="#F1F5F9" stroke-width="1"></line>
+          <line x1="20" y1="140" x2="560" y2="140" stroke="#F1F5F9" stroke-width="1"></line>
+          <line x1="20" y1="190" x2="560" y2="190" stroke="#E2E8F0" stroke-width="1"></line>
+          <polyline points="40,150 140,128 240,135 340,100 440,84 540,68" fill="none" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
+          <polygon points="40,128 140,108 240,112 340,76 440,58 540,42 540,190 40,190" fill="#2563EB" opacity="0.08"></polygon>
+          <polyline points="40,128 140,108 240,112 340,76 440,58 540,42" fill="none" stroke="#2563EB" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
+          <circle cx="540" cy="42" r="5" fill="#2563EB" stroke="#fff" stroke-width="2.5"></circle>
+          <text x="40" y="200" font-size="11" fill="#94A3B8" font-family="Geist">Yan</text>
+          <text x="135" y="200" font-size="11" fill="#94A3B8" font-family="Geist">Fev</text>
+          <text x="236" y="200" font-size="11" fill="#94A3B8" font-family="Geist">Mar</text>
+          <text x="338" y="200" font-size="11" fill="#94A3B8" font-family="Geist">Apr</text>
+          <text x="436" y="200" font-size="11" fill="#94A3B8" font-family="Geist">May</text>
+          <text x="528" y="200" font-size="11" fill="#2563EB" font-weight="600" font-family="Geist">İyun</text>
+        </svg>
+      </div>
+      <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:24px;">
+        <div style="font-size:15px; font-weight:650; margin-bottom:18px;">Sual növü bölgüsü</div>
+        <div style="display:flex; align-items:center; gap:22px;">
+          <div style="position:relative; width:120px; height:120px; flex:none;">
+            <svg width="120" height="120" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="48" fill="none" stroke="#2563EB" stroke-width="22" stroke-dasharray="135 167" transform="rotate(-90 60 60)"></circle>
+              <circle cx="60" cy="60" r="48" fill="none" stroke="#7C3AED" stroke-width="22" stroke-dasharray="75 227" stroke-dashoffset="-135" transform="rotate(-90 60 60)"></circle>
+              <circle cx="60" cy="60" r="48" fill="none" stroke="#0891B2" stroke-width="22" stroke-dasharray="54 248" stroke-dashoffset="-210" transform="rotate(-90 60 60)"></circle>
+              <circle cx="60" cy="60" r="48" fill="none" stroke="#E2E8F0" stroke-width="22" stroke-dasharray="38 264" stroke-dashoffset="-264" transform="rotate(-90 60 60)"></circle>
+            </svg>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:11px; flex:1;">
+            <div style="display:flex; align-items:center; gap:8px;"><span style="width:10px; height:10px; border-radius:3px; background:#2563EB;"></span><span style="font-size:12.5px; color:#334155; flex:1;">Single Choice</span><span style="font-family:'Geist Mono',monospace; font-size:12px; font-weight:600;">45%</span></div>
+            <div style="display:flex; align-items:center; gap:8px;"><span style="width:10px; height:10px; border-radius:3px; background:#7C3AED;"></span><span style="font-size:12.5px; color:#334155; flex:1;">Multiple</span><span style="font-family:'Geist Mono',monospace; font-size:12px; font-weight:600;">25%</span></div>
+            <div style="display:flex; align-items:center; gap:8px;"><span style="width:10px; height:10px; border-radius:3px; background:#0891B2;"></span><span style="font-size:12.5px; color:#334155; flex:1;">True/False</span><span style="font-family:'Geist Mono',monospace; font-size:12px; font-weight:600;">18%</span></div>
+            <div style="display:flex; align-items:center; gap:8px;"><span style="width:10px; height:10px; border-radius:3px; background:#E2E8F0;"></span><span style="font-size:12.5px; color:#334155; flex:1;">Açıq cavab</span><span style="font-family:'Geist Mono',monospace; font-size:12px; font-weight:600;">12%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:18px;">
+      <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:24px;">
+        <div style="font-size:15px; font-weight:650; margin-bottom:18px;">Şöbələr üzrə performans</div>
+        <div style="display:flex; flex-direction:column; gap:15px;">
+          <div><div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span style="font-size:13px; color:#334155; font-weight:500;">Safety</span><span style="font-family:'Geist Mono',monospace; font-size:12.5px; font-weight:600;">88%</span></div><div style="height:9px; border-radius:99px; background:#F1F5F9; overflow:hidden;"><div style="height:100%; width:88%; border-radius:99px; background:#16A34A;"></div></div></div>
+          <div><div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span style="font-size:13px; color:#334155; font-weight:500;">HR</span><span style="font-family:'Geist Mono',monospace; font-size:12.5px; font-weight:600;">76%</span></div><div style="height:9px; border-radius:99px; background:#F1F5F9; overflow:hidden;"><div style="height:100%; width:76%; border-radius:99px; background:#2563EB;"></div></div></div>
+          <div><div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span style="font-size:13px; color:#334155; font-weight:500;">Accounting</span><span style="font-family:'Geist Mono',monospace; font-size:12.5px; font-weight:600;">63%</span></div><div style="height:9px; border-radius:99px; background:#F1F5F9; overflow:hidden;"><div style="height:100%; width:63%; border-radius:99px; background:#D97706;"></div></div></div>
+          <div><div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span style="font-size:13px; color:#334155; font-weight:500;">IT</span><span style="font-family:'Geist Mono',monospace; font-size:12.5px; font-weight:600;">48%</span></div><div style="height:9px; border-radius:99px; background:#F1F5F9; overflow:hidden;"><div style="height:100%; width:48%; border-radius:99px; background:#DC2626;"></div></div></div>
+        </div>
+      </div>
+      <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:24px;">
+        <div style="font-size:15px; font-weight:650; margin-bottom:6px;">Ən çətin suallar</div>
+        <div style="font-size:12.5px; color:#94A3B8; margin-bottom:16px;">Ən aşağı düzgün cavab faizinə malik suallar</div>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div style="display:flex; align-items:center; gap:12px;"><span style="font-family:'Geist Mono',monospace; font-size:11px; color:#94A3B8; width:56px; flex:none;">#TAX-08</span><span style="font-size:13px; color:#334155; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">IFRS 16 lizinq uçotu…</span><span style="padding:2px 9px; border-radius:6px; background:#FEE2E2; color:#B91C1C; font-size:11.5px; font-weight:700; font-family:'Geist Mono',monospace;">23%</span></div>
+          <div style="display:flex; align-items:center; gap:12px;"><span style="font-family:'Geist Mono',monospace; font-size:11px; color:#94A3B8; width:56px; flex:none;">#FIR-12</span><span style="font-size:13px; color:#334155; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Yanğınsöndürən növləri…</span><span style="padding:2px 9px; border-radius:6px; background:#FEE2E2; color:#B91C1C; font-size:11.5px; font-weight:700; font-family:'Geist Mono',monospace;">31%</span></div>
+          <div style="display:flex; align-items:center; gap:12px;"><span style="font-family:'Geist Mono',monospace; font-size:11px; color:#94A3B8; width:56px; flex:none;">#HR-19</span><span style="font-size:13px; color:#334155; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Əmək məcəlləsi maddə 70…</span><span style="padding:2px 9px; border-radius:6px; background:#FEF3C7; color:#B45309; font-size:11.5px; font-weight:700; font-family:'Geist Mono',monospace;">44%</span></div>
+          <div style="display:flex; align-items:center; gap:12px;"><span style="font-family:'Geist Mono',monospace; font-size:11px; color:#94A3B8; width:56px; flex:none;">#PPE-07</span><span style="font-size:13px; color:#334155; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Respirator filtr sinifləri…</span><span style="padding:2px 9px; border-radius:6px; background:#FEF3C7; color:#B45309; font-size:11.5px; font-weight:700; font-family:'Geist Mono',monospace;">52%</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:24px;">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:18px;"><div style="font-size:15px; font-weight:650;">Anti-cheat jurnalı</div><span style="padding:2px 9px; border-radius:99px; background:#FEE2E2; color:#B91C1C; font-size:11.5px; font-weight:700; font-family:'Geist Mono',monospace;">12 hadisə</span></div>
+      <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:14px;">
+        <div style="padding:16px; border-radius:11px; background:#FFFBEB; border:1px solid #FDE68A;"><div style="font-family:'Geist Mono',monospace; font-size:24px; font-weight:600; color:#B45309;">7</div><div style="font-size:12.5px; color:#92722B; margin-top:2px;">Tab dəyişdirmə</div></div>
+        <div style="padding:16px; border-radius:11px; background:#FEF2F2; border:1px solid #FECACA;"><div style="font-family:'Geist Mono',monospace; font-size:24px; font-weight:600; color:#B91C1C;">3</div><div style="font-size:12.5px; color:#9B2C2C; margin-top:2px;">DevTools cəhdi</div></div>
+        <div style="padding:16px; border-radius:11px; background:#F8FAFC; border:1px solid #E2E8F0;"><div style="font-family:'Geist Mono',monospace; font-size:24px; font-weight:600; color:#475569;">2</div><div style="font-size:12.5px; color:#64748B; margin-top:2px;">Copy cəhdi</div></div>
+        <div style="padding:16px; border-radius:11px; background:#FEF2F2; border:1px solid #FECACA;"><div style="font-family:'Geist Mono',monospace; font-size:24px; font-weight:600; color:#B91C1C;">2</div><div style="font-size:12.5px; color:#9B2C2C; margin-top:2px;">Avtomatik bitmə</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+</sc-if>
+<sc-if value="{{ isEmployee }}" hint-placeholder-val="{{ true }}">
+<section data-screen-label="Employee Panel" style="min-height:840px; display:flex; flex-direction:column; background:#EEF1F6;">
+  <div style="height:62px; flex:none; background:#fff; border-bottom:1px solid #E6EAF1; display:flex; align-items:center; justify-content:space-between; padding:0 30px;">
+    <div style="display:flex; align-items:center; gap:11px;">
+      <div style="width:34px; height:34px; border-radius:9px; background:linear-gradient(135deg,#3B82F6,#1D4ED8); display:flex; align-items:center; justify-content:center;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg></div>
+      <span style="font-size:16px; font-weight:700; letter-spacing:-0.3px;">Mənim Qiymətləndirmələrim</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:9px;"><span style="width:34px; height:34px; border-radius:50%; background:#1D4ED8; color:#fff; font-size:12.5px; font-weight:600; display:flex; align-items:center; justify-content:center;">RM</span><div><div style="font-size:13px; font-weight:600; line-height:1.2;">Rəşad Məmmədov</div><div style="font-size:11px; color:#94A3B8;">Safety şöbəsi</div></div></div>
+  </div>
+
+  <div style="flex:1; padding:28px 30px; max-width:1080px; margin:0 auto; width:100%; box-sizing:border-box;">
+    <div style="background:linear-gradient(120deg,#0E1B33,#1D3A6B); border-radius:16px; padding:26px 28px; color:#fff; display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; position:relative; overflow:hidden;">
+      <div style="position:absolute; right:-40px; top:-40px; width:200px; height:200px; border-radius:50%; background:radial-gradient(circle,rgba(59,130,246,0.3),transparent 70%);"></div>
+      <div style="position:relative;">
+        <div style="font-size:13px; color:#9FB3D1; margin-bottom:6px;">Növbəti təyin olunmuş imtahan</div>
+        <div style="font-size:21px; font-weight:700; letter-spacing:-0.3px; margin-bottom:10px;">Fire Safety — Q3 Bilik Yoxlaması</div>
+        <div style="display:flex; gap:18px;"><span style="display:inline-flex; align-items:center; gap:7px; font-size:13px; color:#9FB3D1;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg> 25 dəqiqə · 30 sual</span><span style="display:inline-flex; align-items:center; gap:7px; font-size:13px; color:#9FB3D1;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg> Son tarix: 29 İyun</span></div>
+      </div>
+      <button style="position:relative; height:48px; padding:0 26px; border-radius:12px; border:none; background:#fff; color:#1D4ED8; font-family:inherit; font-size:15px; font-weight:650; cursor:pointer; display:inline-flex; align-items:center; gap:9px; box-shadow:0 8px 20px rgba(0,0,0,0.2);">İmtahana başla <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></button>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:22px;">
+      <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:20px;"><div style="font-family:'Geist Mono',monospace; font-size:26px; font-weight:600;">12</div><div style="font-size:13px; color:#64748B; margin-top:2px;">Tamamlanmış</div></div>
+      <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:20px;"><div style="font-family:'Geist Mono',monospace; font-size:26px; font-weight:600; color:#16A34A;">83%</div><div style="font-size:13px; color:#64748B; margin-top:2px;">Orta nəticəm</div></div>
+      <div style="background:#fff; border:1px solid #E6EAF1; border-radius:14px; padding:20px;"><div style="font-family:'Geist Mono',monospace; font-size:26px; font-weight:600; color:#D97706;">1</div><div style="font-size:13px; color:#64748B; margin-top:2px;">Gözləyən</div></div>
+    </div>
+
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;"><div style="font-size:16px; font-weight:650;">Keçmiş nəticələrim</div><div style="display:inline-flex; padding:3px; background:#fff; border:1px solid #E6EAF1; border-radius:8px;"><span style="padding:5px 12px; border-radius:6px; font-size:12px; font-weight:600; background:#2563EB; color:#fff;">Hamısı</span><span style="padding:5px 12px; border-radius:6px; font-size:12px; font-weight:500; color:#64748B;">Pass</span><span style="padding:5px 12px; border-radius:6px; font-size:12px; font-weight:500; color:#64748B;">Fail</span></div></div>
+
+    <div style="display:flex; flex-direction:column; gap:11px;">
+      <div style="background:#fff; border:1px solid #E6EAF1; border-radius:13px; padding:16px 20px; display:flex; align-items:center; gap:16px;">
+        <div style="width:44px; height:44px; border-radius:11px; background:#DCFCE7; display:flex; align-items:center; justify-content:center; flex:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></div>
+        <div style="flex:1;"><div style="font-size:14.5px; font-weight:600;">PPE Əsasları</div><div style="font-size:12.5px; color:#94A3B8;">Safety · 14 İyun 2026</div></div>
+        <div style="text-align:right;"><div style="font-family:'Geist Mono',monospace; font-size:17px; font-weight:600;">92%</div><div style="font-size:11.5px; color:#94A3B8;">26/28 bal</div></div>
+        <span style="display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border-radius:99px; background:#DCFCE7; color:#15803D; font-size:12px; font-weight:650; flex:none;">Pass</span>
+        <button style="width:34px; height:34px; border-radius:8px; border:1px solid #E2E8F0; background:#fff; color:#475569; cursor:pointer; display:flex; align-items:center; justify-content:center; flex:none;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></button>
+      </div>
+      <div style="background:#fff; border:1px solid #E6EAF1; border-radius:13px; padding:16px 20px; display:flex; align-items:center; gap:16px;">
+        <div style="width:44px; height:44px; border-radius:11px; background:#DCFCE7; display:flex; align-items:center; justify-content:center; flex:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></div>
+        <div style="flex:1;"><div style="font-size:14.5px; font-weight:600;">First Aid Təlimi</div><div style="font-size:12.5px; color:#94A3B8;">Safety · 2 May 2026</div></div>
+        <div style="text-align:right;"><div style="font-family:'Geist Mono',monospace; font-size:17px; font-weight:600;">78%</div><div style="font-size:11.5px; color:#94A3B8;">18/23 bal</div></div>
+        <span style="display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border-radius:99px; background:#DCFCE7; color:#15803D; font-size:12px; font-weight:650; flex:none;">Pass</span>
+        <button style="width:34px; height:34px; border-radius:8px; border:1px solid #E2E8F0; background:#fff; color:#475569; cursor:pointer; display:flex; align-items:center; justify-content:center; flex:none;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></button>
+      </div>
+      <div style="background:#fff; border:1px solid #E6EAF1; border-radius:13px; padding:16px 20px; display:flex; align-items:center; gap:16px;">
+        <div style="width:44px; height:44px; border-radius:11px; background:#FEE2E2; display:flex; align-items:center; justify-content:center; flex:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"></path></svg></div>
+        <div style="flex:1;"><div style="font-size:14.5px; font-weight:600;">Fire Safety — Q2</div><div style="font-size:12.5px; color:#94A3B8;">Safety · 18 Mart 2026 · <span style="color:#2563EB; font-weight:600; cursor:pointer;">Təkrar imtahan mümkündür</span></div></div>
+        <div style="text-align:right;"><div style="font-family:'Geist Mono',monospace; font-size:17px; font-weight:600;">44%</div><div style="font-size:11.5px; color:#94A3B8;">13/30 bal</div></div>
+        <span style="display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border-radius:99px; background:#FEE2E2; color:#B91C1C; font-size:12px; font-weight:650; flex:none;">Fail</span>
+        <button style="width:34px; height:34px; border-radius:8px; border:1px solid #E2E8F0; background:#fff; color:#475569; cursor:pointer; display:flex; align-items:center; justify-content:center; flex:none;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></button>
+      </div>
+    </div>
+  </div>
+</section>
+</sc-if>
+
+  </main>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { section: 'overview' };
+
+  nav() {
+    return [
+      { header: 'Foundations', items: [['overview','Overview'],['colors','Color System'],['type','Typography'],['elevation','Spacing & Elevation']] },
+      { header: 'Components', items: [['buttons','Buttons'],['forms','Forms & Inputs'],['badges','Badges & Status'],['cards','Cards & Stats'],['tables','Data Tables'],['feedback','Tabs & Feedback'],['questions','Question Types']] },
+      { header: 'Screens', items: [['dashboard','Admin Dashboard'],['analytics','Analytics'],['bank','Question Bank'],['exam','Exam Screen'],['employee','Employee Panel']] },
+    ];
+  }
+
+  renderVals() {
+    const cur = this.state.section;
+    const go = (id) => () => this.setState({ section: id });
+    const navItems = [];
+    for (const g of this.nav()) {
+      navItems.push({ isHeader: true, isItem: false, label: g.header });
+      for (const [id, label] of g.items) {
+        const active = cur === id;
+        const style = [
+          'display:flex','align-items:center','justify-content:space-between',
+          'padding:8px 11px','margin:1px 0','border-radius:8px','cursor:pointer',
+          'font-size:13px','transition:all .14s ease',
+          active ? 'background:rgba(59,130,246,0.16)' : 'background:transparent',
+          active ? 'color:#fff' : 'color:#94A3B8',
+          active ? 'font-weight:600' : 'font-weight:500',
+        ].join(';');
+        navItems.push({ isHeader: false, isItem: true, label, active, style, onClick: go(id) });
+      }
+    }
+    const is = (id) => cur === id;
+    return {
+      navItems,
+      isOverview: is('overview'), isColors: is('colors'), isType: is('type'), isElevation: is('elevation'),
+      isButtons: is('buttons'), isForms: is('forms'), isBadges: is('badges'), isCards: is('cards'),
+      isTables: is('tables'), isFeedback: is('feedback'), isQuestions: is('questions'),
+      isDashboard: is('dashboard'), isAnalytics: is('analytics'), isBank: is('bank'),
+      isExam: is('exam'), isEmployee: is('employee'),
+    };
+  }
+}
+</script>
+</body>
+</html>
