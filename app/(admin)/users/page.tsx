@@ -2,130 +2,114 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { Plus, Pencil, Ban } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import type { User } from "@/lib/types";
-import styles from "../admin.module.css";
+import { PageHeader } from "@/components/app/PageHeader";
+import { Table, Tr, Td } from "@/components/ui/Table";
+import { Avatar } from "@/components/ui/Avatar";
+import { RoleBadge } from "@/components/ui/Badge";
+import { buttonClasses } from "@/components/ui/Button";
+import { Loading } from "@/components/ui/Feedback";
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const loadUsers = useCallback(async () => {
+  const load = useCallback(async () => {
     try {
-      const data = await apiFetch<User[]>("/api/v1/users");
-      setUsers(data);
+      setUsers(await apiFetch<User[]>("/api/v1/users"));
       setError("");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load users");
+      setError(e instanceof Error ? e.message : "İstifadəçilər yüklənmədi");
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    loadUsers();
-  }, [loadUsers]);
+    load();
+  }, [load]);
 
-  const handleDeactivate = async (id: number) => {
-    if (!confirm("Deactivate this user?")) return;
+  const deactivate = async (id: number) => {
+    if (!confirm("Bu istifadəçini deaktiv etmək istəyirsiniz?")) return;
     try {
       await apiFetch(`/api/v1/users/${id}`, { method: "DELETE" });
-      await loadUsers();
+      await load();
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Failed to deactivate user");
+      alert(e instanceof Error ? e.message : "Deaktiv edilmədi");
     }
   };
 
   return (
-    <div>
-      <div className={styles.pageHeader}>
-        <h1 className={styles.title}>Users</h1>
-        <Link href="/users/create" className={styles.primaryBtn}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-          Add New User
-        </Link>
-      </div>
+    <div className="mx-auto max-w-[1200px]">
+      <PageHeader
+        title="İstifadəçilər"
+        subtitle="Əməkdaşları və rollarını idarə edin"
+        action={
+          <Link href="/users/create" className={buttonClasses("primary", "md")}>
+            <Plus size={17} /> Yeni istifadəçi
+          </Link>
+        }
+      />
 
-      {error && <div className={styles.error}>{error}</div>}
+      {error && <div className="mb-4 rounded-[11px] border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[13px] text-danger-fg">{error}</div>}
 
-      <div className={styles.card} style={{ padding: 0, overflow: "auto" }}>
-        {loading ? (
-          <p style={{ padding: "1.5rem", color: "var(--text-secondary)" }}>Loading...</p>
-        ) : (
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Department</th>
-                <th>Roles</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => (
-                <tr key={user.id}>
-                  <td style={{ fontWeight: 500 }}>
-                    {user.firstName} {user.lastName}
-                  </td>
-                  <td style={{ color: "var(--text-secondary)" }}>{user.email}</td>
-                  <td>{user.departmentName || "-"}</td>
-                  <td>
-                    <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                      {user.roles.map((role) => (
-                        <span key={role.id} className={styles.badge}>
-                          {role.name.replace("ROLE_", "")}
-                        </span>
-                      ))}
-                    </div>
-                  </td>
-                  <td>
-                    <span className={`${styles.badge} ${user.status === "ACTIVE" ? styles.active : ""}`}>
-                      {user.status}
-                    </span>
-                  </td>
-                  <td>
-                    <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-                      <Link
-                        href={`/users/${user.id}/edit`}
-                        style={{
-                          color: "var(--primary-color)",
-                          fontWeight: 500,
-                          textDecoration: "none",
-                        }}
-                      >
-                        Edit
-                      </Link>
-                      {user.status === "ACTIVE" && (
-                        <button
-                          onClick={() => handleDeactivate(user.id)}
-                          style={{
-                            background: "transparent",
-                            border: "none",
-                            color: "var(--error-color)",
-                            cursor: "pointer",
-                            fontWeight: 500,
-                          }}
-                        >
-                          Deactivate
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-        {!loading && users.length === 0 && (
-          <p style={{ padding: "1.5rem", color: "var(--text-secondary)" }}>No users found.</p>
-        )}
-      </div>
+      {loading ? (
+        <Loading />
+      ) : (
+        <Table headers={["Ad", "Şöbə", "Rollar", "Status", "Əməliyyat"]}>
+          {users.map((u) => (
+            <Tr key={u.id}>
+              <Td>
+                <div className="flex items-center gap-2.5">
+                  <Avatar name={`${u.firstName} ${u.lastName}`} size={34} />
+                  <div>
+                    <div className="text-[13.5px] font-semibold text-fg">{u.firstName} {u.lastName}</div>
+                    <div className="text-[11.5px] text-fg-faint">{u.email}</div>
+                  </div>
+                </div>
+              </Td>
+              <Td>{u.departmentName || "—"}</Td>
+              <Td>
+                <div className="flex flex-wrap gap-1.5">
+                  {u.roles.map((r) => (
+                    <RoleBadge key={r.id} role={r.name} />
+                  ))}
+                </div>
+              </Td>
+              <Td>
+                <span
+                  className={
+                    "inline-flex rounded-full px-2.5 py-1 text-[11.5px] font-semibold " +
+                    (u.status === "ACTIVE" ? "bg-success-bg text-success-fg" : "bg-slate-100 text-slate-500")
+                  }
+                >
+                  {u.status === "ACTIVE" ? "Aktiv" : "Deaktiv"}
+                </span>
+              </Td>
+              <Td>
+                <div className="flex items-center gap-2">
+                  <Link href={`/users/${u.id}/edit`} className="flex items-center gap-1 text-[13px] font-medium text-blue-600 hover:underline">
+                    <Pencil size={14} /> Düzəliş
+                  </Link>
+                  {u.status === "ACTIVE" && (
+                    <button onClick={() => deactivate(u.id)} className="flex items-center gap-1 text-[13px] font-medium text-danger hover:underline">
+                      <Ban size={14} /> Deaktiv
+                    </button>
+                  )}
+                </div>
+              </Td>
+            </Tr>
+          ))}
+          {users.length === 0 && (
+            <Tr>
+              <Td colSpan={5} className="py-10 text-center text-fg-muted">İstifadəçi yoxdur.</Td>
+            </Tr>
+          )}
+        </Table>
+      )}
     </div>
   );
 }

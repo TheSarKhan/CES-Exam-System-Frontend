@@ -1,61 +1,47 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
+import { Download } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import type { Department, Exam, ExamReport } from "@/lib/types";
-import styles from "../admin.module.css";
+import { PageHeader } from "@/components/app/PageHeader";
+import { Card } from "@/components/ui/Card";
+import { Table, Tr, Td } from "@/components/ui/Table";
+import { FieldGroup, Select } from "@/components/ui/Field";
+import { Button } from "@/components/ui/Button";
+import { Avatar } from "@/components/ui/Avatar";
+import { ResultPill } from "@/components/ui/Badge";
+import { Loading } from "@/components/ui/Feedback";
 
 function formatDate(iso: string | null) {
   if (!iso) return "—";
-  return new Date(iso).toLocaleString();
+  return new Date(iso).toLocaleString("az", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
-function buildQuery(filters: {
-  departmentId: string;
-  examId: string;
-  startDate: string;
-  endDate: string;
-}) {
-  const params = new URLSearchParams();
-  if (filters.departmentId) params.set("departmentId", filters.departmentId);
-  if (filters.examId) params.set("examId", filters.examId);
-  if (filters.startDate) params.set("startDate", `${filters.startDate}T00:00:00`);
-  if (filters.endDate) params.set("endDate", `${filters.endDate}T23:59:59`);
-  const qs = params.toString();
+function buildQuery(f: { departmentId: string; examId: string; startDate: string; endDate: string }) {
+  const p = new URLSearchParams();
+  if (f.departmentId) p.set("departmentId", f.departmentId);
+  if (f.examId) p.set("examId", f.examId);
+  if (f.startDate) p.set("startDate", `${f.startDate}T00:00:00`);
+  if (f.endDate) p.set("endDate", `${f.endDate}T23:59:59`);
+  const qs = p.toString();
   return qs ? `?${qs}` : "";
 }
 
 function exportCsv(rows: ExamReport[]) {
-  const headers = [
-    "Employee",
-    "Email",
-    "Department",
-    "Exam",
-    "Type",
-    "Score (%)",
-    "Result",
-    "Started",
-    "Completed",
-  ];
+  const headers = ["Əməkdaş", "E-poçt", "Şöbə", "İmtahan", "Növ", "Bal (%)", "Nəticə", "Başladı", "Bitdi"];
   const lines = rows.map((r) => [
-    r.userName,
-    r.userEmail,
-    r.departmentName ?? "",
-    r.examTitle,
-    r.examType,
+    r.userName, r.userEmail, r.departmentName ?? "", r.examTitle, r.examType,
     r.score != null ? String(r.score) : "",
-    r.passed == null ? "Survey" : r.passed ? "Passed" : "Failed",
-    r.startTime,
-    r.endTime,
+    r.passed == null ? "Sorğu" : r.passed ? "Keçdi" : "Kəsildi",
+    r.startTime, r.endTime,
   ]);
-  const csv = [headers, ...lines]
-    .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
-    .join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const csv = [headers, ...lines].map((row) => row.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `ces-reports-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.download = `ces-hesabat-${new Date().toISOString().slice(0, 10)}.csv`;
   link.click();
   URL.revokeObjectURL(url);
 }
@@ -64,191 +50,105 @@ export default function ReportsPage() {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [exams, setExams] = useState<Exam[]>([]);
   const [reports, setReports] = useState<ExamReport[]>([]);
-  const [filters, setFilters] = useState({
-    departmentId: "",
-    examId: "",
-    startDate: "",
-    endDate: "",
-  });
+  const [filters, setFilters] = useState({ departmentId: "", examId: "", startDate: "", endDate: "" });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    Promise.all([
-      apiFetch<Department[]>("/api/v1/departments"),
-      apiFetch<Exam[]>("/api/v1/exams"),
-    ])
-      .then(([depts, examList]) => {
-        setDepartments(depts);
-        setExams(examList);
-      })
+    Promise.all([apiFetch<Department[]>("/api/v1/departments"), apiFetch<Exam[]>("/api/v1/exams")])
+      .then(([d, e]) => { setDepartments(d); setExams(e); })
       .catch((e) => setError(e.message));
   }, []);
 
-  const loadReports = useCallback(async (activeFilters = filters) => {
+  const load = useCallback(async (f = filters) => {
     setLoading(true);
     try {
-      const data = await apiFetch<ExamReport[]>(`/api/v1/admin/reports${buildQuery(activeFilters)}`);
-      setReports(data);
+      setReports(await apiFetch<ExamReport[]>(`/api/v1/admin/reports${buildQuery(f)}`));
       setError("");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load reports");
+      setError(e instanceof Error ? e.message : "Hesabat yüklənmədi");
     } finally {
       setLoading(false);
     }
   }, [filters]);
 
-  useEffect(() => {
-    loadReports();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleApply = (e: React.FormEvent) => {
-    e.preventDefault();
-    loadReports(filters);
-  };
-
-  const handleReset = () => {
-    const cleared = { departmentId: "", examId: "", startDate: "", endDate: "" };
-    setFilters(cleared);
-    loadReports(cleared);
-  };
+  useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div>
-      <div className={styles.pageHeader}>
-        <div>
-          <h1 className={styles.title}>Reports</h1>
-          <p className={styles.subtitle}>Exam results by employee, department, and date range</p>
-        </div>
-        <button
-          type="button"
-          className={styles.secondaryBtn}
-          onClick={() => exportCsv(reports)}
-          disabled={reports.length === 0}
-        >
-          Export CSV
-        </button>
-      </div>
+    <div className="mx-auto max-w-[1200px]">
+      <PageHeader
+        title="Hesabatlar"
+        subtitle="Əməkdaş, şöbə və tarix üzrə imtahan nəticələri"
+        action={
+          <Button variant="outline" icon={<Download size={16} />} disabled={reports.length === 0} onClick={() => exportCsv(reports)}>
+            CSV ixrac
+          </Button>
+        }
+      />
 
-      {error && <div className={styles.error}>{error}</div>}
+      {error && <div className="mb-4 rounded-[11px] border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[13px] text-danger-fg">{error}</div>}
 
-      <div className={styles.card} style={{ marginBottom: "1.5rem" }}>
-        <form onSubmit={handleApply}>
-          <div className={styles.filterGrid}>
-            <div className={styles.formGroup} style={{ marginBottom: 0 }}>
-              <label className={styles.label}>Department</label>
-              <select
-                className={styles.input}
-                value={filters.departmentId}
-                onChange={(e) => setFilters({ ...filters, departmentId: e.target.value })}
-              >
-                <option value="">All departments</option>
-                {departments.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className={styles.formGroup} style={{ marginBottom: 0 }}>
-              <label className={styles.label}>Exam</label>
-              <select
-                className={styles.input}
-                value={filters.examId}
-                onChange={(e) => setFilters({ ...filters, examId: e.target.value })}
-              >
-                <option value="">All exams</option>
-                {exams.map((ex) => (
-                  <option key={ex.id} value={ex.id}>
-                    {ex.title}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className={styles.formGroup} style={{ marginBottom: 0 }}>
-              <label className={styles.label}>From</label>
-              <input
-                type="date"
-                className={styles.input}
-                value={filters.startDate}
-                onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
-              />
-            </div>
-            <div className={styles.formGroup} style={{ marginBottom: 0 }}>
-              <label className={styles.label}>To</label>
-              <input
-                type="date"
-                className={styles.input}
-                value={filters.endDate}
-                onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
-              />
-            </div>
-            <div className={styles.filterActions}>
-              <button type="submit" className={styles.primaryBtn}>
-                Apply Filters
-              </button>
-              <button type="button" className={styles.secondaryBtn} onClick={handleReset}>
-                Reset
-              </button>
-            </div>
+      <Card className="mb-5 p-5">
+        <form onSubmit={(e) => { e.preventDefault(); load(filters); }} className="grid grid-cols-1 items-end gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto_auto_auto]">
+          <FieldGroup label="Şöbə">
+            <Select value={filters.departmentId} onChange={(e) => setFilters({ ...filters, departmentId: e.target.value })}>
+              <option value="">Bütün şöbələr</option>
+              {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+            </Select>
+          </FieldGroup>
+          <FieldGroup label="İmtahan">
+            <Select value={filters.examId} onChange={(e) => setFilters({ ...filters, examId: e.target.value })}>
+              <option value="">Bütün imtahanlar</option>
+              {exams.map((ex) => <option key={ex.id} value={ex.id}>{ex.title}</option>)}
+            </Select>
+          </FieldGroup>
+          <FieldGroup label="Başlanğıc">
+            <input type="date" className="field num" value={filters.startDate} onChange={(e) => setFilters({ ...filters, startDate: e.target.value })} />
+          </FieldGroup>
+          <FieldGroup label="Son">
+            <input type="date" className="field num" value={filters.endDate} onChange={(e) => setFilters({ ...filters, endDate: e.target.value })} />
+          </FieldGroup>
+          <div className="flex gap-2">
+            <Button type="submit">Tətbiq et</Button>
+            <Button type="button" variant="ghost" onClick={() => { const c = { departmentId: "", examId: "", startDate: "", endDate: "" }; setFilters(c); load(c); }}>
+              Sıfırla
+            </Button>
           </div>
         </form>
-      </div>
+      </Card>
 
-      <div className={styles.card} style={{ padding: 0, overflow: "auto" }}>
-        {loading ? (
-          <p style={{ padding: "1.5rem", color: "var(--text-secondary)" }}>Loading reports...</p>
-        ) : (
-          <>
-            <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid var(--border-color)", color: "var(--text-secondary)", fontSize: "0.875rem" }}>
-              {reports.length} result{reports.length !== 1 ? "s" : ""}
-            </div>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Employee</th>
-                  <th>Department</th>
-                  <th>Exam</th>
-                  <th>Score</th>
-                  <th>Result</th>
-                  <th>Completed</th>
-                </tr>
-              </thead>
-              <tbody>
-                {reports.map((row) => (
-                  <tr key={row.sessionId}>
-                    <td>
-                      <div style={{ fontWeight: 500 }}>{row.userName}</div>
-                      <div style={{ fontSize: "0.8125rem", color: "var(--text-secondary)" }}>{row.userEmail}</div>
-                    </td>
-                    <td>{row.departmentName || "—"}</td>
-                    <td>
-                      <div style={{ fontWeight: 500 }}>{row.examTitle}</div>
-                      <div style={{ fontSize: "0.8125rem", color: "var(--text-secondary)" }}>{row.examType}</div>
-                    </td>
-                    <td>{row.score != null ? `${row.score}%` : "—"}</td>
-                    <td>
-                      {row.passed == null ? (
-                        <span className={styles.badge}>Survey</span>
-                      ) : row.passed ? (
-                        <span className={styles.badgePass}>Passed</span>
-                      ) : (
-                        <span className={styles.badgeFail}>Failed</span>
-                      )}
-                    </td>
-                    <td>{formatDate(row.endTime)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {reports.length === 0 && (
-              <p style={{ padding: "1.5rem", color: "var(--text-secondary)" }}>
-                No completed exams match your filters.
-              </p>
-            )}
-          </>
-        )}
-      </div>
+      {loading ? (
+        <Loading />
+      ) : (
+        <Table headers={[`Əməkdaş`, "Şöbə", "İmtahan", "Bal", "Nəticə", "Tamamlandı"]}>
+          {reports.map((r) => (
+            <Tr key={r.sessionId}>
+              <Td>
+                <div className="flex items-center gap-2.5">
+                  <Avatar name={r.userName} size={32} />
+                  <div>
+                    <div className="text-[13.5px] font-semibold text-fg">{r.userName}</div>
+                    <div className="text-[11.5px] text-fg-faint">{r.userEmail}</div>
+                  </div>
+                </div>
+              </Td>
+              <Td>{r.departmentName || "—"}</Td>
+              <Td>
+                <div className="font-medium text-fg">{r.examTitle}</div>
+                <div className="text-[11.5px] text-fg-faint">{r.examType === "EXAM" ? "İmtahan" : "Sorğu"}</div>
+              </Td>
+              <Td className="num font-semibold text-fg">{r.score != null ? `${r.score}%` : "—"}</Td>
+              <Td>{r.passed == null ? <ResultPill result="survey" /> : r.passed ? <ResultPill result="pass" /> : <ResultPill result="fail" />}</Td>
+              <Td className="num text-fg-muted">{formatDate(r.endTime)}</Td>
+            </Tr>
+          ))}
+          {reports.length === 0 && (
+            <Tr>
+              <Td colSpan={6} className="py-10 text-center text-fg-muted">Filtrlərə uyğun tamamlanmış imtahan yoxdur.</Td>
+            </Tr>
+          )}
+        </Table>
+      )}
     </div>
   );
 }

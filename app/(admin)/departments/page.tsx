@@ -1,109 +1,92 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
+import { Building2, Plus } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import type { Department } from "@/lib/types";
-import styles from "../admin.module.css";
+import { PageHeader } from "@/components/app/PageHeader";
+import { Table, Tr, Td } from "@/components/ui/Table";
+import { Card } from "@/components/ui/Card";
+import { FieldGroup, Input } from "@/components/ui/Field";
+import { Button } from "@/components/ui/Button";
+import { Loading } from "@/components/ui/Feedback";
 
 export default function DepartmentsPage() {
   const [departments, setDepartments] = useState<Department[]>([]);
-  const [newDeptName, setNewDeptName] = useState("");
+  const [name, setName] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const loadDepartments = useCallback(async () => {
+  const load = useCallback(async () => {
     try {
-      const data = await apiFetch<Department[]>("/api/v1/departments");
-      setDepartments(data);
+      setDepartments(await apiFetch<Department[]>("/api/v1/departments"));
       setError("");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load departments");
+      setError(e instanceof Error ? e.message : "Şöbələr yüklənmədi");
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    loadDepartments();
-  }, [loadDepartments]);
+    load();
+  }, [load]);
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const create = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newDeptName.trim()) return;
+    if (!name.trim()) return;
     setSubmitting(true);
     try {
-      await apiFetch<Department>("/api/v1/departments", {
-        method: "POST",
-        body: JSON.stringify({ name: newDeptName.trim() }),
-      });
-      setNewDeptName("");
-      await loadDepartments();
+      await apiFetch("/api/v1/departments", { method: "POST", body: JSON.stringify({ name: name.trim() }) });
+      setName("");
+      await load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to create department");
+      setError(e instanceof Error ? e.message : "Şöbə yaradılmadı");
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <div>
-      <div className={styles.pageHeader}>
-        <h1 className={styles.title}>Departments</h1>
-      </div>
+    <div className="mx-auto max-w-[1200px]">
+      <PageHeader title="Şöbələr" subtitle="Şirkət şöbələrini idarə edin" />
 
-      {error && <div className={styles.error}>{error}</div>}
+      {error && <div className="mb-4 rounded-[11px] border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[13px] text-danger-fg">{error}</div>}
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "2rem" }}>
-        <div className={styles.card}>
-          <h3 style={{ marginBottom: "1rem", fontWeight: 600 }}>Add New Department</h3>
-          <form onSubmit={handleCreate}>
-            <div className={styles.formGroup}>
-              <label className={styles.label}>Department Name</label>
-              <input
-                type="text"
-                className={styles.input}
-                value={newDeptName}
-                onChange={(e) => setNewDeptName(e.target.value)}
-                placeholder="e.g. Marketing"
-                required
-              />
-            </div>
-            <button type="submit" className={styles.primaryBtn} disabled={submitting}>
-              {submitting ? "Creating..." : "Create Department"}
-            </button>
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_2fr]">
+        <Card className="h-fit p-5">
+          <h3 className="mb-4 flex items-center gap-2 text-[15px] font-semibold text-fg">
+            <Building2 size={17} className="text-blue-600" /> Yeni şöbə
+          </h3>
+          <form onSubmit={create} className="flex flex-col gap-4">
+            <FieldGroup label="Şöbənin adı">
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="məs. Marketinq" required />
+            </FieldGroup>
+            <Button type="submit" loading={submitting} icon={<Plus size={16} />}>
+              Şöbə yarat
+            </Button>
           </form>
-        </div>
+        </Card>
 
-        <div className={styles.card} style={{ padding: 0, overflow: "hidden" }}>
-          {loading ? (
-            <p style={{ padding: "1.5rem", color: "var(--text-secondary)" }}>Loading...</p>
-          ) : (
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Name</th>
-                  <th>Created At</th>
-                </tr>
-              </thead>
-              <tbody>
-                {departments.map((dept) => (
-                  <tr key={dept.id}>
-                    <td>#{dept.id}</td>
-                    <td style={{ fontWeight: 500 }}>{dept.name}</td>
-                    <td style={{ color: "var(--text-secondary)" }}>
-                      {new Date(dept.createdAt).toLocaleDateString()}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-          {!loading && departments.length === 0 && (
-            <p style={{ padding: "1.5rem", color: "var(--text-secondary)" }}>No departments yet.</p>
-          )}
-        </div>
+        {loading ? (
+          <Loading />
+        ) : (
+          <Table headers={["ID", "Ad", "Yaradılıb"]}>
+            {departments.map((d) => (
+              <Tr key={d.id}>
+                <Td className="num text-fg-faint">#{d.id}</Td>
+                <Td className="font-semibold text-fg">{d.name}</Td>
+                <Td className="num text-fg-muted">{new Date(d.createdAt).toLocaleDateString("az")}</Td>
+              </Tr>
+            ))}
+            {departments.length === 0 && (
+              <Tr>
+                <Td colSpan={3} className="py-10 text-center text-fg-muted">Şöbə yoxdur.</Td>
+              </Tr>
+            )}
+          </Table>
+        )}
       </div>
     </div>
   );

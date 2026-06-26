@@ -2,9 +2,13 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { Plus, Send } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import type { Exam } from "@/lib/types";
-import styles from "../admin.module.css";
+import { PageHeader } from "@/components/app/PageHeader";
+import { Table, Tr, Td } from "@/components/ui/Table";
+import { buttonClasses } from "@/components/ui/Button";
+import { Loading } from "@/components/ui/Feedback";
 
 export default function ExamsPage() {
   const [exams, setExams] = useState<Exam[]>([]);
@@ -19,83 +23,65 @@ export default function ExamsPage() {
   }, []);
 
   return (
-    <div>
-      <div className={styles.pageHeader}>
-        <h1 className={styles.title}>Exams & Surveys</h1>
-        <div style={{ display: "flex", gap: "0.75rem" }}>
-          <Link
-            href="/exams/assign"
-            className={styles.primaryBtn}
-            style={{ background: "var(--bg-secondary)", color: "var(--text-primary)", border: "1px solid var(--border-color)" }}
-          >
-            Assign Exam
-          </Link>
-          <Link href="/exams/create" className={styles.primaryBtn}>
-            Create Exam
-          </Link>
-        </div>
-      </div>
+    <div className="mx-auto max-w-[1200px]">
+      <PageHeader
+        title="İmtahanlar və sorğular"
+        subtitle="Qiymətləndirmələri yaradın və təyin edin"
+        action={
+          <div className="flex gap-2.5">
+            <Link href="/exams/assign" className={buttonClasses("secondary", "md")}>
+              <Send size={16} /> Təyin et
+            </Link>
+            <Link href="/exams/create" className={buttonClasses("primary", "md")}>
+              <Plus size={17} /> Yeni imtahan
+            </Link>
+          </div>
+        }
+      />
 
-      {error && <div className={styles.error}>{error}</div>}
+      {error && <div className="mb-4 rounded-[11px] border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[13px] text-danger-fg">{error}</div>}
 
-      <div className={styles.card} style={{ padding: 0, overflow: "hidden" }}>
-        {loading ? (
-          <p style={{ padding: "1.5rem", color: "var(--text-secondary)" }}>Loading...</p>
-        ) : (
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Type</th>
-                <th>Topics</th>
-                <th>Questions</th>
-                <th>Pass Mark</th>
-                <th>Duration</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {exams.map((exam) => {
-                const topicCount = exam.topicConfigs?.length ?? 0;
-                const totalQuestions =
-                  exam.topicConfigs?.reduce((sum, tc) => sum + tc.questionCount, 0) ?? 0;
-                return (
-                  <tr key={exam.id}>
-                    <td style={{ fontWeight: 500 }}>{exam.title}</td>
-                    <td>
-                      <span
-                        className={styles.badge}
-                        style={{
-                          backgroundColor:
-                            exam.type === "EXAM" ? "rgba(59,130,246,0.1)" : "rgba(168,85,247,0.1)",
-                          color: exam.type === "EXAM" ? "#3b82f6" : "#a855f7",
-                        }}
-                      >
-                        {exam.type}
-                      </span>
-                    </td>
-                    <td>{topicCount} topics</td>
-                    <td>{totalQuestions}</td>
-                    <td>{exam.passMark != null ? `${exam.passMark}%` : "-"}</td>
-                    <td>{exam.durationMinutes != null ? `${exam.durationMinutes} min` : "-"}</td>
-                    <td>
-                      <Link
-                        href={`/exams/assign?examId=${exam.id}`}
-                        style={{ color: "var(--success-color)", fontWeight: 500, fontSize: "0.875rem", textDecoration: "none" }}
-                      >
-                        Assign
-                      </Link>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-        {!loading && exams.length === 0 && (
-          <p style={{ padding: "1.5rem", color: "var(--text-secondary)" }}>No exams created yet.</p>
-        )}
-      </div>
+      {loading ? (
+        <Loading />
+      ) : (
+        <Table headers={["Başlıq", "Növ", "Mövzular", "Suallar", "Keçid balı", "Müddət", "Əməliyyat"]}>
+          {exams.map((ex) => {
+            const topics = ex.topicConfigs?.length ?? 0;
+            const total = ex.topicConfigs?.reduce((s, t) => s + t.questionCount, 0) ?? 0;
+            return (
+              <Tr key={ex.id}>
+                <Td className="font-semibold text-fg">{ex.title}</Td>
+                <Td>
+                  <span
+                    className="inline-flex rounded-[7px] px-2.5 py-1 text-[12px] font-semibold"
+                    style={
+                      ex.type === "EXAM"
+                        ? { background: "#EAF1FE", color: "#1D4ED8" }
+                        : { background: "#F3E8FF", color: "#7E22CE" }
+                    }
+                  >
+                    {ex.type === "EXAM" ? "İmtahan" : "Sorğu"}
+                  </span>
+                </Td>
+                <Td className="num">{topics}</Td>
+                <Td className="num">{total}</Td>
+                <Td className="num">{ex.passMark != null ? `${ex.passMark}%` : "—"}</Td>
+                <Td className="num">{ex.durationMinutes != null ? `${ex.durationMinutes} dəq` : "—"}</Td>
+                <Td>
+                  <Link href={`/exams/assign?examId=${ex.id}`} className="text-[13px] font-medium text-success-fg hover:underline">
+                    Təyin et
+                  </Link>
+                </Td>
+              </Tr>
+            );
+          })}
+          {exams.length === 0 && (
+            <Tr>
+              <Td colSpan={7} className="py-10 text-center text-fg-muted">Hələ imtahan yaradılmayıb.</Td>
+            </Tr>
+          )}
+        </Table>
+      )}
     </div>
   );
 }
