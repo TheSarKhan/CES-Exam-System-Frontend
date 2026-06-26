@@ -2,99 +2,101 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import type { MyAssignment } from "@/lib/types";
-import styles from "../employee.module.css";
+import { StatusPill, ResultPill } from "@/components/ui/Badge";
+import { Button, buttonClasses } from "@/components/ui/Button";
+import { Loading, EmptyState } from "@/components/ui/Feedback";
+import { FileText } from "lucide-react";
 
-function statusBadge(status: MyAssignment["status"]) {
-  if (status === "COMPLETED") return styles.badgeCompleted;
-  if (status === "IN_PROGRESS") return styles.badgeProgress;
-  return styles.badgePending;
+function fmt(d: string | null) {
+  if (!d) return "—";
+  return new Date(d).toLocaleDateString("az", { day: "2-digit", month: "short", year: "numeric" });
 }
 
 export default function EmployeeExamsPage() {
-  const [assignments, setAssignments] = useState<MyAssignment[]>([]);
+  const [items, setItems] = useState<MyAssignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [starting, setStarting] = useState<number | null>(null);
 
   useEffect(() => {
     apiFetch<MyAssignment[]>("/api/v1/assignments/my")
-      .then(setAssignments)
+      .then(setItems)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, []);
 
-  const handleStart = async (assignment: MyAssignment) => {
+  const start = async (a: MyAssignment) => {
+    setStarting(a.assignmentId);
     try {
-      if (assignment.status === "IN_PROGRESS" && assignment.sessionId) {
-        window.location.href = `/employee/exams/${assignment.sessionId}/take`;
+      if (a.status === "IN_PROGRESS" && a.sessionId) {
+        window.location.href = `/employee/exams/${a.sessionId}/take`;
         return;
       }
-      const session = await apiFetch<{ sessionId: number }>("/api/v1/sessions/start", {
+      const s = await apiFetch<{ sessionId: number }>("/api/v1/sessions/start", {
         method: "POST",
-        body: JSON.stringify({ assignmentId: assignment.assignmentId }),
+        body: JSON.stringify({ assignmentId: a.assignmentId }),
       });
-      window.location.href = `/employee/exams/${session.sessionId}/take`;
+      window.location.href = `/employee/exams/${s.sessionId}/take`;
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Failed to start");
+      alert(e instanceof Error ? e.message : "İmtahana başlanmadı");
+      setStarting(null);
     }
   };
 
   return (
     <div>
-      <div className={styles.pageHeader}>
-        <h1 className={styles.title}>My Exams</h1>
-        <p className={styles.subtitle}>All assigned exams and surveys</p>
+      <div className="mb-6">
+        <h2 className="text-[22px] font-bold tracking-[-0.4px] text-fg">İmtahanlarım</h2>
+        <p className="mt-0.5 text-[13.5px] text-fg-muted">Sənə təyin olunmuş bütün imtahan və sorğular</p>
       </div>
 
-      {error && <div className={styles.error}>{error}</div>}
-      {loading && <p>Loading...</p>}
+      {error && <div className="mb-4 rounded-[11px] border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[13px] text-danger-fg">{error}</div>}
 
-      <div className={styles.card} style={{ padding: 0, overflow: "hidden" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ borderBottom: "1px solid var(--border-color)" }}>
-              <th style={{ padding: "1rem", textAlign: "left", color: "var(--text-secondary)", fontSize: "0.875rem" }}>Title</th>
-              <th style={{ padding: "1rem", textAlign: "left", color: "var(--text-secondary)", fontSize: "0.875rem" }}>Type</th>
-              <th style={{ padding: "1rem", textAlign: "left", color: "var(--text-secondary)", fontSize: "0.875rem" }}>Deadline</th>
-              <th style={{ padding: "1rem", textAlign: "left", color: "var(--text-secondary)", fontSize: "0.875rem" }}>Status</th>
-              <th style={{ padding: "1rem", textAlign: "left", color: "var(--text-secondary)", fontSize: "0.875rem" }}>Score</th>
-              <th style={{ padding: "1rem" }}></th>
-            </tr>
-          </thead>
-          <tbody>
-            {assignments.map((a) => (
-              <tr key={a.assignmentId} style={{ borderBottom: "1px solid var(--border-color)" }}>
-                <td style={{ padding: "1rem", fontWeight: 500 }}>{a.examTitle}</td>
-                <td style={{ padding: "1rem" }}>{a.examType}</td>
-                <td style={{ padding: "1rem" }}>
-                  {a.endDate ? new Date(a.endDate).toLocaleDateString() : "—"}
-                </td>
-                <td style={{ padding: "1rem" }}>
-                  <span className={statusBadge(a.status)}>{a.status}</span>
-                </td>
-                <td style={{ padding: "1rem" }}>
-                  {a.score != null ? `${a.score}%` : "—"}
-                </td>
-                <td style={{ padding: "1rem" }}>
-                  {a.status === "COMPLETED" && a.sessionId ? (
-                    <Link href={`/employee/exams/${a.sessionId}/result`} className={styles.secondaryBtn}>
-                      Results
-                    </Link>
-                  ) : a.status !== "COMPLETED" ? (
-                    <button className={styles.primaryBtn} onClick={() => handleStart(a)}>
-                      {a.status === "IN_PROGRESS" ? "Continue" : "Start"}
-                    </button>
-                  ) : null}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {!loading && assignments.length === 0 && (
-          <p style={{ padding: "2rem", color: "var(--text-secondary)" }}>No exams assigned yet.</p>
-        )}
-      </div>
+      {loading ? (
+        <Loading />
+      ) : items.length === 0 ? (
+        <div className="card">
+          <EmptyState icon={<FileText size={22} />} title="İmtahan təyin olunmayıb" description="Sənə imtahan təyin olunduqda burada görünəcək." />
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2.5">
+          {items.map((a) => (
+            <div key={a.assignmentId} className="card flex flex-wrap items-center gap-4 p-4">
+              <div className="min-w-0 flex-1">
+                <div className="text-[15px] font-semibold text-fg">{a.examTitle}</div>
+                <div className="mt-1 flex flex-wrap items-center gap-3 text-[12.5px] text-fg-muted">
+                  <span>{a.examType === "SURVEY" ? "Sorğu" : "İmtahan"}</span>
+                  {a.durationMinutes && <span className="num">{a.durationMinutes} dəq</span>}
+                  <span>Son tarix: <span className="num">{fmt(a.endDate)}</span></span>
+                </div>
+              </div>
+
+              {a.status === "COMPLETED" ? (
+                a.passed == null ? <ResultPill result="survey" /> : a.passed ? <ResultPill result="pass" /> : <ResultPill result="fail" />
+              ) : (
+                <StatusPill status={a.status === "IN_PROGRESS" ? "active" : "scheduled"} label={a.status === "IN_PROGRESS" ? "Davam edir" : "Gözləyir"} />
+              )}
+
+              {a.status === "COMPLETED" && a.score != null && (
+                <span className="num w-12 text-right text-[15px] font-semibold text-fg">{a.score}%</span>
+              )}
+
+              {a.status === "COMPLETED" && a.sessionId ? (
+                <Link href={`/employee/exams/${a.sessionId}/result`} className={buttonClasses("outline", "sm")}>
+                  Nəticə
+                </Link>
+              ) : a.status !== "COMPLETED" ? (
+                <Button size="sm" loading={starting === a.assignmentId} iconRight={<ArrowRight size={15} />} onClick={() => start(a)}>
+                  {a.status === "IN_PROGRESS" ? "Davam et" : "Başla"}
+                </Button>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
