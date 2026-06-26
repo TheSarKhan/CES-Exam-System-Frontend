@@ -3,14 +3,14 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import type { Category, Topic } from "@/lib/types";
-import styles from "../../admin.module.css";
+import { Card } from "@/components/ui/Card";
+import { FieldGroup, Input, Select, Textarea } from "@/components/ui/Field";
+import { Button, buttonClasses } from "@/components/ui/Button";
 
-interface TopicOption {
-  id: number;
-  label: string;
-}
+interface TopicOption { id: number; label: string }
 
 export default function CreateQuestionPage() {
   const router = useRouter();
@@ -18,201 +18,164 @@ export default function CreateQuestionPage() {
   const [topicId, setTopicId] = useState("");
   const [qType, setQType] = useState("SINGLE_CHOICE");
   const [qText, setQText] = useState("");
-  const [score, setScore] = useState(1.0);
+  const [score, setScore] = useState(1);
   const [tfCorrect, setTfCorrect] = useState<"true" | "false">("true");
-  const [options, setOptions] = useState([
-    { text: "", isCorrect: false },
-    { text: "", isCorrect: false },
-  ]);
+  const [options, setOptions] = useState([{ text: "", isCorrect: false }, { text: "", isCorrect: false }]);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     apiFetch<Category[]>("/api/v1/question-bank/categories")
       .then(async (cats) => {
-        const allTopics: TopicOption[] = [];
-        for (const cat of cats) {
-          const catTopics = await apiFetch<Topic[]>(`/api/v1/question-bank/categories/${cat.id}/topics`);
-          catTopics.forEach((t) => {
-            allTopics.push({ id: t.id, label: `${cat.name} > ${t.name}` });
-          });
+        const all: TopicOption[] = [];
+        for (const c of cats) {
+          const ts = await apiFetch<Topic[]>(`/api/v1/question-bank/categories/${c.id}/topics`);
+          ts.forEach((t) => all.push({ id: t.id, label: `${c.name} › ${t.name}` }));
         }
-        setTopics(allTopics);
-        if (allTopics.length > 0) setTopicId(String(allTopics[0].id));
+        setTopics(all);
+        if (all.length) setTopicId(String(all[0].id));
       })
       .catch((e) => setError(e.message));
   }, []);
 
-  const handleAddOption = () => {
-    setOptions([...options, { text: "", isCorrect: false }]);
-  };
-
-  const handleOptionChange = (index: number, field: "text" | "isCorrect", value: string | boolean) => {
-    const newOptions = [...options];
-    if (field === "isCorrect" && qType === "SINGLE_CHOICE" && value === true) {
-      newOptions.forEach((o) => (o.isCorrect = false));
-    }
-    newOptions[index] = { ...newOptions[index], [field]: value };
-    setOptions(newOptions);
+  const setOpt = (i: number, field: "text" | "isCorrect", value: string | boolean) => {
+    setOptions((prev) => {
+      const next = [...prev];
+      if (field === "isCorrect" && qType === "SINGLE_CHOICE" && value === true) next.forEach((o) => (o.isCorrect = false));
+      next[i] = { ...next[i], [field]: value };
+      return next;
+    });
   };
 
   const buildOptions = () => {
-    if (qType === "TRUE_FALSE") {
+    if (qType === "TRUE_FALSE")
       return [
-        { text: "True", isCorrect: tfCorrect === "true", sortOrder: 0 },
-        { text: "False", isCorrect: tfCorrect === "false", sortOrder: 1 },
+        { text: "Doğru", isCorrect: tfCorrect === "true", sortOrder: 0 },
+        { text: "Yanlış", isCorrect: tfCorrect === "false", sortOrder: 1 },
       ];
-    }
-    if (qType === "SINGLE_CHOICE" || qType === "MULTIPLE_CHOICE") {
+    if (qType === "SINGLE_CHOICE" || qType === "MULTIPLE_CHOICE")
       return options.map((o, i) => ({ text: o.text, isCorrect: o.isCorrect, sortOrder: i }));
-    }
     return undefined;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!topicId) {
-      setError("Select a topic");
-      return;
-    }
+    if (!topicId) return setError("Mövzu seçin");
     setSubmitting(true);
     setError("");
     try {
       await apiFetch("/api/v1/question-bank/questions", {
         method: "POST",
-        body: JSON.stringify({
-          topicId: Number(topicId),
-          type: qType,
-          text: qText,
-          score,
-          options: buildOptions(),
-        }),
+        body: JSON.stringify({ topicId: Number(topicId), type: qType, text: qText, score, options: buildOptions() }),
       });
       router.push("/question-bank");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to create question");
+      setError(e instanceof Error ? e.message : "Sual yaradılmadı");
       setSubmitting(false);
     }
   };
 
+  const hasOptions = qType === "SINGLE_CHOICE" || qType === "MULTIPLE_CHOICE";
+
   return (
-    <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-      <div className={styles.pageHeader}>
-        <div>
-          <Link href="/question-bank" style={{ color: "var(--text-secondary)", fontSize: "0.875rem", marginBottom: "0.5rem", display: "inline-block" }}>
-            &larr; Back to Question Bank
-          </Link>
-          <h1 className={styles.title}>Create New Question</h1>
-        </div>
-      </div>
+    <div className="mx-auto max-w-[760px]">
+      <Link href="/question-bank" className="mb-3 inline-flex items-center gap-1.5 text-[13px] font-medium text-fg-muted hover:text-fg">
+        <ArrowLeft size={15} /> Sual bankına qayıt
+      </Link>
+      <h2 className="mb-5 text-[22px] font-bold tracking-[-0.4px] text-fg">Yeni sual</h2>
 
-      {error && <div className={styles.error}>{error}</div>}
+      {error && <div className="mb-4 rounded-[11px] border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[13px] text-danger-fg">{error}</div>}
 
-      <div className={styles.card}>
-        <form onSubmit={handleSubmit}>
-          <div className={styles.formGroup}>
-            <label className={styles.label}>Topic</label>
-            <select className={styles.input} value={topicId} onChange={(e) => setTopicId(e.target.value)} required>
-              {topics.length === 0 && <option value="">No topics available</option>}
-              {topics.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.label}
-                </option>
-              ))}
-            </select>
+      <Card className="p-6">
+        <form onSubmit={submit} className="flex flex-col gap-5">
+          <FieldGroup label="Mövzu">
+            <Select value={topicId} onChange={(e) => setTopicId(e.target.value)} required>
+              {topics.length === 0 && <option value="">Mövzu yoxdur</option>}
+              {topics.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
+            </Select>
+          </FieldGroup>
+
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <FieldGroup label="Sual növü">
+              <Select value={qType} onChange={(e) => setQType(e.target.value)}>
+                <option value="SINGLE_CHOICE">Tək seçim</option>
+                <option value="MULTIPLE_CHOICE">Çox seçim</option>
+                <option value="TRUE_FALSE">Doğru / Yanlış</option>
+                <option value="SHORT_TEXT">Qısa mətn (manual)</option>
+                <option value="LONG_TEXT">Uzun mətn (manual)</option>
+                <option value="RATING">Reytinq</option>
+                <option value="LIKERT_SCALE">Likert</option>
+                <option value="NUMBER_INPUT">Ədəd</option>
+                <option value="DATE_PICKER">Tarix</option>
+              </Select>
+            </FieldGroup>
+            <FieldGroup label="Bal">
+              <Input type="number" step="0.5" value={score} onChange={(e) => setScore(parseFloat(e.target.value) || 0)} required />
+            </FieldGroup>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", marginBottom: "1.5rem" }}>
-            <div className={styles.formGroup}>
-              <label className={styles.label}>Question Type</label>
-              <select className={styles.input} value={qType} onChange={(e) => setQType(e.target.value)}>
-                <option value="SINGLE_CHOICE">Single Choice</option>
-                <option value="MULTIPLE_CHOICE">Multiple Choice</option>
-                <option value="TRUE_FALSE">True / False</option>
-                <option value="SHORT_TEXT">Short Text (Manual Review)</option>
-                <option value="LONG_TEXT">Long Text (Manual Review)</option>
-              </select>
-            </div>
-            <div className={styles.formGroup}>
-              <label className={styles.label}>Score</label>
-              <input
-                type="number"
-                step="0.5"
-                className={styles.input}
-                value={score}
-                onChange={(e) => setScore(parseFloat(e.target.value))}
-                required
-              />
-            </div>
-          </div>
+          <FieldGroup label="Sual mətni">
+            <Textarea rows={4} value={qText} onChange={(e) => setQText(e.target.value)} placeholder="Sualınızı buraya yazın…" required />
+          </FieldGroup>
 
-          <div className={styles.formGroup}>
-            <label className={styles.label}>Question Text</label>
-            <textarea
-              className={styles.input}
-              style={{ minHeight: "100px", resize: "vertical" }}
-              value={qText}
-              onChange={(e) => setQText(e.target.value)}
-              placeholder="Type your question here..."
-              required
-            />
-          </div>
-
-          {(qType === "SINGLE_CHOICE" || qType === "MULTIPLE_CHOICE") && (
-            <div style={{ marginTop: "2rem", padding: "1.5rem", background: "var(--bg-secondary)", borderRadius: "var(--radius-md)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-                <h4 style={{ fontWeight: 600 }}>Options</h4>
-                <button type="button" onClick={handleAddOption} className={styles.badge} style={{ cursor: "pointer", border: "1px solid var(--border-color)" }}>
-                  + Add Option
+          {hasOptions && (
+            <div className="rounded-[12px] bg-surface-2 p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <h4 className="text-[14px] font-semibold text-fg">Variantlar</h4>
+                <button type="button" onClick={() => setOptions([...options, { text: "", isCorrect: false }])} className="flex items-center gap-1 text-[13px] font-medium text-blue-600 hover:underline">
+                  <Plus size={14} /> Variant əlavə et
                 </button>
               </div>
-
-              {options.map((opt, idx) => (
-                <div key={idx} style={{ display: "flex", gap: "1rem", alignItems: "center", marginBottom: "1rem" }}>
-                  <input
-                    type={qType === "SINGLE_CHOICE" ? "radio" : "checkbox"}
-                    checked={opt.isCorrect}
-                    onChange={(e) => handleOptionChange(idx, "isCorrect", e.target.checked)}
-                    style={{ width: "20px", height: "20px" }}
-                  />
-                  <input
-                    type="text"
-                    className={styles.input}
-                    style={{ flex: 1 }}
-                    value={opt.text}
-                    onChange={(e) => handleOptionChange(idx, "text", e.target.value)}
-                    placeholder={`Option ${idx + 1}`}
-                    required
-                  />
-                </div>
-              ))}
+              <div className="flex flex-col gap-2.5">
+                {options.map((o, i) => (
+                  <div key={i} className="flex items-center gap-2.5">
+                    <input
+                      type={qType === "SINGLE_CHOICE" ? "radio" : "checkbox"}
+                      checked={o.isCorrect}
+                      onChange={(e) => setOpt(i, "isCorrect", e.target.checked)}
+                      className="h-5 w-5 accent-blue-600"
+                      title="Düzgün cavab"
+                    />
+                    <input className="field flex-1" value={o.text} onChange={(e) => setOpt(i, "text", e.target.value)} placeholder={`Variant ${i + 1}`} required />
+                    {options.length > 2 && (
+                      <button type="button" onClick={() => setOptions(options.filter((_, x) => x !== i))} className="text-fg-faint hover:text-danger">
+                        <Trash2 size={16} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <p className="mt-2.5 text-[12px] text-fg-faint">Düzgün cav(lar)ı işarələyin.</p>
             </div>
           )}
 
           {qType === "TRUE_FALSE" && (
-            <div style={{ marginTop: "2rem", padding: "1.5rem", background: "var(--bg-secondary)", borderRadius: "var(--radius-md)" }}>
-              <h4 style={{ fontWeight: 600, marginBottom: "1rem" }}>Correct Answer</h4>
-              <div style={{ display: "flex", gap: "2rem" }}>
-                <label style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-                  <input type="radio" name="tf" value="true" checked={tfCorrect === "true"} onChange={() => setTfCorrect("true")} /> True
-                </label>
-                <label style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-                  <input type="radio" name="tf" value="false" checked={tfCorrect === "false"} onChange={() => setTfCorrect("false")} /> False
-                </label>
+            <div className="rounded-[12px] bg-surface-2 p-4">
+              <h4 className="mb-3 text-[14px] font-semibold text-fg">Düzgün cavab</h4>
+              <div className="flex gap-3">
+                {(["true", "false"] as const).map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => setTfCorrect(v)}
+                    className={
+                      "rounded-[9px] border px-5 py-2 text-[14px] font-medium transition-colors " +
+                      (tfCorrect === v ? "border-blue-600 bg-blue-50 text-blue-700 dark:bg-blue-600/10" : "border-line text-fg-muted hover:bg-surface")
+                    }
+                  >
+                    {v === "true" ? "Doğru" : "Yanlış"}
+                  </button>
+                ))}
               </div>
             </div>
           )}
 
-          <div style={{ marginTop: "2rem", display: "flex", justifyContent: "flex-end", gap: "1rem" }}>
-            <Link href="/question-bank" style={{ padding: "0.75rem 1.5rem", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", color: "var(--text-primary)", textDecoration: "none", fontWeight: 500 }}>
-              Cancel
-            </Link>
-            <button type="submit" className={styles.primaryBtn} style={{ padding: "0.75rem 1.5rem" }} disabled={submitting}>
-              {submitting ? "Saving..." : "Save Question"}
-            </button>
+          <div className="flex justify-end gap-3 pt-1">
+            <Link href="/question-bank" className={buttonClasses("secondary", "md")}>Ləğv et</Link>
+            <Button type="submit" loading={submitting}>Sualı yarat</Button>
           </div>
         </form>
-      </div>
+      </Card>
     </div>
   );
 }
