@@ -90,7 +90,7 @@ export function Modal({
 }) {
   if (!open) return null;
   const tones = {
-    blue: { bg: "#EAF1FE", fg: "#2563EB" },
+    blue: { bg: "#F7EFD8", fg: "#8E6F17" },
     red: { bg: "#FEE2E2", fg: "#B91C1C" },
     amber: { bg: "#FEF3C7", fg: "#B45309" },
     green: { bg: "#DCFCE7", fg: "#15803D" },

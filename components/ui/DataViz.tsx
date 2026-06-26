@@ -6,7 +6,7 @@ import { cn } from "@/lib/cn";
 /* ---------- KPI / Stat card ---------- */
 type Tone = "blue" | "green" | "purple" | "amber" | "red";
 const toneTile: Record<Tone, { bg: string; fg: string }> = {
-  blue: { bg: "#EAF1FE", fg: "#2563EB" },
+  blue: { bg: "#F7EFD8", fg: "#8E6F17" },
   green: { bg: "#DCFCE7", fg: "#15803D" },
   purple: { bg: "#F3E8FF", fg: "#7E22CE" },
   amber: { bg: "#FEF3C7", fg: "#B45309" },
@@ -49,7 +49,7 @@ export function KpiCard({
 /* ---------- Progress bar ---------- */
 export function scoreColor(v: number) {
   if (v >= 80) return "#16A34A";
-  if (v >= 60) return "#2563EB";
+  if (v >= 60) return "#B4902F";
   if (v >= 45) return "#D97706";
   return "#DC2626";
 }

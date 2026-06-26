@@ -1,95 +1,211 @@
 "use client";
 
 import React, { useState } from "react";
-import { CheckSquare, AlertCircle } from "lucide-react";
+import Link from "next/link";
+import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { useAuth } from "@/lib/auth";
-import { Button } from "@/components/ui/Button";
-import { FieldGroup, Input } from "@/components/ui/Field";
+import { useToast } from "@/lib/toast";
+import { humanizeError } from "@/lib/errors";
+
+const GOLD = "#C9A24B";
 
 export default function LoginPage() {
   const { login } = useAuth();
+  const toast = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [showPw, setShowPw] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     setSubmitting(true);
     try {
       await login(email, password);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Giriş alınmadı");
+      toast.error(humanizeError(err, "Giriş alınmadı"), "Giriş uğursuz oldu");
     } finally {
       setSubmitting(false);
     }
   };
 
+  const inputCls =
+    "w-full rounded-[12px] border border-white/10 bg-white/[0.04] py-3.5 pl-11 pr-11 text-[14px] text-white placeholder-white/30 outline-none transition-colors focus:border-[#C9A24B]/60 focus:bg-white/[0.06]";
+
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-app px-4">
-      {/* Subtle brand glow */}
-      <div
-        className="pointer-events-none absolute -top-40 left-1/2 h-[480px] w-[480px] -translate-x-1/2 rounded-full opacity-[0.07]"
-        style={{ background: "radial-gradient(circle, #2563EB 0%, transparent 70%)" }}
-      />
-
-      <div className="relative z-10 w-full max-w-[420px]">
-        <div className="mb-7 flex flex-col items-center text-center">
-          <span className="mb-4 flex h-[52px] w-[52px] items-center justify-center rounded-[15px] bg-gradient-to-br from-blue-500 to-blue-700 shadow-[0_8px_20px_rgba(37,99,235,0.4)]">
-            <CheckSquare size={27} strokeWidth={2.2} className="text-white" />
+    <main className="grid min-h-screen lg:grid-cols-2" style={{ background: "#0b0b09" }}>
+      {/* ---------- LEFT: form ---------- */}
+      <div className="relative flex flex-col px-6 py-8 sm:px-12 lg:px-16">
+        {/* brand */}
+        <div className="flex items-center gap-3">
+          <span className="flex h-12 w-12 items-center justify-center rounded-[12px] border border-white/10 bg-white/[0.03]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-mark.png" alt="CES" className="h-7 w-auto object-contain" />
           </span>
-          <h1 className="text-[24px] font-bold tracking-[-0.5px] text-fg">
-            Corporate Assessment
-          </h1>
-          <p className="mt-1 text-[14px] text-fg-muted">
-            Davam etmək üçün hesabınıza daxil olun
-          </p>
+          <div className="leading-tight">
+            <div className="text-[14px] font-bold tracking-[-0.2px] text-white">
+              Construction <span style={{ color: GOLD }}>Equipment</span> Services
+            </div>
+            <div className="mt-0.5 text-[10.5px] font-semibold uppercase tracking-[1.6px] text-white/40">
+              Qiymətləndirmə Platforması · Bakı, AZ
+            </div>
+          </div>
         </div>
 
-        <div className="card p-7 shadow-pop">
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-            {error && (
-              <div className="flex items-start gap-2 rounded-[11px] border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[13px] text-danger-fg">
-                <AlertCircle size={17} className="mt-px shrink-0" />
-                <span>{error}</span>
+        {/* form (vertically centered) */}
+        <div className="flex flex-1 items-center py-10">
+          <div className="w-full max-w-[420px]">
+            <p className="mb-3 text-[12px] font-semibold uppercase tracking-[3px]" style={{ color: GOLD }}>
+              Daxil ol
+            </p>
+            <h1 className="text-[38px] font-bold leading-[1.05] tracking-[-1px] text-white sm:text-[42px]">
+              Yenidən xoş <span style={{ color: GOLD }}>gəldin.</span>
+            </h1>
+            <p className="mt-3 text-[14px] text-white/50">Hesabınıza daxil olun və işinizi davam etdirin.</p>
+
+            <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-5">
+              {/* email */}
+              <div>
+                <label htmlFor="email" className="mb-2 block text-[12px] font-semibold uppercase tracking-wide text-white/55">
+                  Email <span style={{ color: GOLD }}>*</span>
+                </label>
+                <div className="relative">
+                  <Mail size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-white/35" />
+                  <input
+                    id="email"
+                    type="email"
+                    placeholder="ad@ces.az"
+                    autoComplete="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className={inputCls}
+                  />
+                </div>
               </div>
-            )}
 
-            <FieldGroup label="E-poçt ünvanı" htmlFor="email">
-              <Input
-                id="email"
-                type="email"
-                placeholder="ad@sirket.az"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                autoComplete="email"
-                required
-              />
-            </FieldGroup>
+              {/* password */}
+              <div>
+                <div className="mb-2 flex items-center justify-between">
+                  <label htmlFor="password" className="text-[12px] font-semibold uppercase tracking-wide text-white/55">
+                    Şifrə <span style={{ color: GOLD }}>*</span>
+                  </label>
+                  <Link
+                    href="/forgot-password"
+                    className="text-[12px] text-white/45 transition-colors hover:text-white"
+                  >
+                    Unutmuşam?
+                  </Link>
+                </div>
+                <div className="relative">
+                  <Lock size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-white/35" />
+                  <input
+                    id="password"
+                    type={showPw ? "text" : "password"}
+                    placeholder="••••••••"
+                    autoComplete="current-password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={inputCls}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPw((s) => !s)}
+                    aria-label={showPw ? "Şifrəni gizlət" : "Şifrəni göstər"}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/35 transition-colors hover:text-white/70"
+                  >
+                    {showPw ? <EyeOff size={17} /> : <Eye size={17} />}
+                  </button>
+                </div>
+              </div>
 
-            <FieldGroup label="Şifrə" htmlFor="password">
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="current-password"
-                required
-              />
-            </FieldGroup>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="mt-1 flex w-full items-center justify-center gap-2 rounded-[12px] bg-[#ECEAE3] py-3.5 text-[15px] font-semibold text-[#171612] transition-all hover:bg-white disabled:opacity-70"
+              >
+                {submitting ? "Daxil olunur…" : "Daxil ol"}
+                {!submitting && <ArrowRight size={17} />}
+              </button>
+            </form>
 
-            <Button type="submit" size="lg" loading={submitting} className="mt-1 w-full">
-              {submitting ? "Daxil olunur…" : "Daxil ol"}
-            </Button>
-          </form>
+            <div className="mt-7 flex flex-wrap items-center justify-between gap-2 text-[13px]">
+              <span className="text-white/40">Sistemə dəstək lazımdırsa?</span>
+              <a href="mailto:support@ces.az" className="font-medium text-white/80 transition-colors hover:text-[#C9A24B]">
+                support@ces.az →
+              </a>
+            </div>
+          </div>
         </div>
 
-        <p className="mt-6 text-center text-[12.5px] text-fg-faint">
-          Corporate Assessment Platform · Daxili istifadə üçün
+        {/* footer */}
+        <p className="text-[12px] text-white/30">
+          © 2026 Construction Equipment Services · Bütün hüquqlar qorunur
         </p>
       </div>
+
+      {/* ---------- RIGHT: image panel ---------- */}
+      <div className="relative hidden overflow-hidden lg:block">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/login.png" alt="" className="absolute inset-0 h-full w-full object-cover" />
+
+        {/* darkening + bottom gradient for legibility */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(11,11,9,0.55) 0%, rgba(11,11,9,0.10) 30%, rgba(11,11,9,0.20) 55%, rgba(11,11,9,0.92) 100%), linear-gradient(90deg, rgba(11,11,9,0.55) 0%, transparent 22%)",
+          }}
+        />
+        {/* faint grid texture */}
+        <div
+          className="absolute inset-0 opacity-[0.06]"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)",
+            backgroundSize: "64px 64px",
+          }}
+        />
+
+        {/* status (top-left) */}
+        <div className="absolute left-12 top-10 flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[2px] text-white/70">
+          <span className="h-2 w-2 rounded-full" style={{ background: GOLD, boxShadow: `0 0 10px ${GOLD}` }} />
+          Sistem aktiv · V1.0
+        </div>
+
+        {/* content (bottom) */}
+        <div className="absolute inset-x-0 bottom-0 p-12">
+          <p className="mb-4 text-[12px] font-semibold uppercase tracking-[3px]" style={{ color: GOLD }}>
+            CES · Qiymətləndirmə — 2026
+          </p>
+          <h2 className="max-w-[600px] text-[42px] font-bold leading-[1.08] tracking-[-1px] text-white xl:text-[50px]">
+            Bilik, qiymətləndirmə və <span style={{ color: GOLD }}>nəticə</span> bir platformada.
+          </h2>
+          <p className="mt-5 max-w-[540px] text-[15px] leading-relaxed text-white/55">
+            Dağınıq cədvəllər və əl ilə yoxlama deyil — imtahan, qiymətləndirmə və analitika bir interfeysdə birləşir.
+          </p>
+
+          <div className="mt-9 h-px w-full bg-white/10" />
+
+          <div className="mt-7 grid max-w-[640px] grid-cols-3 gap-4">
+            <Stat big="Anlıq" small="Nəticə" />
+            <Stat big="Təhlükəsiz" small="İmtahan" gold />
+            <Stat big="Sadə" small="İnterfeys" />
+          </div>
+        </div>
+      </div>
     </main>
+  );
+}
+
+function Stat({ big, small, gold }: { big: string; small: string; gold?: boolean }) {
+  return (
+    <div>
+      <div className="text-[26px] font-bold tracking-[-0.5px]" style={{ color: gold ? GOLD : "#ffffff" }}>
+        {big}
+      </div>
+      <div className="mt-1 text-[11px] font-semibold uppercase tracking-[2px] text-white/45">{small}</div>
+    </div>
   );
 }

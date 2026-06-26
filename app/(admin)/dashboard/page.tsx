@@ -2,21 +2,21 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { Users, ClipboardList, CheckCircle2, TrendingUp, Plus } from "lucide-react";
+import {
+  Users, ClipboardList, CheckCircle2, TrendingUp, Plus, ClipboardCheck, ShieldAlert,
+  Activity, ArrowRight, ShieldCheck,
+} from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { apiFetch } from "@/lib/api";
-import type { DashboardStats } from "@/lib/types";
+import type { DashboardStats, DashboardAttentionSession } from "@/lib/types";
 import { KpiCard, Gauge, scoreColor } from "@/components/ui/DataViz";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { ResultPill } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
 import { Loading, EmptyState } from "@/components/ui/Feedback";
 import { buttonClasses } from "@/components/ui/Button";
-
-function formatDate(iso: string | null) {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("az", { day: "2-digit", month: "short", year: "numeric" });
-}
+import { formatDate, formatDateWithWeekdayAz } from "@/lib/format";
+import { cn } from "@/lib/cn";
 
 export default function AdminDashboardPage() {
   const { user } = useAuth();
@@ -32,15 +32,8 @@ export default function AdminDashboardPage() {
   }, []);
 
   const recent = stats?.recentSessions ?? [];
-  const scored = recent.filter((r) => r.score != null);
-  const avgScore = scored.length
-    ? Math.round(scored.reduce((s, r) => s + (r.score ?? 0), 0) / scored.length)
-    : 0;
-  const passCount = recent.filter((r) => r.passed === true).length;
-  const failCount = recent.filter((r) => r.passed === false).length;
-  const passRate = passCount + failCount ? Math.round((passCount / (passCount + failCount)) * 100) : 0;
-
-  const today = new Date().toLocaleDateString("az", { weekday: "long", day: "numeric", month: "long" });
+  const allClear = !!stats && (stats.pendingGradingCount ?? 0) === 0 && (stats.flaggedCount ?? 0) === 0;
+  const today = formatDateWithWeekdayAz(new Date());
 
   return (
     <div className="mx-auto max-w-[1200px]">
@@ -50,7 +43,7 @@ export default function AdminDashboardPage() {
           <h2 className="text-[22px] font-bold tracking-[-0.4px] text-fg">
             Xoş gəldin, {user?.firstName ?? "Admin"} 👋
           </h2>
-          <p className="mt-0.5 text-[13.5px] text-fg-muted capitalize">{today}</p>
+          <p className="mt-0.5 text-[13.5px] text-fg-muted">{today}</p>
         </div>
         <Link href="/exams/create" className={buttonClasses("primary", "md")}>
           <Plus size={17} /> Yeni imtahan
@@ -65,12 +58,7 @@ export default function AdminDashboardPage() {
 
       {/* KPI grid */}
       <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard
-          icon={<Users size={19} />}
-          tone="blue"
-          value={loading ? "—" : stats?.totalUsers ?? 0}
-          label="Ümumi istifadəçi"
-        />
+        <KpiCard icon={<Users size={19} />} tone="blue" value={loading ? "—" : stats?.totalUsers ?? 0} label="Aktiv istifadəçi" />
         <KpiCard
           icon={<ClipboardList size={19} />}
           tone="green"
@@ -90,58 +78,69 @@ export default function AdminDashboardPage() {
           tone="purple"
           value={loading ? "—" : stats?.completedThisMonth ?? 0}
           label="Bu ay tamamlanan"
+          topRight={!loading ? <span className="num text-[11px] text-fg-muted">cəmi {stats?.completedTotal ?? 0}</span> : undefined}
         />
         <KpiCard
           icon={<TrendingUp size={19} />}
           tone="amber"
-          value={loading ? "—" : `${avgScore}%`}
-          label="Son nəticələrin ortalaması"
+          value={loading ? "—" : stats?.avgScore != null ? `${stats.avgScore}%` : "—"}
+          label="Ümumi orta nəticə"
         />
       </div>
+
+      {/* Action center */}
+      {!loading && stats && (
+        allClear ? (
+          <Card className="mb-5 flex items-center gap-3.5 p-5">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] bg-success-bg text-success-fg">
+              <ShieldCheck size={22} />
+            </span>
+            <div>
+              <p className="text-[14.5px] font-semibold text-fg">Hər şey qaydasındadır</p>
+              <p className="text-[13px] text-fg-muted">Qiymətləndirmə gözləyən sessiya və proktorinq xəbərdarlığı yoxdur.</p>
+            </div>
+          </Card>
+        ) : (
+          <div className="mb-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <AttentionCard
+              tone="amber"
+              icon={<ClipboardCheck size={18} />}
+              title="Qiymətləndirmə gözləyir"
+              total={stats.pendingGradingCount ?? 0}
+              items={stats.pendingGrading ?? []}
+              unit="cavab"
+              emptyText="Qiymətləndirilməli sessiya yoxdur."
+            />
+            <AttentionCard
+              tone="red"
+              icon={<ShieldAlert size={18} />}
+              title="Proktorinq xəbərdarlıqları"
+              total={stats.flaggedCount ?? 0}
+              items={stats.flaggedSessions ?? []}
+              unit="pozuntu"
+              emptyText="Pozuntu qeydə alınmayıb."
+            />
+          </div>
+        )
+      )}
 
       {/* Charts row */}
       <div className="mb-5 grid grid-cols-1 gap-4 lg:grid-cols-[1.6fr_1fr]">
         <Card className="p-5">
-          <CardHeader title="Son imtahan nəticələri" subtitle="Ən son tamamlanan sessiyalar" />
+          <CardHeader title="Son 7 günün aktivliyi" subtitle="Gündəlik tamamlanan imtahanlar" />
           <div className="mt-5">
-            {loading ? (
-              <Loading />
-            ) : scored.length === 0 ? (
-              <EmptyState icon={<TrendingUp size={22} />} title="Hələ nəticə yoxdur" description="İmtahanlar tamamlandıqca nəticələr burada görünəcək." />
-            ) : (
-              <div className="flex h-[180px] items-end gap-3">
-                {scored.slice(0, 10).map((r) => (
-                  <div key={r.sessionId} className="flex flex-1 flex-col items-center gap-2">
-                    <span className="num text-[11px] font-semibold text-fg-muted">{r.score}%</span>
-                    <div className="flex w-full flex-1 items-end">
-                      <div
-                        className="w-full rounded-t-[6px] transition-[height]"
-                        style={{ height: `${Math.max(4, r.score ?? 0)}%`, background: scoreColor(r.score ?? 0) }}
-                        title={`${r.userName} — ${r.score}%`}
-                      />
-                    </div>
-                    <span className="w-full truncate text-center text-[10.5px] text-fg-faint">
-                      {r.userName.split(" ")[0]}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
+            {loading ? <Loading /> : <WeeklyActivity data={stats?.weeklyActivity ?? []} />}
           </div>
         </Card>
 
         <Card className="flex flex-col p-5">
-          <CardHeader title="Keçid nisbəti" subtitle="Son sessiyalar üzrə" />
+          <CardHeader title="Keçid nisbəti" subtitle="Bütün tamamlanmış imtahanlar" />
           <div className="flex flex-1 flex-col items-center justify-center gap-4 py-2">
-            <Gauge value={passRate} label="keçid" color="#16A34A" />
+            <Gauge value={stats?.passRate ?? 0} label="keçid" color="#16A34A" />
             <div className="flex gap-5 text-[13px]">
               <span className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-success" />
-                Keçdi <b className="num font-semibold text-fg">{passCount}</b>
-              </span>
-              <span className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-danger" />
-                Kəsildi <b className="num font-semibold text-fg">{failCount}</b>
+                <span className="h-2.5 w-2.5 rounded-full bg-blue-500" />
+                Tamamlanan <b className="num font-semibold text-fg">{stats?.completedTotal ?? 0}</b>
               </span>
             </div>
           </div>
@@ -205,6 +204,84 @@ export default function AdminDashboardPage() {
           </div>
         )}
       </Card>
+    </div>
+  );
+}
+
+function AttentionCard({
+  tone, icon, title, total, items, unit, emptyText,
+}: {
+  tone: "amber" | "red";
+  icon: React.ReactNode;
+  title: string;
+  total: number;
+  items: DashboardAttentionSession[];
+  unit: string;
+  emptyText: string;
+}) {
+  const tones = {
+    amber: { tile: "bg-amber-50 text-amber-600 dark:bg-amber-500/10", badge: "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400" },
+    red: { tile: "bg-red-50 text-red-600 dark:bg-red-500/10", badge: "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400" },
+  } as const;
+  const t = tones[tone];
+  return (
+    <Card className="flex flex-col p-0">
+      <div className="flex items-center justify-between border-b border-line px-5 py-3.5">
+        <div className="flex items-center gap-2.5">
+          <span className={cn("flex h-9 w-9 items-center justify-center rounded-[10px]", t.tile)}>{icon}</span>
+          <h3 className="text-[14.5px] font-semibold text-fg">{title}</h3>
+        </div>
+        {total > 0 && <span className={cn("num rounded-full px-2.5 py-1 text-[12px] font-semibold", t.badge)}>{total}</span>}
+      </div>
+      {items.length === 0 ? (
+        <div className="px-5 py-6 text-center text-[13px] text-fg-muted">{emptyText}</div>
+      ) : (
+        <div className="flex flex-col divide-y divide-line">
+          {items.map((s) => (
+            <Link
+              key={s.sessionId}
+              href={`/exams/${s.examId}/results`}
+              className="group flex items-center gap-3 px-5 py-3 hover:bg-surface-2"
+            >
+              <Avatar name={s.userName} size={30} />
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-[13px] font-medium text-fg">{s.userName}</div>
+                <div className="truncate text-[11.5px] text-fg-muted">{s.examTitle}</div>
+              </div>
+              <span className={cn("num shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold", t.badge)}>
+                {s.count} {unit}
+              </span>
+              <ArrowRight size={15} className="shrink-0 text-fg-faint transition-transform group-hover:translate-x-0.5" />
+            </Link>
+          ))}
+        </div>
+      )}
+    </Card>
+  );
+}
+
+function WeeklyActivity({ data }: { data: { label: string; count: number }[] }) {
+  if (data.length === 0) {
+    return <EmptyState icon={<Activity size={22} />} title="Məlumat yoxdur" description="Tamamlanan imtahanlar burada görünəcək." />;
+  }
+  const max = Math.max(1, ...data.map((d) => d.count));
+  return (
+    <div className="flex items-end gap-2.5">
+      {data.map((d, i) => {
+        const h = Math.round((d.count / max) * 150);
+        return (
+          <div key={i} className="flex flex-1 flex-col items-center gap-1.5">
+            <span className="num text-[11px] font-semibold text-fg-muted">{d.count > 0 ? d.count : ""}</span>
+            <div className="flex w-full items-end justify-center" style={{ height: 150 }}>
+              <div
+                className="w-full max-w-[40px] rounded-t-[6px]"
+                style={{ height: d.count > 0 ? Math.max(4, h) : 3, background: d.count > 0 ? scoreColor(70) : "#E2E8F0" }}
+              />
+            </div>
+            <span className="num text-[10.5px] text-fg-faint">{d.label}</span>
+          </div>
+        );
+      })}
     </div>
   );
 }

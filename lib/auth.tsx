@@ -18,6 +18,7 @@ interface AuthContextValue {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  updateProfile: (firstName: string, lastName: string) => void;
   isAdmin: () => boolean;
   isEmployee: () => boolean;
 }
@@ -91,6 +92,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push("/login");
   }, [router]);
 
+  const updateProfile = useCallback((firstName: string, lastName: string) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, firstName, lastName };
+      localStorage.setItem("ces_user", JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
   const isAdmin = useCallback(() => user?.roles.includes("ROLE_ADMIN") ?? false, [user]);
   const isEmployee = useCallback(
     () =>
@@ -99,7 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, isAdmin, isEmployee }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, updateProfile, isAdmin, isEmployee }}>
       {children}
     </AuthContext.Provider>
   );

@@ -39,7 +39,7 @@ const statusMap: Record<
   ExamStatus,
   { label: string; bg: string; fg: string; dot: string; pulse?: boolean }
 > = {
-  active: { label: "Aktiv", bg: "#EFF5FF", fg: "#1D4ED8", dot: "#2563EB", pulse: true },
+  active: { label: "Aktiv", bg: "#FAF5E9", fg: "#75590F", dot: "#8E6F17", pulse: true },
   draft: { label: "Qaralama", bg: "#F1F5F9", fg: "#475569", dot: "#94A3B8" },
   scheduled: { label: "Planlanıb", bg: "#FEF3C7", fg: "#B45309", dot: "#D97706" },
   expired: { label: "Bitib", bg: "#F1F5F9", fg: "#94A3B8", dot: "#CBD5E1" },
@@ -107,7 +107,7 @@ export function RoleBadge({ role }: { role: string }) {
   const r = role.replace("ROLE_", "").toUpperCase();
   if (r === "ADMIN")
     return (
-      <span className={cn(base, "text-white")} style={{ background: "#0E1B33" }}>
+      <span className={cn(base, "text-white")} style={{ background: "#2A2620" }}>
         <Shield size={12} strokeWidth={2.4} /> Admin
       </span>
     );
@@ -118,7 +118,7 @@ export function RoleBadge({ role }: { role: string }) {
       </span>
     );
   return (
-    <span className={base} style={{ background: "#EAF1FE", color: "#1D4ED8" }}>
+    <span className={base} style={{ background: "#FAF5E9", color: "#75590F" }}>
       İşçi
     </span>
   );

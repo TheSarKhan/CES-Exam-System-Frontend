@@ -33,9 +33,24 @@ export function Table({
   );
 }
 
-export function Tr({ children, className }: { children: React.ReactNode; className?: string }) {
+export function Tr({
+  children,
+  className,
+  onClick,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  onClick?: () => void;
+}) {
   return (
-    <tr className={cn("border-b border-line last:border-0 hover:bg-surface-2", className)}>
+    <tr
+      onClick={onClick}
+      className={cn(
+        "border-b border-line last:border-0 hover:bg-surface-2",
+        onClick && "cursor-pointer",
+        className,
+      )}
+    >
       {children}
     </tr>
   );

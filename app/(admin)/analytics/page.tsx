@@ -1,18 +1,22 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { ClipboardList, TrendingUp, Target, MessageSquare, ShieldAlert } from "lucide-react";
+import { ClipboardList, TrendingUp, Target, MessageSquare, ShieldAlert, Flame, XCircle } from "lucide-react";
 import { apiFetch } from "@/lib/api";
-import type { ExamReport } from "@/lib/types";
+import type { ExamReport, AnalyticsInsights, AnalyticsQuestionInsight, Difficulty } from "@/lib/types";
 import { PageHeader } from "@/components/app/PageHeader";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { KpiCard, Gauge, ProgressBar, scoreColor } from "@/components/ui/DataViz";
 import { Loading, EmptyState, Alert } from "@/components/ui/Feedback";
+import { questionTypeLabel } from "@/components/exam/QuestionInput";
+import { DIFFICULTY_META } from "@/lib/questionBank";
+import { cn } from "@/lib/cn";
 
 const MONTHS = ["Yan", "Fev", "Mar", "Apr", "May", "İyn", "İyl", "Avq", "Sen", "Okt", "Noy", "Dek"];
 
 export default function AnalyticsPage() {
   const [reports, setReports] = useState<ExamReport[]>([]);
+  const [insights, setInsights] = useState<AnalyticsInsights | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -21,6 +25,10 @@ export default function AnalyticsPage() {
       .then(setReports)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
+    // Loads only once the aggregation endpoint exists; until then the section stays a placeholder.
+    apiFetch<AnalyticsInsights>("/api/v1/admin/analytics/insights")
+      .then(setInsights)
+      .catch(() => setInsights(null));
   }, []);
 
   const stats = useMemo(() => {
@@ -151,10 +159,85 @@ export default function AnalyticsPage() {
             </Card>
           </div>
 
-          <Alert tone="info" title="Sual səviyyəsi analitikası və anti-cheat jurnalı">
-            Ən çətin suallar, ən çox səhv cavablandırılan suallar və anti-cheat pozuntu statistikası üçün backend-də
-            ayrıca aqreqasiya endpoint-i tələb olunur — bu bölmə həmin endpoint hazır olduqda aktivləşəcək.
-          </Alert>
+          {insights ? (
+            <>
+              {/* Question-level insights */}
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <Card className="p-0">
+                  <div className="flex items-center gap-2 border-b border-line px-5 py-4">
+                    <Flame size={17} className="text-red-500" />
+                    <h3 className="text-[15px] font-semibold text-fg">Ən çətin suallar</h3>
+                    <span className="text-[12px] text-fg-muted">ən aşağı uğur faizi</span>
+                  </div>
+                  {insights.hardestQuestions.length === 0 ? (
+                    <div className="px-5 py-6 text-center text-[13px] text-fg-muted">Qiymətləndirilmiş sual yoxdur.</div>
+                  ) : (
+                    <div className="flex flex-col divide-y divide-line">
+                      {insights.hardestQuestions.map((q, i) => (
+                        <InsightRow key={q.questionId} q={q} rank={i + 1} metric="rate" />
+                      ))}
+                    </div>
+                  )}
+                </Card>
+
+                <Card className="p-0">
+                  <div className="flex items-center gap-2 border-b border-line px-5 py-4">
+                    <XCircle size={17} className="text-amber-500" />
+                    <h3 className="text-[15px] font-semibold text-fg">Ən çox səhv cavablandırılan</h3>
+                    <span className="text-[12px] text-fg-muted">səhv cavab sayına görə</span>
+                  </div>
+                  {insights.mostMissed.length === 0 ? (
+                    <div className="px-5 py-6 text-center text-[13px] text-fg-muted">Səhv cavab qeydə alınmayıb.</div>
+                  ) : (
+                    <div className="flex flex-col divide-y divide-line">
+                      {insights.mostMissed.map((q, i) => (
+                        <InsightRow key={q.questionId} q={q} rank={i + 1} metric="wrong" />
+                      ))}
+                    </div>
+                  )}
+                </Card>
+              </div>
+
+              {/* Anti-cheat log summary */}
+              <Card className="p-0">
+                <div className="flex items-center justify-between border-b border-line px-5 py-4">
+                  <div className="flex items-center gap-2">
+                    <ShieldAlert size={17} className="text-red-500" />
+                    <h3 className="text-[15px] font-semibold text-fg">Anti-cheat jurnalı</h3>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="num rounded-full bg-red-50 px-2.5 py-1 text-[11.5px] font-semibold text-red-700 dark:bg-red-500/10 dark:text-red-400">
+                      {insights.totalViolations} hadisə
+                    </span>
+                    <span className="num rounded-full bg-surface-2 px-2.5 py-1 text-[11.5px] font-semibold text-fg-muted">
+                      {insights.flaggedSessions} sessiya
+                    </span>
+                  </div>
+                </div>
+                {insights.violationStats.length === 0 ? (
+                  <EmptyState icon={<ShieldAlert size={22} />} title="Pozuntu yoxdur" description="İmtahanlar zamanı anti-cheat pozuntusu qeydə alınmayıb." />
+                ) : (
+                  <div className="flex flex-col gap-3 p-5">
+                    {insights.violationStats.map((v) => {
+                      const pct = insights.totalViolations > 0 ? (v.count / insights.totalViolations) * 100 : 0;
+                      return (
+                        <div key={v.type} className="flex items-center gap-3">
+                          <span className="w-[200px] shrink-0 truncate text-[13px] text-fg-soft">{v.label || v.type}</span>
+                          <div className="flex-1"><ProgressBar value={pct} color="#DC2626" /></div>
+                          <span className="num w-[40px] shrink-0 text-right text-[13px] font-semibold text-fg">{v.count}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </Card>
+            </>
+          ) : (
+            <Alert tone="info" title="Sual səviyyəsi analitikası və anti-cheat jurnalı">
+              Ən çətin suallar, ən çox səhv cavablandırılan suallar və anti-cheat pozuntu statistikası üçün backend-də
+              ayrıca aqreqasiya endpoint-i tələb olunur — bu bölmə həmin endpoint hazır olduqda aktivləşəcək.
+            </Alert>
+          )}
         </div>
       )}
     </div>
@@ -183,14 +266,45 @@ function TrendChart({ months }: { months: { label: string; rate: number; n: numb
           </g>
         );
       })}
-      <path d={area} fill="#2563EB" opacity="0.08" />
-      <path d={line} fill="none" stroke="#2563EB" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d={area} fill="#B4902F" opacity="0.10" />
+      <path d={line} fill="none" stroke="#8E6F17" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
       {pts.map((p, i) => (
         <g key={i}>
-          <circle cx={p.x} cy={p.y} r="3.5" fill="#2563EB" />
+          <circle cx={p.x} cy={p.y} r="3.5" fill="#8E6F17" />
           <text x={p.x} y={H - 8} textAnchor="middle" className="fill-fg-muted" style={{ fontSize: 10 }}>{p.label}</text>
         </g>
       ))}
     </svg>
+  );
+}
+
+function InsightRow({ q, rank, metric }: { q: AnalyticsQuestionInsight; rank: number; metric: "rate" | "wrong" }) {
+  return (
+    <div className="flex items-center gap-3 px-5 py-3">
+      <span className="num flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-surface-2 text-[11px] font-semibold text-fg-muted">{rank}</span>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[13px] font-medium text-fg">{q.text}</p>
+        <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-fg-muted">
+          <span>{questionTypeLabel(q.type)}</span>
+          {q.difficulty && (
+            <>
+              <span className="text-fg-faint">·</span>
+              <span className={cn("rounded-[5px] px-1.5 py-0.5 font-semibold", DIFFICULTY_META[q.difficulty as Difficulty]?.cls)}>
+                {DIFFICULTY_META[q.difficulty as Difficulty]?.label ?? q.difficulty}
+              </span>
+            </>
+          )}
+          <span className="text-fg-faint">·</span>
+          <span className="num">{q.total} cavab</span>
+        </div>
+      </div>
+      {metric === "rate" ? (
+        <span className="num shrink-0 text-[13px] font-semibold" style={{ color: scoreColor(q.successRate ?? 0) }}>
+          {q.successRate != null ? `${q.successRate}%` : "—"}
+        </span>
+      ) : (
+        <span className="num shrink-0 rounded-full bg-danger-bg px-2 py-0.5 text-[12px] font-semibold text-danger-fg">{q.wrong} səhv</span>
+      )}
+    </div>
   );
 }

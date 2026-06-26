@@ -12,17 +12,17 @@
   --font-sans: var(--font-geist), system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
 
-  /* Brand — Corporate Blue */
-  --color-blue-50: #eff5ff;
-  --color-blue-100: #dbeafe;
-  --color-blue-200: #bfdbfe;
-  --color-blue-300: #93c5fd;
-  --color-blue-400: #60a5fa;
-  --color-blue-500: #3b82f6;
-  --color-blue-600: #2563eb;
-  --color-blue-700: #1d4ed8;
-  --color-blue-800: #1e40af;
-  --color-blue-900: #1e3a8a;
+  /* Brand — CES Gold (palette keys kept as `blue-*` so all utilities re-tint at once) */
+  --color-blue-50: #faf5e9;
+  --color-blue-100: #f3e7c9;
+  --color-blue-200: #e6d09c;
+  --color-blue-300: #d7ba6c;
+  --color-blue-400: #c8a449;
+  --color-blue-500: #b4902f;
+  --color-blue-600: #8e6f17;
+  --color-blue-700: #75590f;
+  --color-blue-800: #5e470c;
+  --color-blue-900: #4b3909;
 
   /* Neutral — Slate */
   --color-slate-50: #f8fafc;
@@ -63,9 +63,9 @@
   --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04);
   --shadow-pop: 0 4px 12px rgba(15, 23, 42, 0.08);
   --shadow-modal: 0 12px 32px rgba(15, 23, 42, 0.16);
-  --shadow-primary: 0 1px 2px rgba(37, 99, 235, 0.4);
-  --shadow-primary-hover: 0 4px 12px rgba(37, 99, 235, 0.45);
-  --shadow-toast: 0 8px 24px rgba(14, 27, 51, 0.3);
+  --shadow-primary: 0 1px 2px rgba(142, 111, 23, 0.4);
+  --shadow-primary-hover: 0 4px 12px rgba(142, 111, 23, 0.45);
+  --shadow-toast: 0 8px 24px rgba(30, 27, 18, 0.3);
 
   /* Keyframes / animations */
   --animate-pulse-dot: pulse-dot 1.6s ease infinite;
@@ -90,31 +90,31 @@
 }
 
 :root {
-  --app: #eef1f6;
+  --app: #f1eee8;
   --surface: #ffffff;
-  --surface-2: #f8fafc;
-  --line: #e6eaf1;
-  --line-strong: #e2e8f0;
-  --fg: #0f172a;
-  --fg-soft: #334155;
-  --fg-muted: #64748b;
-  --fg-faint: #94a3b8;
-  --sidebar: #0e1b33;
-  --sidebar-2: #16294a;
+  --surface-2: #f9f7f2;
+  --line: #ebe7df;
+  --line-strong: #e4dfd4;
+  --fg: #232019;
+  --fg-soft: #4a443a;
+  --fg-muted: #726b5d;
+  --fg-faint: #9c9484;
+  --sidebar: #21201b;
+  --sidebar-2: #2e2b23;
 }
 
 .dark {
-  --app: #0a1222;
-  --surface: #111e36;
-  --surface-2: #16294a;
+  --app: #14130f;
+  --surface: #1d1b16;
+  --surface-2: #2a271f;
   --line: rgba(255, 255, 255, 0.09);
   --line-strong: rgba(255, 255, 255, 0.14);
-  --fg: #f1f5f9;
-  --fg-soft: #cbd5e1;
-  --fg-muted: #94a3b8;
-  --fg-faint: #64748b;
-  --sidebar: #081020;
-  --sidebar-2: #16294a;
+  --fg: #f5f1e8;
+  --fg-soft: #d8d1c2;
+  --fg-muted: #a39b89;
+  --fg-faint: #6f685a;
+  --sidebar: #17160f;
+  --sidebar-2: #2a271f;
 }
 
 @keyframes pulse-dot {
@@ -124,6 +124,11 @@
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(-10px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* ============================================================
@@ -188,7 +193,7 @@
   .focus-ring:focus-visible {
     outline: none;
     border-color: var(--color-blue-300);
-    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.18);
+    box-shadow: 0 0 0 4px rgba(142, 111, 23, 0.2);
   }
 
   /* Button base */
@@ -231,7 +236,7 @@
   }
   .btn-secondary:hover:not(:disabled) { background: var(--color-slate-200); }
   .dark .btn-secondary { background: var(--surface-2); color: var(--fg-soft); }
-  .dark .btn-secondary:hover:not(:disabled) { background: #1d3a6b; }
+  .dark .btn-secondary:hover:not(:disabled) { background: #39342a; }
 
   .btn-outline {
     background: var(--surface);
@@ -269,7 +274,7 @@
   .field:focus {
     outline: none;
     border-color: var(--color-blue-600);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+    box-shadow: 0 0 0 3px rgba(142, 111, 23, 0.16);
   }
   .field-error {
     border-color: var(--color-danger);
