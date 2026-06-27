@@ -4,6 +4,7 @@ import React from "react";
 import { Check, Calendar, Minus, Plus, Star, ImageIcon, Clock } from "lucide-react";
 import type { SessionQuestion } from "@/lib/types";
 import { cn } from "@/lib/cn";
+import { imageSrc } from "@/lib/api";
 
 export interface AnswerValue {
   selectedOptionId?: number | null;
@@ -216,11 +217,21 @@ export function QuestionInput({
 
   /* ---- Image question (media + text answer) ---- */
   if (type === "IMAGE_QUESTION") {
+    const src = imageSrc(question.imageUrl);
     return (
       <div>
-        <div className="mb-3 flex h-[150px] items-center justify-center rounded-[12px] bg-gradient-to-br from-slate-800 to-slate-700 text-slate-400">
-          <ImageIcon size={32} />
-        </div>
+        {src ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={src}
+            alt="Sual şəkli"
+            className="mb-3 max-h-[360px] w-full rounded-[12px] border border-line object-contain"
+          />
+        ) : (
+          <div className="mb-3 flex h-[150px] items-center justify-center rounded-[12px] bg-gradient-to-br from-slate-800 to-slate-700 text-slate-400">
+            <ImageIcon size={32} />
+          </div>
+        )}
         <input
           className="field"
           value={answer?.textAnswer ?? ""}
@@ -238,6 +249,7 @@ export function QuestionInput({
       <div className="grid grid-cols-2 gap-3">
         {options.map((opt) => {
           const selected = answer?.selectedOptionId === opt.id;
+          const optSrc = imageSrc(opt.imageUrl);
           return (
             <button
               key={opt.id}
@@ -249,15 +261,20 @@ export function QuestionInput({
               )}
               style={selected ? { borderWidth: 2 } : undefined}
             >
-              <div className="flex h-[110px] items-center justify-center bg-gradient-to-br from-slate-800 to-slate-700 text-slate-400">
-                <ImageIcon size={26} />
-              </div>
+              {optSrc ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={optSrc} alt={opt.text || "Variant"} className="h-[110px] w-full object-cover" />
+              ) : (
+                <div className="flex h-[110px] items-center justify-center bg-gradient-to-br from-slate-800 to-slate-700 text-slate-400">
+                  <ImageIcon size={26} />
+                </div>
+              )}
               {selected && (
                 <span className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-white">
                   <Check size={14} strokeWidth={3} />
                 </span>
               )}
-              <div className="px-3 py-2 text-left text-[13px] font-medium text-fg-soft">{opt.text}</div>
+              {opt.text && <div className="px-3 py-2 text-left text-[13px] font-medium text-fg-soft">{opt.text}</div>}
             </button>
           );
         })}

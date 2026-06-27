@@ -52,9 +52,10 @@ export default function EditQuestionPage() {
           initial={{
             type: question!.type,
             text: question!.text,
+            imageUrl: question!.imageUrl,
             score: question!.score,
             difficulty: question!.difficulty,
-            options: question!.options?.map((o) => ({ text: o.text, isCorrect: o.isCorrect })) ?? null,
+            options: question!.options?.map((o) => ({ text: o.text, isCorrect: o.isCorrect, imageUrl: o.imageUrl })) ?? null,
           }}
           submitLabel="Yadda saxla"
           onSubmit={async (body) => {

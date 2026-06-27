@@ -51,4 +51,33 @@ export async function apiFetch<T = unknown>(path: string, options?: RequestInit)
   return JSON.parse(body) as T;
 }
 
+/** Absolute URL for a stored image (backend returns a relative /api/v1/public/images/... path). */
+export function imageSrc(url?: string | null): string | undefined {
+  if (!url) return undefined;
+  return /^https?:\/\//.test(url) ? url : `${API_BASE}${url}`;
+}
+
+/** Upload an image (admin) and get back its public URL. */
+export async function uploadImage(file: File): Promise<{ filename: string; url: string }> {
+  const token = typeof window !== "undefined" ? localStorage.getItem("ces_token") : null;
+  const form = new FormData();
+  form.append("file", file);
+  const res = await fetch(`${API_BASE}/api/v1/images`, {
+    method: "POST",
+    headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }, // no Content-Type: browser sets the multipart boundary
+    body: form,
+  });
+  if (!res.ok) {
+    let message = res.statusText;
+    try {
+      const j = await res.json();
+      message = j.message || message;
+    } catch {
+      /* not JSON */
+    }
+    throw new Error(message);
+  }
+  return res.json();
+}
+
 export { API_BASE };

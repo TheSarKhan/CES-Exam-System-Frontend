@@ -15,6 +15,7 @@ export interface MyAssignment {
 export interface SessionQuestionOption {
   id: number;
   text: string;
+  imageUrl?: string | null;
   sortOrder: number;
 }
 
@@ -22,6 +23,7 @@ export interface SessionQuestion {
   id: number;
   type: string;
   text: string;
+  imageUrl?: string | null;
   score: number;
   options: SessionQuestionOption[] | null;
 }
@@ -176,6 +178,7 @@ export interface Topic {
 export interface QuestionOption {
   id: number;
   text: string;
+  imageUrl?: string | null;
   isCorrect: boolean;
   sortOrder: number;
 }
@@ -185,6 +188,7 @@ export interface Question {
   topicId: number;
   type: string;
   text: string;
+  imageUrl?: string | null;
   score: number;
   difficulty: Difficulty;
   isActive: boolean;

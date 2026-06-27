@@ -1,14 +1,15 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Plus, Trash2, FolderTree } from "lucide-react";
+import { Plus, Trash2, FolderTree, ImagePlus, Loader2, X } from "lucide-react";
 import type { Difficulty } from "@/lib/types";
 import type { TopicOption } from "@/lib/questionBank";
 import { Card } from "@/components/ui/Card";
 import { FieldGroup, Input, Select, Textarea } from "@/components/ui/Field";
 import { Button, buttonClasses } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
+import { uploadImage, imageSrc } from "@/lib/api";
 
 const TYPE_OPTIONS: { value: string; label: string }[] = [
   { value: "SINGLE_CHOICE", label: "Tək seçim" },
@@ -16,7 +17,68 @@ const TYPE_OPTIONS: { value: string; label: string }[] = [
   { value: "TRUE_FALSE", label: "Doğru / Yanlış" },
   { value: "SHORT_TEXT", label: "Qısa mətn" },
   { value: "LONG_TEXT", label: "Uzun mətn" },
+  { value: "IMAGE_QUESTION", label: "Şəkilli sual" },
+  { value: "IMAGE_CHOICE", label: "Şəkil seçimi" },
 ];
+
+/** Reusable image upload control with preview + remove. */
+function ImageUploader({ value, onChange, label }: { value?: string | null; onChange: (url: string | null) => void; label: string }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const src = imageSrc(value);
+
+  const pick = async (file?: File) => {
+    if (!file) return;
+    setBusy(true);
+    setErr("");
+    try {
+      const { url } = await uploadImage(file);
+      onChange(url);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Yüklənmədi");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif"
+        className="hidden"
+        onChange={(e) => pick(e.target.files?.[0])}
+      />
+      {src ? (
+        <div className="relative inline-block">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={src} alt={label} className="max-h-[160px] rounded-[10px] border border-line object-contain" />
+          <button
+            type="button"
+            onClick={() => onChange(null)}
+            className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-danger text-white shadow"
+            title="Şəkli sil"
+          >
+            <X size={13} />
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={busy}
+          className="flex items-center gap-2 rounded-[10px] border border-dashed border-line-strong px-4 py-3 text-[13px] font-medium text-fg-muted hover:border-blue-400 hover:text-blue-600"
+        >
+          {busy ? <Loader2 size={16} className="animate-spin" /> : <ImagePlus size={16} />}
+          {busy ? "Yüklənir…" : label}
+        </button>
+      )}
+      {err && <p className="mt-1.5 text-[12px] text-danger-fg">{err}</p>}
+    </div>
+  );
+}
 
 const DIFFICULTIES: { value: Difficulty; label: string }[] = [
   { value: "EASY", label: "Asan" },
@@ -27,9 +89,10 @@ const DIFFICULTIES: { value: Difficulty; label: string }[] = [
 export interface QuestionFormInitial {
   type?: string;
   text?: string;
+  imageUrl?: string | null;
   score?: number;
   difficulty?: Difficulty;
-  options?: { text: string; isCorrect: boolean }[] | null;
+  options?: { text: string; isCorrect: boolean; imageUrl?: string | null }[] | null;
 }
 
 interface QuestionFormProps {
@@ -72,12 +135,13 @@ export function QuestionForm({ topicOptions, initialTopicId, initial, submitLabe
 
   const [qType, setQType] = useState(initial?.type ?? "SINGLE_CHOICE");
   const [qText, setQText] = useState(initial?.text ?? "");
+  const [qImageUrl, setQImageUrl] = useState<string | null>(initial?.imageUrl ?? null);
   const [score, setScore] = useState<number>(initial?.score ?? 1);
   const [difficulty, setDifficulty] = useState<Difficulty>(initial?.difficulty ?? "MEDIUM");
-  const [options, setOptions] = useState<{ text: string; isCorrect: boolean }[]>(() => {
+  const [options, setOptions] = useState<{ text: string; isCorrect: boolean; imageUrl?: string | null }[]>(() => {
     const o = initial?.options;
-    if (o && o.length && (initial?.type === "SINGLE_CHOICE" || initial?.type === "MULTIPLE_CHOICE")) {
-      return o.map((x) => ({ text: x.text, isCorrect: x.isCorrect }));
+    if (o && o.length && (initial?.type === "SINGLE_CHOICE" || initial?.type === "MULTIPLE_CHOICE" || initial?.type === "IMAGE_CHOICE")) {
+      return o.map((x) => ({ text: x.text, isCorrect: x.isCorrect, imageUrl: x.imageUrl ?? null }));
     }
     return [{ text: "", isCorrect: false }, { text: "", isCorrect: false }];
   });
@@ -117,10 +181,12 @@ export function QuestionForm({ topicOptions, initialTopicId, initial, submitLabe
     setTopicId(firstTopic?.topicId ?? "");
   };
 
-  const setOpt = (i: number, field: "text" | "isCorrect", value: string | boolean) => {
+  const singleCorrect = qType === "SINGLE_CHOICE" || qType === "IMAGE_CHOICE";
+
+  const setOpt = (i: number, field: "text" | "isCorrect" | "imageUrl", value: string | boolean | null) => {
     setOptions((prev) => {
       const next = [...prev];
-      if (field === "isCorrect" && qType === "SINGLE_CHOICE" && value === true) next.forEach((o) => (o.isCorrect = false));
+      if (field === "isCorrect" && singleCorrect && value === true) next.forEach((o) => (o.isCorrect = false));
       next[i] = { ...next[i], [field]: value };
       return next;
     });
@@ -134,16 +200,23 @@ export function QuestionForm({ topicOptions, initialTopicId, initial, submitLabe
       ];
     if (qType === "SINGLE_CHOICE" || qType === "MULTIPLE_CHOICE")
       return options.map((o, i) => ({ text: o.text, isCorrect: o.isCorrect, sortOrder: i }));
+    if (qType === "IMAGE_CHOICE")
+      return options.map((o, i) => ({ text: o.text || `Variant ${i + 1}`, imageUrl: o.imageUrl ?? null, isCorrect: o.isCorrect, sortOrder: i }));
     return undefined;
   };
 
   const hasOptions = qType === "SINGLE_CHOICE" || qType === "MULTIPLE_CHOICE";
+  const isImageChoice = qType === "IMAGE_CHOICE";
+  const isImageQuestion = qType === "IMAGE_QUESTION";
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!topicId) return setError("Mövzu seçin");
     if (hasOptions && options.filter((o) => o.text.trim()).length < 2) return setError("Ən azı 2 variant daxil edin");
     if (hasOptions && !options.some((o) => o.isCorrect)) return setError("Ən azı bir düzgün variant işarələyin");
+    if (isImageQuestion && !qImageUrl) return setError("Sual üçün şəkil yükləyin");
+    if (isImageChoice && options.filter((o) => o.imageUrl).length < 2) return setError("Ən azı 2 variant şəkli yükləyin");
+    if (isImageChoice && !options.some((o) => o.isCorrect)) return setError("Düzgün variantı işarələyin");
     setSubmitting(true);
     setError("");
     try {
@@ -151,6 +224,7 @@ export function QuestionForm({ topicOptions, initialTopicId, initial, submitLabe
         topicId: Number(topicId),
         type: qType,
         text: qText,
+        imageUrl: qImageUrl,
         score,
         difficulty,
         options: buildOptions(),
@@ -229,6 +303,43 @@ export function QuestionForm({ topicOptions, initialTopicId, initial, submitLabe
         <FieldGroup label="Sual mətni">
           <Textarea rows={4} value={qText} onChange={(e) => setQText(e.target.value)} placeholder="Sualınızı buraya yazın…" required />
         </FieldGroup>
+
+        {isImageQuestion && (
+          <FieldGroup label="Sual şəkli">
+            <ImageUploader value={qImageUrl} onChange={setQImageUrl} label="Şəkil yüklə" />
+          </FieldGroup>
+        )}
+
+        {isImageChoice && (
+          <div className="rounded-[12px] bg-surface-2 p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <h4 className="text-[14px] font-semibold text-fg">Şəkilli variantlar</h4>
+              <button type="button" onClick={() => setOptions([...options, { text: "", isCorrect: false, imageUrl: null }])} className="flex items-center gap-1 text-[13px] font-medium text-blue-600 hover:underline">
+                <Plus size={14} /> Variant əlavə et
+              </button>
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {options.map((o, i) => (
+                <div key={i} className="rounded-[10px] border border-line bg-surface p-3">
+                  <div className="mb-2 flex items-center justify-between">
+                    <label className="flex items-center gap-2 text-[13px] font-medium text-fg">
+                      <input type="radio" checked={o.isCorrect} onChange={(e) => setOpt(i, "isCorrect", e.target.checked)} className="h-4 w-4 accent-blue-600" />
+                      Düzgün
+                    </label>
+                    {options.length > 2 && (
+                      <button type="button" onClick={() => setOptions(options.filter((_, x) => x !== i))} className="text-fg-faint hover:text-danger">
+                        <Trash2 size={15} />
+                      </button>
+                    )}
+                  </div>
+                  <ImageUploader value={o.imageUrl} onChange={(url) => setOpt(i, "imageUrl", url)} label="Variant şəkli" />
+                  <input className="field mt-2" value={o.text} onChange={(e) => setOpt(i, "text", e.target.value)} placeholder={`Etiket (ixtiyari) ${i + 1}`} />
+                </div>
+              ))}
+            </div>
+            <p className="mt-2.5 text-[12px] text-fg-faint">Hər variant üçün şəkil yükləyin və düzgün olanı seçin.</p>
+          </div>
+        )}
 
         {hasOptions && (
           <div className="rounded-[12px] bg-surface-2 p-4">
