@@ -1,21 +1,16 @@
 import React from "react";
+import { BrandLogo } from "@/components/app/BrandLogo";
 
 export default function ExamTokenLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg-secondary)" }}>
-      <header
-        style={{
-          height: "56px",
-          background: "var(--bg-primary)",
-          borderBottom: "1px solid var(--border-color)",
-          display: "flex",
-          alignItems: "center",
-          padding: "0 2rem",
-        }}
-      >
-        <span style={{ fontWeight: 700, color: "var(--primary-color)" }}>CES Assessment</span>
+    <div className="min-h-screen bg-app">
+      <header className="flex h-14 items-center border-b border-line bg-surface px-6">
+        <BrandLogo
+          className="h-8 w-auto object-contain"
+          fallback={<span className="text-[14px] font-bold tracking-[-0.2px] text-fg">CES Assessment</span>}
+        />
       </header>
-      <main style={{ maxWidth: "960px", margin: "0 auto", padding: "2rem 1.5rem" }}>{children}</main>
+      <main>{children}</main>
     </div>
   );
 }

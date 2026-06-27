@@ -1,226 +1,95 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { Building2, FolderTree, HelpCircle, ArrowRight, ArrowUpFromLine } from "lucide-react";
 import { apiFetch } from "@/lib/api";
-import type { Category, Question, Topic } from "@/lib/types";
-import styles from "../admin.module.css";
-
-interface CategoryWithTopics extends Category {
-  topics: Topic[];
-}
+import { useToast } from "@/lib/toast";
+import { humanizeError } from "@/lib/errors";
+import type { Category, Department } from "@/lib/types";
+import { PageHeader } from "@/components/app/PageHeader";
+import { buttonClasses } from "@/components/ui/Button";
+import { Loading, EmptyState } from "@/components/ui/Feedback";
 
 export default function QuestionBankPage() {
-  const [categories, setCategories] = useState<CategoryWithTopics[]>([]);
-  const [selectedTopic, setSelectedTopic] = useState<number | null>(null);
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [questionCounts, setQuestionCounts] = useState<Record<number, number>>({});
+  const toast = useToast();
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadingQuestions, setLoadingQuestions] = useState(false);
-  const [error, setError] = useState("");
-
-  const loadCategories = useCallback(async () => {
-    try {
-      const cats = await apiFetch<Category[]>("/api/v1/question-bank/categories");
-      const withTopics = await Promise.all(
-        cats.map(async (cat) => {
-          const topics = await apiFetch<Topic[]>(`/api/v1/question-bank/categories/${cat.id}/topics`);
-          return { ...cat, topics };
-        })
-      );
-      setCategories(withTopics);
-      const firstTopic = withTopics.find((c) => c.topics.length > 0)?.topics[0];
-      if (firstTopic) setSelectedTopic(firstTopic.id);
-      setError("");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load question bank");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
 
   useEffect(() => {
-    loadCategories();
-  }, [loadCategories]);
+    Promise.all([
+      apiFetch<Department[]>("/api/v1/departments"),
+      apiFetch<Category[]>("/api/v1/question-bank/categories"),
+    ])
+      .then(([deps, cats]) => { setDepartments(deps); setCategories(cats); })
+      .catch((e) => toast.error(humanizeError(e, "Sual bankı yüklənmədi")))
+      .finally(() => setLoading(false));
+  }, [toast]);
 
-  const [newCategoryName, setNewCategoryName] = useState("");
-  const [newTopicName, setNewTopicName] = useState("");
-  const [addingTopicToCategory, setAddingTopicToCategory] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (!selectedTopic) {
-      setQuestions([]);
-      return;
+  // per-department aggregates from the full category list
+  const statsByDept = useMemo(() => {
+    const m = new Map<number, { categories: number; questions: number }>();
+    for (const c of categories) {
+      const cur = m.get(c.departmentId) ?? { categories: 0, questions: 0 };
+      cur.categories += 1;
+      cur.questions += c.questionCount ?? 0;
+      m.set(c.departmentId, cur);
     }
-    setLoadingQuestions(true);
-    apiFetch<Question[]>(`/api/v1/question-bank/topics/${selectedTopic}/questions`)
-      .then((data) => {
-        setQuestions(data);
-        setQuestionCounts((prev) => ({ ...prev, [selectedTopic]: data.length }));
-      })
-      .catch((e) => setError(e.message))
-      .finally(() => setLoadingQuestions(false));
-  }, [selectedTopic]);
-
-  const handleCreateCategory = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newCategoryName.trim()) return;
-    try {
-      await apiFetch("/api/v1/question-bank/categories", {
-        method: "POST",
-        body: JSON.stringify({ name: newCategoryName }),
-      });
-      setNewCategoryName("");
-      loadCategories();
-    } catch (e: any) {
-      setError(e.message || "Failed to create category");
-    }
-  };
-
-  const handleCreateTopic = async (e: React.FormEvent, categoryId: number) => {
-    e.preventDefault();
-    if (!newTopicName.trim()) return;
-    try {
-      await apiFetch("/api/v1/question-bank/topics", {
-        method: "POST",
-        body: JSON.stringify({ categoryId, name: newTopicName }),
-      });
-      setNewTopicName("");
-      setAddingTopicToCategory(null);
-      loadCategories();
-    } catch (e: any) {
-      setError(e.message || "Failed to create topic");
-    }
-  };
+    return m;
+  }, [categories]);
 
   return (
-    <div>
-      <div className={styles.pageHeader}>
-        <h1 className={styles.title}>Question Bank</h1>
-        <Link href="/question-bank/create" className={styles.primaryBtn}>
-          + Add New Question
-        </Link>
-      </div>
-
-      {error && <div className={styles.error}>{error}</div>}
+    <div className="mx-auto max-w-[1200px]">
+      <PageHeader
+        title="Sual bankı"
+        subtitle="Şöbə seçin, sonra kateqoriya və suallarına baxın"
+        action={
+          <Link href="/question-bank/import" className={buttonClasses("outline", "md")}>
+            <ArrowUpFromLine size={16} /> Toplu idxal
+          </Link>
+        }
+      />
 
       {loading ? (
-        <p style={{ color: "var(--text-secondary)" }}>Loading...</p>
+        <Loading />
+      ) : departments.length === 0 ? (
+        <div className="card">
+          <EmptyState
+            icon={<Building2 size={22} />}
+            title="Şöbə yoxdur"
+            description="Sual bankı şöbələr üzrə qurulur. Əvvəlcə Şöbələr bölməsindən şöbə yaradın."
+            action={<Link href="/departments" className={buttonClasses("primary", "sm")}>Şöbələrə keç</Link>}
+          />
+        </div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "250px 1fr", gap: "2rem" }}>
-          <div className={styles.card} style={{ padding: "1rem" }}>
-            <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1rem", color: "var(--text-secondary)" }}>
-              Categories
-            </h3>
-            
-            <form onSubmit={handleCreateCategory} style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
-              <input type="text" className={styles.input} style={{ padding: "0.35rem 0.5rem", fontSize: "0.875rem" }} placeholder="New Category..." value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} required />
-              <button type="submit" className={styles.primaryBtn} style={{ padding: "0.35rem 0.5rem", fontSize: "0.875rem" }}>Add</button>
-            </form>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {departments.map((d) => {
+            const s = statsByDept.get(d.id) ?? { categories: 0, questions: 0 };
+            return (
+              <Link
+                key={d.id}
+                href={`/question-bank/department/${d.id}`}
+                className="card group relative flex flex-col p-5 transition-all hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-pop"
+              >
+                <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-[12px] bg-blue-50 text-blue-600 dark:bg-blue-600/15 dark:text-blue-400">
+                  <Building2 size={20} />
+                </span>
 
-            {categories.length === 0 ? (
-              <p style={{ color: "var(--text-secondary)", fontSize: "0.875rem" }}>No categories yet.</p>
-            ) : (
-              <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-                {categories.map((cat) => (
-                  <li key={cat.id} style={{ marginBottom: "1rem" }}>
-                    <div style={{ fontWeight: 600, color: "var(--text-primary)", marginBottom: "0.5rem" }}>
-                      {cat.name}
-                    </div>
-                    <ul style={{ listStyle: "none", paddingLeft: "1rem", margin: 0 }}>
-                      {cat.topics.map((top) => (
-                        <li
-                          key={top.id}
-                          onClick={() => setSelectedTopic(top.id)}
-                          style={{
-                            padding: "0.5rem",
-                            cursor: "pointer",
-                            borderRadius: "var(--radius-md)",
-                            backgroundColor:
-                              selectedTopic === top.id ? "rgba(59, 130, 246, 0.1)" : "transparent",
-                            color: selectedTopic === top.id ? "var(--primary-color)" : "var(--text-secondary)",
-                            fontWeight: selectedTopic === top.id ? 500 : 400,
-                          }}
-                        >
-                          {top.name}
-                          {questionCounts[top.id] != null && (
-                            <span style={{ fontSize: "0.75rem", opacity: 0.7 }}>
-                              {" "}({questionCounts[top.id]})
-                            </span>
-                          )}
-                        </li>
-                      ))}
-                      <li style={{ marginTop: "0.5rem" }}>
-                        {addingTopicToCategory === cat.id ? (
-                          <form onSubmit={(e) => handleCreateTopic(e, cat.id)} style={{ display: "flex", gap: "0.25rem", flexDirection: "column" }}>
-                            <input type="text" autoFocus className={styles.input} style={{ padding: "0.25rem 0.5rem", fontSize: "0.875rem" }} placeholder="Topic name..." value={newTopicName} onChange={e => setNewTopicName(e.target.value)} required />
-                            <div style={{ display: "flex", gap: "0.25rem" }}>
-                              <button type="submit" className={styles.primaryBtn} style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem", flex: 1 }}>Save</button>
-                              <button type="button" onClick={() => { setAddingTopicToCategory(null); setNewTopicName(""); }} style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem", flex: 1, background: "transparent", border: "1px solid var(--border-color)", cursor: "pointer", borderRadius: "var(--radius-sm)" }}>Cancel</button>
-                            </div>
-                          </form>
-                        ) : (
-                          <button type="button" onClick={() => setAddingTopicToCategory(cat.id)} style={{ background: "transparent", border: "none", color: "var(--primary-color)", fontSize: "0.75rem", cursor: "pointer", padding: "0.25rem 0" }}>+ Add Topic</button>
-                        )}
-                      </li>
-                    </ul>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+                <h3 className="text-[16px] font-semibold text-fg">{d.name}</h3>
 
-          <div className={styles.card} style={{ padding: 0, overflow: "hidden" }}>
-            <div style={{ padding: "1.5rem", borderBottom: "1px solid var(--border-color)" }}>
-              <h3 style={{ fontWeight: 600 }}>Questions for Selected Topic</h3>
-            </div>
-            {loadingQuestions ? (
-              <p style={{ padding: "1.5rem", color: "var(--text-secondary)" }}>Loading questions...</p>
-            ) : (
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Question</th>
-                    <th>Type</th>
-                    <th>Score</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {questions.map((q) => (
-                    <tr key={q.id}>
-                      <td
-                        style={{
-                          fontWeight: 500,
-                          maxWidth: "300px",
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
-                        {q.text}
-                      </td>
-                      <td>
-                        <span className={styles.badge}>{q.type}</span>
-                      </td>
-                      <td>{q.score}</td>
-                      <td>
-                        <span className={`${styles.badge} ${q.isActive ? styles.active : ""}`}>
-                          {q.isActive ? "ACTIVE" : "INACTIVE"}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-            {!loadingQuestions && selectedTopic && questions.length === 0 && (
-              <p style={{ padding: "1.5rem", color: "var(--text-secondary)" }}>No questions in this topic.</p>
-            )}
-            {!selectedTopic && (
-              <p style={{ padding: "1.5rem", color: "var(--text-secondary)" }}>Select a topic to view questions.</p>
-            )}
-          </div>
+                <div className="mt-4 flex items-center justify-between border-t border-line pt-3">
+                  <div className="flex items-center gap-3 text-[12px] text-fg-muted">
+                    <span className="inline-flex items-center gap-1"><FolderTree size={13} className="text-fg-faint" /><span className="num font-semibold text-fg">{s.categories}</span> kateqoriya</span>
+                    <span className="inline-flex items-center gap-1"><HelpCircle size={13} className="text-fg-faint" /><span className="num font-semibold text-fg">{s.questions}</span> sual</span>
+                  </div>
+                  <span className="inline-flex items-center gap-1 text-[12px] font-medium text-blue-600 dark:text-blue-400">
+                    Bax <ArrowRight size={13} className="transition-transform group-hover:translate-x-0.5" />
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>

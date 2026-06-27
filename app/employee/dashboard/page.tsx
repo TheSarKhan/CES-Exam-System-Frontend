@@ -2,116 +2,220 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import {
+  ArrowRight, Clock, FileText, CheckCircle2, TrendingUp, Hourglass,
+  CalendarClock, ChevronRight, Sparkles,
+} from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { apiFetch } from "@/lib/api";
 import type { MyAssignment } from "@/lib/types";
-import styles from "../employee.module.css";
-
-function statusBadge(status: MyAssignment["status"]) {
-  if (status === "COMPLETED") return styles.badgeCompleted;
-  if (status === "IN_PROGRESS") return styles.badgeProgress;
-  return styles.badgePending;
-}
-
-function formatDate(d: string | null) {
-  if (!d) return "—";
-  return new Date(d).toLocaleDateString();
-}
+import { ResultPill } from "@/components/ui/Badge";
+import { Loading } from "@/components/ui/Feedback";
+import { buttonClasses } from "@/components/ui/Button";
+import { cn } from "@/lib/cn";
+import { formatDate } from "@/lib/format";
 
 export default function EmployeeDashboardPage() {
   const { user } = useAuth();
-  const [assignments, setAssignments] = useState<MyAssignment[]>([]);
+  const [items, setItems] = useState<MyAssignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [starting, setStarting] = useState<number | null>(null);
 
   useEffect(() => {
     apiFetch<MyAssignment[]>("/api/v1/assignments/my")
-      .then(setAssignments)
+      .then(setItems)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, []);
 
-  const active = assignments.filter((a) => a.status !== "COMPLETED");
+  const pending = items.filter((a) => a.status !== "COMPLETED");
+  const completed = items.filter((a) => a.status === "COMPLETED");
+  const scored = completed.filter((a) => a.score != null);
+  const avg = scored.length ? Math.round(scored.reduce((s, a) => s + (a.score ?? 0), 0) / scored.length) : 0;
+
+  const start = async (a: MyAssignment) => {
+    setStarting(a.assignmentId);
+    try {
+      if (a.status === "IN_PROGRESS" && a.sessionId) {
+        window.location.href = `/employee/exams/${a.sessionId}/take`;
+        return;
+      }
+      const s = await apiFetch<{ sessionId: number }>("/api/v1/sessions/start", {
+        method: "POST",
+        body: JSON.stringify({ assignmentId: a.assignmentId }),
+      });
+      window.location.href = `/employee/exams/${s.sessionId}/take`;
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "İmtahana başlanmadı");
+      setStarting(null);
+    }
+  };
+
+  if (loading) return <Loading />;
 
   return (
-    <div>
-      <div className={styles.pageHeader}>
-        <h1 className={styles.title}>
-          Welcome, {user?.firstName} {user?.lastName}
-        </h1>
-        <p className={styles.subtitle}>Your assigned assessments and exams</p>
+    <div className="flex flex-col gap-6">
+      <div>
+        <h2 className="text-[22px] font-bold tracking-[-0.4px] text-fg">Salam, {user?.firstName} 👋</h2>
+        <p className="mt-0.5 text-[13.5px] text-fg-muted">Qiymətləndirmə panelin</p>
       </div>
 
-      {error && <div className={styles.error}>{error}</div>}
-      {loading && <p className={styles.meta}>Loading...</p>}
-
-      {!loading && active.length === 0 && (
-        <div className={styles.card}>
-          <p className={styles.meta}>No active exams at the moment.</p>
-        </div>
+      {error && (
+        <div className="rounded-[11px] border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[13px] text-danger-fg">{error}</div>
       )}
 
-      <div className={styles.cardGrid}>
-        {active.map((a) => (
-          <div key={a.assignmentId} className={styles.examCard}>
-            <span className={statusBadge(a.status)}>{a.status}</span>
-            <h3 className={styles.examTitle}>{a.examTitle}</h3>
-            <p className={styles.meta}>Type: {a.examType}</p>
-            <p className={styles.meta}>Deadline: {formatDate(a.endDate)}</p>
-            {a.durationMinutes && (
-              <p className={styles.meta}>Duration: {a.durationMinutes} min</p>
-            )}
-            <ExamAction assignment={a} />
+      {/* Status banner */}
+      <div
+        className="relative overflow-hidden rounded-[16px] p-6 text-white sm:p-7"
+        style={{ background: "linear-gradient(135deg,#24221C 0%,#332F26 55%,#463F2E 100%)" }}
+      >
+        <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full" style={{ background: "radial-gradient(circle,rgba(201,165,76,0.30),transparent 70%)" }} />
+        <div className="relative flex flex-wrap items-center justify-between gap-5">
+          <div>
+            <span className="text-[12px] font-semibold uppercase tracking-wider" style={{ color: "#D7BA6C" }}>
+              {pending.length > 0 ? "Səni gözləyir" : "Hər şey qaydasındadır"}
+            </span>
+            <h3 className="mt-2 text-[21px] font-bold tracking-[-0.3px]">
+              {pending.length > 0
+                ? `${pending.length} gözləyən imtahanın var`
+                : "Gözləyən imtahan yoxdur"}
+            </h3>
+            <p className="mt-1.5 text-[13px] text-slate-300">
+              {pending.length > 0
+                ? "Aşağıdan birbaşa başlaya, ya da İmtahanlarım bölməsinə keçə bilərsən."
+                : "Yeni imtahan təyin olunduqda burada görünəcək."}
+            </p>
           </div>
-        ))}
+          {pending.length > 0 ? (
+            <Link href="/employee/exams" className="flex h-11 items-center gap-2 rounded-[11px] bg-white px-5 text-[14px] font-semibold text-[#5E470C] shadow-[0_8px_20px_rgba(0,0,0,0.2)] transition-transform hover:-translate-y-0.5">
+              İmtahanlara keç <ArrowRight size={17} />
+            </Link>
+          ) : (
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/12"><Sparkles size={20} /></span>
+          )}
+        </div>
       </div>
 
-      {assignments.some((a) => a.status === "COMPLETED") && (
-        <div style={{ marginTop: "2rem" }}>
-          <Link href="/employee/exams" className={styles.secondaryBtn}>
-            View all exams & results
-          </Link>
-        </div>
+      {/* KPIs */}
+      <div className="grid grid-cols-3 gap-4">
+        <MiniKpi icon={<CheckCircle2 size={18} />} tone="gold" value={completed.length} label="Tamamlanmış" />
+        <MiniKpi icon={<TrendingUp size={18} />} tone="green" value={scored.length ? `${avg}%` : "—"} label="Orta nəticəm" />
+        <MiniKpi icon={<Hourglass size={18} />} tone="amber" value={pending.length} label="Gözləyən" />
+      </div>
+
+      {/* Pending preview */}
+      {pending.length > 0 && (
+        <Section title="Gözləyən imtahanlar" href={pending.length > 3 ? "/employee/exams" : undefined} linkLabel="Hamısı">
+          <div className="flex flex-col gap-2.5">
+            {pending.slice(0, 3).map((a) => (
+              <div key={a.assignmentId} className="card flex flex-wrap items-center gap-4 p-4">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[11px] bg-blue-50 text-blue-700 dark:bg-blue-600/15 dark:text-blue-400">
+                  <FileText size={18} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-[14.5px] font-semibold text-fg">{a.examTitle}</div>
+                  <div className="mt-0.5 flex flex-wrap items-center gap-3 text-[12.5px] text-fg-muted">
+                    <span>{a.examType === "SURVEY" ? "Sorğu" : "İmtahan"}</span>
+                    {a.durationMinutes && <span className="flex items-center gap-1"><Clock size={12} /> <span className="num">{a.durationMinutes}</span> dəq</span>}
+                    {a.endDate && <span className="flex items-center gap-1"><CalendarClock size={12} /> <span className="num">{formatDate(a.endDate)}</span></span>}
+                  </div>
+                </div>
+                <button
+                  onClick={() => start(a)}
+                  disabled={starting === a.assignmentId}
+                  className={cn(buttonClasses("primary", "sm"), "shrink-0")}
+                >
+                  {starting === a.assignmentId ? "Başlanır…" : a.status === "IN_PROGRESS" ? "Davam et" : "Başla"}
+                  <ArrowRight size={15} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </Section>
+      )}
+
+      {/* Recent results preview */}
+      {completed.length > 0 && (
+        <Section title="Son nəticələr" href="/employee/results" linkLabel="Hamısı">
+          <div className="flex flex-col gap-2.5">
+            {completed.slice(0, 3).map((a) => (
+              <Link
+                key={a.assignmentId}
+                href={a.sessionId ? `/employee/exams/${a.sessionId}/result` : "#"}
+                className="card flex items-center gap-4 p-4 transition-colors hover:bg-surface-2"
+              >
+                <span className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-[11px]", a.passed === false ? "bg-danger-bg text-danger-fg" : "bg-success-bg text-success-fg")}>
+                  {a.passed === false ? "✕" : <CheckCircle2 size={18} />}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-[14.5px] font-semibold text-fg">{a.examTitle}</div>
+                  <div className="text-[12.5px] text-fg-muted">{a.examType === "SURVEY" ? "Sorğu" : "İmtahan"} · {formatDate(a.endDate)}</div>
+                </div>
+                {a.score != null && <span className="num hidden text-[15px] font-semibold text-fg sm:block">{a.score}%</span>}
+                {a.passed == null ? <ResultPill result="survey" /> : a.passed ? <ResultPill result="pass" /> : <ResultPill result="fail" />}
+                <ChevronRight size={16} className="text-fg-faint" />
+              </Link>
+            ))}
+          </div>
+        </Section>
       )}
     </div>
   );
 }
 
-function ExamAction({ assignment }: { assignment: MyAssignment }) {
-  if (assignment.status === "COMPLETED" && assignment.sessionId) {
-    return (
-      <Link href={`/employee/exams/${assignment.sessionId}/result`} className={styles.secondaryBtn}>
-        View Results
-      </Link>
-    );
-  }
-  return <StartOrResumeButton assignment={assignment} />;
+function Section({
+  title,
+  href,
+  linkLabel,
+  children,
+}: {
+  title: string;
+  href?: string;
+  linkLabel?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <h3 className="text-[16px] font-semibold text-fg">{title}</h3>
+        {href && (
+          <Link href={href} className="flex items-center gap-1 text-[13px] font-medium text-blue-700 hover:text-blue-800 dark:text-blue-400">
+            {linkLabel ?? "Hamısı"} <ChevronRight size={15} />
+          </Link>
+        )}
+      </div>
+      {children}
+    </div>
+  );
 }
 
-function StartOrResumeButton({ assignment }: { assignment: MyAssignment }) {
-  const [loading, setLoading] = useState(false);
-
-  const handleStart = async () => {
-    setLoading(true);
-    try {
-      if (assignment.status === "IN_PROGRESS" && assignment.sessionId) {
-        window.location.href = `/employee/exams/${assignment.sessionId}/take`;
-        return;
-      }
-      const session = await apiFetch<{ sessionId: number }>("/api/v1/sessions/start", {
-        method: "POST",
-        body: JSON.stringify({ assignmentId: assignment.assignmentId }),
-      });
-      window.location.href = `/employee/exams/${session.sessionId}/take`;
-    } catch (e) {
-      alert(e instanceof Error ? e.message : "Failed to start exam");
-      setLoading(false);
-    }
-  };
-
+function MiniKpi({
+  icon,
+  tone,
+  value,
+  label,
+}: {
+  icon: React.ReactNode;
+  tone: "gold" | "green" | "amber";
+  value: React.ReactNode;
+  label: string;
+}) {
+  const tones = {
+    gold: { bg: "#F7EFD8", fg: "#8E6F17" },
+    green: { bg: "#DCFCE7", fg: "#15803D" },
+    amber: { bg: "#FEF3C7", fg: "#B45309" },
+  } as const;
+  const t = tones[tone];
   return (
-    <button className={styles.primaryBtn} onClick={handleStart} disabled={loading}>
-      {loading ? "Starting..." : assignment.status === "IN_PROGRESS" ? "Continue" : "Start Exam"}
-    </button>
+    <div className="card flex items-center gap-3 p-4">
+      <span className="flex h-10 w-10 items-center justify-center rounded-[11px]" style={{ background: t.bg, color: t.fg }}>
+        {icon}
+      </span>
+      <div>
+        <div className="num text-[20px] font-semibold leading-none text-fg">{value}</div>
+        <div className="mt-1 text-[12px] text-fg-muted">{label}</div>
+      </div>
+    </div>
   );
 }

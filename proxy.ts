@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const ADMIN_PATHS = ["/dashboard", "/departments", "/users", "/question-bank", "/reports"];
+const ADMIN_PATHS = ["/dashboard", "/departments", "/users", "/question-bank", "/reports", "/analytics"];
 const ADMIN_EXAM_PATHS = ["/exams/create", "/exams/assign"];
 
 function decodeRoles(token: string): string[] {
@@ -19,7 +19,7 @@ function hasRole(roles: string[], role: string) {
   return roles.includes(role) || roles.includes(`ROLE_${role}`);
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get("ces_token")?.value;
 
@@ -46,7 +46,12 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/employee/dashboard", request.url));
   }
 
-  if (pathname.startsWith("/employee") && !hasRole(roles, "EMPLOYEE") && !hasRole(roles, "CANDIDATE") && !hasRole(roles, "ADMIN")) {
+  if (
+    pathname.startsWith("/employee") &&
+    !hasRole(roles, "EMPLOYEE") &&
+    !hasRole(roles, "CANDIDATE") &&
+    !hasRole(roles, "ADMIN")
+  ) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
@@ -62,6 +67,7 @@ export const config = {
     "/users/:path*",
     "/question-bank/:path*",
     "/reports/:path*",
+    "/analytics/:path*",
     "/exams/:path*",
   ],
 };

@@ -10,13 +10,22 @@ export async function publicFetch<T = unknown>(path: string, options?: RequestIn
   });
   if (!res.ok) {
     const text = await res.text();
+    let message = text || res.statusText;
     try {
       const json = JSON.parse(text);
-      throw new Error(json.message || text);
+      message = json.message || message;
+      if (json.fieldErrors && typeof json.fieldErrors === "object") {
+        const details = Object.values(json.fieldErrors).filter(Boolean).join(", ");
+        if (details) message = details;
+      }
     } catch {
-      throw new Error(text || res.statusText);
+      /* not JSON */
     }
+    throw new Error(message);
   }
+  // Some endpoints return 200/201 with an empty body — avoid "Unexpected end of JSON input".
   if (res.status === 204) return undefined as T;
-  return res.json();
+  const body = await res.text();
+  if (!body) return undefined as T;
+  return JSON.parse(body) as T;
 }
