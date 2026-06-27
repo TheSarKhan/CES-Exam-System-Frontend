@@ -3,11 +3,12 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowUpFromLine, Download, FileText, Check, X, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ArrowUpFromLine, Download, FileText, FileSpreadsheet, Check, X, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { loadTopicOptions, type TopicOption } from "@/lib/questionBank";
 import type { Difficulty, BulkImportResult } from "@/lib/types";
 import { parseCsv, downloadCsv } from "@/lib/csv";
+import { parseExcelToRows, downloadExcelTemplate } from "@/lib/excel";
 import { Card } from "@/components/ui/Card";
 import { Button, buttonClasses } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Field";
@@ -111,6 +112,9 @@ export default function ImportQuestionsPage() {
   const [topicOptions, setTopicOptions] = useState<TopicOption[] | null>(null);
   const [topicId, setTopicId] = useState<number | "">("");
   const [csvText, setCsvText] = useState("");
+  // When an Excel file is loaded its parsed rows take precedence over the textarea.
+  const [sheetRows, setSheetRows] = useState<string[][] | null>(null);
+  const [sheetName, setSheetName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<BulkImportResult | null>(null);
   const [error, setError] = useState("");
@@ -126,22 +130,38 @@ export default function ImportQuestionsPage() {
   }, []);
 
   const drafts = useMemo<Draft[]>(() => {
-    if (!csvText.trim()) return [];
-    const rows = parseCsv(csvText);
+    const rows = sheetRows ?? (csvText.trim() ? parseCsv(csvText) : []);
     if (rows.length === 0) return [];
     // skip a header row if present
     const start = (rows[0][0] ?? "").trim().toLowerCase() === "type" ? 1 : 0;
     return rows.slice(start).map((cells, i) => buildDraft(cells, i + 1));
-  }, [csvText]);
+  }, [csvText, sheetRows]);
 
   const valid = drafts.filter((d) => !d.error);
   const invalid = drafts.filter((d) => d.error);
 
-  const onFile = (file: File) => {
+  const onFile = async (file: File) => {
+    setError("");
+    const isExcel = /\.xlsx?$/i.test(file.name);
+    if (isExcel) {
+      try {
+        const rows = await parseExcelToRows(file);
+        if (rows.length === 0) { setError("Excel faylında məlumat tapılmadı."); return; }
+        setSheetRows(rows);
+        setSheetName(file.name);
+        setCsvText("");
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Excel oxunmadı");
+      }
+      return;
+    }
+    // CSV → read as text into the textarea
     const reader = new FileReader();
-    reader.onload = () => setCsvText(String(reader.result ?? ""));
+    reader.onload = () => { setSheetRows(null); setSheetName(""); setCsvText(String(reader.result ?? "")); };
     reader.readAsText(file);
   };
+
+  const clearSheet = () => { setSheetRows(null); setSheetName(""); };
 
   const doImport = async () => {
     if (topicId === "" || valid.length === 0) return;
@@ -201,7 +221,7 @@ export default function ImportQuestionsPage() {
           )}
           <div className="flex gap-2">
             <Link href="/question-bank" className={buttonClasses("primary", "md")}>Sual bankına keç</Link>
-            <Button variant="outline" onClick={() => { setResult(null); setCsvText(""); }}>Yenidən idxal</Button>
+            <Button variant="outline" onClick={() => { setResult(null); setCsvText(""); clearSheet(); }}>Yenidən idxal</Button>
           </div>
         </Card>
       ) : !topicOptions ? (
@@ -221,23 +241,36 @@ export default function ImportQuestionsPage() {
 
           {/* Step 2: CSV */}
           <Card className="p-5">
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <h3 className="text-[14px] font-semibold text-fg">2. CSV məlumatı</h3>
-              <div className="flex gap-2">
-                <Button variant="ghost" icon={<Download size={15} />} onClick={() => downloadCsv("ces-sual-shablon.csv", TEMPLATE)}>Şablon</Button>
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+              <h3 className="text-[14px] font-semibold text-fg">2. Suallar (Excel tövsiyə olunur)</h3>
+              <div className="flex flex-wrap gap-2">
+                <Button icon={<FileSpreadsheet size={15} />} onClick={() => downloadExcelTemplate()}>Excel şablon</Button>
+                <Button variant="ghost" icon={<Download size={15} />} onClick={() => downloadCsv("ces-sual-shablon.csv", TEMPLATE)}>CSV şablon</Button>
                 <Button variant="outline" icon={<FileText size={15} />} onClick={() => fileRef.current?.click()}>Fayl seç</Button>
-                <input ref={fileRef} type="file" accept=".csv,text/csv" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); e.target.value = ""; }} />
+                <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv,text/csv" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); e.target.value = ""; }} />
               </div>
             </div>
-            <textarea
-              className="field min-h-[150px] w-full font-mono text-[12.5px]"
-              placeholder="CSV-ni bura yapışdırın və ya yuxarıdan fayl seçin…"
-              value={csvText}
-              onChange={(e) => setCsvText(e.target.value)}
-            />
+
+            {sheetRows ? (
+              <div className="flex items-center justify-between gap-3 rounded-[10px] border border-line bg-surface-2 px-4 py-3">
+                <span className="flex items-center gap-2 text-[13px] text-fg">
+                  <FileSpreadsheet size={16} className="text-emerald-600" />
+                  <b className="truncate">{sheetName}</b> · {drafts.length} sətir yükləndi
+                </span>
+                <button onClick={clearSheet} className="shrink-0 text-[13px] font-medium text-fg-muted hover:text-danger">Təmizlə</button>
+              </div>
+            ) : (
+              <textarea
+                className="field min-h-[150px] w-full font-mono text-[12.5px]"
+                placeholder="Excel faylı seçin (tövsiyə) — və ya CSV-ni bura yapışdırın…"
+                value={csvText}
+                onChange={(e) => setCsvText(e.target.value)}
+              />
+            )}
+
             <div className="mt-2 rounded-[9px] bg-surface-2 px-3 py-2 text-[11.5px] leading-relaxed text-fg-muted">
-              <b>Sütunlar:</b> type, text, difficulty, score, optionA–D, correct. <br />
-              <b>type:</b> SINGLE_CHOICE · MULTIPLE_CHOICE · TRUE_FALSE · SHORT_TEXT · LONG_TEXT. <b>difficulty:</b> EASY/MEDIUM/HARD (boş = Orta).
+              <b>Excel-də</b> hər sahə ayrı xanadır — sual mətnində vergül (,) problem yaratmır; <b>type</b> və <b>difficulty</b> açılan siyahıdan seçilir.<br />
+              <b>Sütunlar:</b> type, text, difficulty, score, optionA–D, correct. <b>difficulty:</b> EASY/MEDIUM/HARD (boş = Orta).
               <b> correct:</b> seçim üçün hərf(lər) (A, və ya çoxlu seçimdə “A C”); Doğru/Yanlış üçün A=Doğru, B=Yanlış; mətn tipləri üçün boş.
             </div>
           </Card>
