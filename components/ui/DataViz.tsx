@@ -96,8 +96,8 @@ export function Gauge({
   const offset = c * (1 - pct / 100);
   const stroke = color ?? scoreColor(value);
   return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <svg width={size} height={size} viewBox="0 0 132 132">
+    <div className="relative" style={{ width: size, height: size }} role="img" aria-label={`${label ? label + ": " : ""}${Math.round(pct)}%`}>
+      <svg width={size} height={size} viewBox="0 0 132 132" aria-hidden="true">
         <circle cx="66" cy="66" r={r} fill="none" stroke="#EEF2F7" strokeWidth="14" className="dark:stroke-white/10" />
         <circle
           cx="66"

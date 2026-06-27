@@ -13,6 +13,7 @@ import {
   ListChecks,
   X,
   Loader2,
+  WifiOff,
 } from "lucide-react";
 import type { SessionStart, SessionQuestion } from "@/lib/types";
 import { useTheme } from "@/lib/theme";
@@ -60,6 +61,7 @@ export function ExamRunner({
   const [restored, setRestored] = useState(false);
   const [timeNotice, setTimeNotice] = useState<string | null>(null);
   const [timeUp, setTimeUp] = useState(false);
+  const [online, setOnline] = useState(true);
   const submittedRef = useRef(false);
   const warned5Ref = useRef(false);
   const warned1Ref = useRef(false);
@@ -184,6 +186,19 @@ export function ExamRunner({
     return () => clearTimeout(id);
   }, [timeNotice, remaining]);
 
+  /* ---- network status (answers autosave locally; submit needs connectivity) ---- */
+  useEffect(() => {
+    setOnline(navigator.onLine);
+    const on = () => setOnline(true);
+    const off = () => setOnline(false);
+    window.addEventListener("online", on);
+    window.addEventListener("offline", off);
+    return () => {
+      window.removeEventListener("online", on);
+      window.removeEventListener("offline", off);
+    };
+  }, []);
+
   /* ---- arrow-key navigation (ignored while typing or reviewing) ---- */
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -291,6 +306,13 @@ export function ExamRunner({
           style={{ width: `${progress}%` }}
         />
       </div>
+
+      {/* Offline indicator */}
+      {!online && (
+        <div role="alert" aria-live="assertive" className="flex items-center gap-2 bg-warning px-5 py-2.5 text-[13px] font-semibold text-white">
+          <WifiOff size={16} aria-hidden /> İnternet bağlantısı kəsildi. Cavablarınız lokal saxlanılır — bağlantı qayıdanda təhvil verə bilərsiniz.
+        </div>
+      )}
 
       {/* Anti-cheat warning */}
       {anti.warning && (
