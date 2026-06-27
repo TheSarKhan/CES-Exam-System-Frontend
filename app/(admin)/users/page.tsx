@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Plus, Pencil, Ban, CheckCircle2, Search, KeyRound, Eye, EyeOff, RefreshCw, Copy, Check } from "lucide-react";
 import { apiFetch } from "@/lib/api";
@@ -16,14 +16,16 @@ import { Button, buttonClasses } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Field";
 import { Alert, Loading, Modal } from "@/components/ui/Feedback";
 
-const hasRole = (u: User, role: string) => u.roles.some((r) => r.name.includes(role));
-const isCandidate = (u: User) => hasRole(u, "CANDIDATE") && !hasRole(u, "ADMIN") && !hasRole(u, "EMPLOYEE");
-
 type RoleFilter = "platform" | "admin" | "employee" | "candidate" | "all";
 
 export default function UsersPage() {
   const { user: currentUser } = useAuth();
   const toast = useToast();
+  const PAGE_SIZE = 20;
+  const ROLE_MAP: Record<RoleFilter, string> = {
+    platform: "PLATFORM", admin: "ADMIN", employee: "EMPLOYEE", candidate: "CANDIDATE", all: "ALL",
+  };
+
   const [users, setUsers] = useState<User[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,7 +33,11 @@ export default function UsersPage() {
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("platform");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [deptFilter, setDeptFilter] = useState("all");
+  const [deptFilter, setDeptFilter] = useState("all"); // department id as string, or "all"
+
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
 
   const [deactivateTarget, setDeactivateTarget] = useState<User | null>(null);
   const [busy, setBusy] = useState(false);
@@ -45,36 +51,45 @@ export default function UsersPage() {
   const [resetError, setResetError] = useState("");
   const [copied, setCopied] = useState(false);
 
+  // Departments load once for the filter dropdown.
+  useEffect(() => {
+    apiFetch<Department[]>("/api/v1/departments")
+      .then(setDepartments)
+      .catch(() => { /* dropdown stays empty */ });
+  }, []);
+
   const load = useCallback(async () => {
+    setLoading(true);
     try {
-      const [u, d] = await Promise.all([
-        apiFetch<User[]>("/api/v1/users"),
-        apiFetch<Department[]>("/api/v1/departments"),
-      ]);
-      setUsers(u);
-      setDepartments(d);
+      const params = new URLSearchParams();
+      params.set("role", ROLE_MAP[roleFilter]);
+      if (search.trim()) params.set("search", search.trim());
+      if (statusFilter !== "all") params.set("status", statusFilter);
+      if (deptFilter !== "all") params.set("departmentId", deptFilter);
+      params.set("page", String(page));
+      params.set("size", String(PAGE_SIZE));
+      const res = await apiFetch<{ content: User[]; totalPages: number; totalElements: number }>(
+        `/api/v1/users/search?${params.toString()}`,
+      );
+      setUsers(res.content ?? []);
+      setTotalPages(res.totalPages ?? 1);
+      setTotal(res.totalElements ?? 0);
     } catch (e) {
       toast.error(humanizeError(e, "İstifadəçilər yüklənmədi"));
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roleFilter, search, statusFilter, deptFilter, page]);
 
-  useEffect(() => { load(); }, [load]);
+  // Debounced fetch on any filter/search/page change.
+  useEffect(() => {
+    const t = setTimeout(() => { load(); }, 250);
+    return () => clearTimeout(t);
+  }, [load]);
 
-  const filtered = useMemo(() => {
-    const s = search.trim().toLowerCase();
-    return users.filter((u) => {
-      if (roleFilter === "platform" && isCandidate(u)) return false;
-      if (roleFilter === "admin" && !hasRole(u, "ADMIN")) return false;
-      if (roleFilter === "employee" && !hasRole(u, "EMPLOYEE")) return false;
-      if (roleFilter === "candidate" && !isCandidate(u)) return false;
-      if (statusFilter !== "all" && u.status !== statusFilter) return false;
-      if (deptFilter !== "all" && (u.departmentName ?? "") !== deptFilter) return false;
-      if (s && !`${u.firstName} ${u.lastName} ${u.email}`.toLowerCase().includes(s)) return false;
-      return true;
-    });
-  }, [users, search, roleFilter, statusFilter, deptFilter]);
+  // Reset to the first page whenever the filters or search change.
+  useEffect(() => { setPage(0); }, [search, roleFilter, statusFilter, deptFilter]);
 
   const activate = async (id: number) => {
     setBusy(true);
@@ -181,7 +196,7 @@ export default function UsersPage() {
         </Select>
         <Select value={deptFilter} onChange={(e) => setDeptFilter(e.target.value)} className="sm:w-[170px]">
           <option value="all">Bütün şöbələr</option>
-          {departments.map((d) => <option key={d.id} value={d.name}>{d.name}</option>)}
+          {departments.map((d) => <option key={d.id} value={String(d.id)}>{d.name}</option>)}
         </Select>
       </div>
 
@@ -189,7 +204,7 @@ export default function UsersPage() {
         <Loading />
       ) : (
         <Table headers={["Ad", "Şöbə", "Rollar", "Status", "Əməliyyat"]}>
-          {filtered.map((u) => (
+          {users.map((u) => (
             <Tr key={u.id}>
               <Td>
                 <div className="flex items-center gap-2.5">
@@ -231,14 +246,24 @@ export default function UsersPage() {
               </Td>
             </Tr>
           ))}
-          {filtered.length === 0 && (
+          {users.length === 0 && (
             <Tr>
               <Td colSpan={5} className="py-10 text-center text-fg-muted">
-                {users.length === 0 ? "İstifadəçi yoxdur." : "Filtrə uyğun istifadəçi tapılmadı."}
+                Filtrə uyğun istifadəçi tapılmadı.
               </Td>
             </Tr>
           )}
         </Table>
+      )}
+
+      {!loading && total > 0 && (
+        <div className="mt-4 flex items-center justify-between text-[13px] text-fg-muted">
+          <span className="num">{total} istifadəçi · səhifə {page + 1}/{Math.max(1, totalPages)}</span>
+          <div className="flex gap-2">
+            <Button variant="secondary" disabled={page <= 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>Əvvəlki</Button>
+            <Button variant="secondary" disabled={page >= totalPages - 1} onClick={() => setPage((p) => p + 1)}>Növbəti</Button>
+          </div>
+        </div>
       )}
 
       <Modal
