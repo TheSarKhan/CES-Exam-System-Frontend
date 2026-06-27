@@ -1,0 +1,28 @@
+name: Deploy to production
+
+# Auto-deploy the frontend whenever code lands on main.
+# Connects to the server over SSH and runs the deploy script, which pulls the
+# latest code and rebuilds only the frontend service via docker compose.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: cesexam-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build & deploy frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: 30m
+          script: /opt/cesexam/deploy.sh frontend
