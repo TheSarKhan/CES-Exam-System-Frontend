@@ -31,8 +31,9 @@ export default function EditExamPage() {
             fromBank: q.fromBank,
             type: q.type,
             text: q.text,
+            imageUrl: q.imageUrl ?? null,
             score: q.score,
-            options: (q.options ?? []).map((o) => ({ text: o.text, isCorrect: o.isCorrect })),
+            options: (q.options ?? []).map((o) => ({ text: o.text, isCorrect: o.isCorrect, imageUrl: o.imageUrl ?? null })),
           })),
         }),
       )

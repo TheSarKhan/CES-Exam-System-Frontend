@@ -5,6 +5,7 @@ import { X, Plus, Trash2, PencilLine } from "lucide-react";
 import { FieldGroup, Input, Select, Textarea } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
+import { ImageUploader } from "@/components/exam/ImageUploader";
 
 const TYPE_OPTIONS = [
   { value: "SINGLE_CHOICE", label: "Tək seçim" },
@@ -12,14 +13,17 @@ const TYPE_OPTIONS = [
   { value: "TRUE_FALSE", label: "Doğru / Yanlış" },
   { value: "SHORT_TEXT", label: "Qısa mətn" },
   { value: "LONG_TEXT", label: "Uzun mətn" },
+  { value: "IMAGE_QUESTION", label: "Şəkilli sual" },
+  { value: "IMAGE_CHOICE", label: "Şəkil seçimi" },
 ];
 
 export interface DraftValue {
   type: string;
   text: string;
+  imageUrl?: string | null;
   score: number;
   /** Final-form options: choice → the variants; TRUE_FALSE → [Doğru, Yanlış]; text types → []. */
-  options: { text: string; isCorrect: boolean }[];
+  options: { text: string; isCorrect: boolean; imageUrl?: string | null }[];
 }
 
 interface ExamQuestionModalProps {
@@ -32,10 +36,11 @@ interface ExamQuestionModalProps {
 export function ExamQuestionModal({ open, initial, onClose, onSave }: ExamQuestionModalProps) {
   const [qType, setQType] = useState(initial?.type ?? "SINGLE_CHOICE");
   const [qText, setQText] = useState(initial?.text ?? "");
+  const [qImageUrl, setQImageUrl] = useState<string | null>(initial?.imageUrl ?? null);
   const [score, setScore] = useState<number>(initial?.score ?? 1);
-  const [options, setOptions] = useState<{ text: string; isCorrect: boolean }[]>(() => {
-    if (initial && (initial.type === "SINGLE_CHOICE" || initial.type === "MULTIPLE_CHOICE")) {
-      return initial.options.map((o) => ({ text: o.text, isCorrect: o.isCorrect }));
+  const [options, setOptions] = useState<{ text: string; isCorrect: boolean; imageUrl?: string | null }[]>(() => {
+    if (initial && (initial.type === "SINGLE_CHOICE" || initial.type === "MULTIPLE_CHOICE" || initial.type === "IMAGE_CHOICE")) {
+      return initial.options.map((o) => ({ text: o.text, isCorrect: o.isCorrect, imageUrl: o.imageUrl ?? null }));
     }
     return [{ text: "", isCorrect: false }, { text: "", isCorrect: false }];
   });
@@ -49,23 +54,28 @@ export function ExamQuestionModal({ open, initial, onClose, onSave }: ExamQuesti
   const [error, setError] = useState("");
 
   const hasOptions = qType === "SINGLE_CHOICE" || qType === "MULTIPLE_CHOICE";
+  const isImageChoice = qType === "IMAGE_CHOICE";
+  const isImageQuestion = qType === "IMAGE_QUESTION";
+  const singleCorrect = qType === "SINGLE_CHOICE" || qType === "IMAGE_CHOICE";
 
-  const setOpt = (i: number, field: "text" | "isCorrect", value: string | boolean) => {
+  const setOpt = (i: number, field: "text" | "isCorrect" | "imageUrl", value: string | boolean | null) => {
     setOptions((prev) => {
       const next = [...prev];
-      if (field === "isCorrect" && qType === "SINGLE_CHOICE" && value === true) next.forEach((o) => (o.isCorrect = false));
+      if (field === "isCorrect" && singleCorrect && value === true) next.forEach((o) => (o.isCorrect = false));
       next[i] = { ...next[i], [field]: value };
       return next;
     });
   };
 
-  const buildOptions = (): { text: string; isCorrect: boolean }[] => {
+  const buildOptions = (): { text: string; isCorrect: boolean; imageUrl?: string | null }[] => {
     if (qType === "TRUE_FALSE")
       return [
         { text: "Doğru", isCorrect: tfCorrect === "true" },
         { text: "Yanlış", isCorrect: tfCorrect === "false" },
       ];
     if (hasOptions) return options.filter((o) => o.text.trim());
+    if (isImageChoice)
+      return options.filter((o) => o.imageUrl).map((o, i) => ({ text: o.text.trim() || `Variant ${i + 1}`, isCorrect: o.isCorrect, imageUrl: o.imageUrl ?? null }));
     return [];
   };
 
@@ -73,7 +83,10 @@ export function ExamQuestionModal({ open, initial, onClose, onSave }: ExamQuesti
     if (!qText.trim()) return setError("Sual mətni boş ola bilməz");
     if (hasOptions && options.filter((o) => o.text.trim()).length < 2) return setError("Ən azı 2 variant daxil edin");
     if (hasOptions && !options.some((o) => o.isCorrect)) return setError("Ən azı bir düzgün variant işarələyin");
-    onSave({ type: qType, text: qText.trim(), score, options: buildOptions() });
+    if (isImageQuestion && !qImageUrl) return setError("Sual üçün şəkil yükləyin");
+    if (isImageChoice && options.filter((o) => o.imageUrl).length < 2) return setError("Ən azı 2 variant şəkli yükləyin");
+    if (isImageChoice && !options.some((o) => o.isCorrect)) return setError("Düzgün variantı işarələyin");
+    onSave({ type: qType, text: qText.trim(), imageUrl: qImageUrl, score, options: buildOptions() });
   };
 
   if (!open) return null;
@@ -109,6 +122,41 @@ export function ExamQuestionModal({ open, initial, onClose, onSave }: ExamQuesti
           <FieldGroup label="Sual mətni">
             <Textarea rows={3} value={qText} onChange={(e) => setQText(e.target.value)} placeholder="Sualınızı buraya yazın…" />
           </FieldGroup>
+
+          {isImageQuestion && (
+            <FieldGroup label="Sual şəkli">
+              <ImageUploader value={qImageUrl} onChange={setQImageUrl} label="Şəkil yüklə" />
+            </FieldGroup>
+          )}
+
+          {isImageChoice && (
+            <div className="rounded-[12px] bg-surface-2 p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <h4 className="text-[14px] font-semibold text-fg">Şəkilli variantlar</h4>
+                <button type="button" onClick={() => setOptions([...options, { text: "", isCorrect: false, imageUrl: null }])} className="flex items-center gap-1 text-[13px] font-medium text-blue-600 hover:underline">
+                  <Plus size={14} /> Variant əlavə et
+                </button>
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {options.map((o, i) => (
+                  <div key={i} className="rounded-[10px] border border-line bg-surface p-3">
+                    <div className="mb-2 flex items-center justify-between">
+                      <label className="flex items-center gap-2 text-[13px] font-medium text-fg">
+                        <input type="radio" checked={o.isCorrect} onChange={(e) => setOpt(i, "isCorrect", e.target.checked)} className="h-4 w-4 accent-blue-600" />
+                        Düzgün
+                      </label>
+                      {options.length > 2 && (
+                        <button type="button" onClick={() => setOptions(options.filter((_, x) => x !== i))} className="text-fg-faint hover:text-danger"><Trash2 size={15} /></button>
+                      )}
+                    </div>
+                    <ImageUploader value={o.imageUrl} onChange={(url) => setOpt(i, "imageUrl", url)} label="Variant şəkli" />
+                    <input className="field mt-2" value={o.text} onChange={(e) => setOpt(i, "text", e.target.value)} placeholder={`Etiket (ixtiyari) ${i + 1}`} />
+                  </div>
+                ))}
+              </div>
+              <p className="mt-2.5 text-[12px] text-fg-faint">Hər variant üçün şəkil yükləyin və düzgün olanı seçin.</p>
+            </div>
+          )}
 
           {hasOptions && (
             <div className="rounded-[12px] bg-surface-2 p-4">

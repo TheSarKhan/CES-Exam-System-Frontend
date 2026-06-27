@@ -205,6 +205,7 @@ export interface ExamQuestionItem {
   questionId: number;
   type: string;
   text: string;
+  imageUrl?: string | null;
   score: number;
   difficulty: Difficulty | null;
   fromBank: boolean;

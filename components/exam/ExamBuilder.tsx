@@ -24,8 +24,9 @@ interface Draft {
   questionId?: number;
   type: string;
   text: string;
+  imageUrl?: string | null;
   score: number;
-  options: { text: string; isCorrect: boolean }[];
+  options: { text: string; isCorrect: boolean; imageUrl?: string | null }[];
 }
 
 export interface ExamBuilderInitial {
@@ -39,8 +40,9 @@ export interface ExamBuilderInitial {
     fromBank: boolean;
     type: string;
     text: string;
+    imageUrl?: string | null;
     score: number;
-    options: { text: string; isCorrect: boolean }[];
+    options: { text: string; isCorrect: boolean; imageUrl?: string | null }[];
   }[];
 }
 
@@ -68,6 +70,7 @@ export function ExamBuilder({ initial, submitLabel, onSubmit, draftKey }: ExamBu
       questionId: q.questionId,
       type: q.type,
       text: q.text,
+      imageUrl: q.imageUrl ?? null,
       score: q.score,
       options: q.options,
     })),
@@ -145,8 +148,9 @@ export function ExamBuilder({ initial, submitLabel, onSubmit, draftKey }: ExamBu
           questionId: q.id,
           type: q.type,
           text: q.text,
+          imageUrl: q.imageUrl ?? null,
           score: q.score,
-          options: (q.options ?? []).map((o) => ({ text: o.text, isCorrect: o.isCorrect })),
+          options: (q.options ?? []).map((o) => ({ text: o.text, isCorrect: o.isCorrect, imageUrl: o.imageUrl ?? null })),
         }));
       return [...prev, ...additions];
     });
@@ -217,9 +221,10 @@ export function ExamBuilder({ initial, submitLabel, onSubmit, draftKey }: ExamBu
             : {
                 type: d.type,
                 text: d.text,
+                imageUrl: d.imageUrl ?? null,
                 score: d.score,
                 options: d.options.length
-                  ? d.options.map((o, i) => ({ text: o.text, isCorrect: o.isCorrect, sortOrder: i }))
+                  ? d.options.map((o, i) => ({ text: o.text, isCorrect: o.isCorrect, imageUrl: o.imageUrl ?? null, sortOrder: i }))
                   : undefined,
               },
         ),
@@ -428,7 +433,7 @@ export function ExamBuilder({ initial, submitLabel, onSubmit, draftKey }: ExamBu
       {editorOpen && (
         <ExamQuestionModal
           open
-          initial={editingDraft ? { type: editingDraft.type, text: editingDraft.text, score: editingDraft.score, options: editingDraft.options } : undefined}
+          initial={editingDraft ? { type: editingDraft.type, text: editingDraft.text, imageUrl: editingDraft.imageUrl, score: editingDraft.score, options: editingDraft.options } : undefined}
           onClose={() => { setEditorOpen(false); setEditingKey(null); }}
           onSave={saveInline}
         />
