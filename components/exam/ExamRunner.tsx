@@ -144,11 +144,20 @@ export function ExamRunner({
     () => (session.durationMinutes ? new Date(session.startTime).getTime() + session.durationMinutes * 60000 : null),
     [session.startTime, session.durationMinutes],
   );
+  // Offset (server − client) captured once at mount. Both startTime and serverTime are
+  // server wall-clock, so any client timezone/clock skew cancels out → the countdown
+  // ends at the true server deadline even if the device clock is wrong.
+  const clockOffset = useMemo(() => {
+    if (!session.serverTime) return 0;
+    const serverMs = new Date(session.serverTime).getTime();
+    return Number.isNaN(serverMs) ? 0 : serverMs - Date.now();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session.serverTime]);
   const [remaining, setRemaining] = useState<number | null>(null);
   useEffect(() => {
     if (!endMs) return;
     const tick = () => {
-      const left = Math.max(0, endMs - Date.now());
+      const left = Math.max(0, endMs - (Date.now() + clockOffset));
       setRemaining(left);
       if (left <= 60000 && left > 0 && !warned1Ref.current) {
         warned1Ref.current = true;
@@ -165,14 +174,15 @@ export function ExamRunner({
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, [endMs, doSubmit]);
+  }, [endMs, clockOffset, doSubmit]);
 
-  /* ---- auto-hide the timer notice ---- */
+  /* ---- auto-hide the timer notice (but keep the final-minute warning pinned) ---- */
   useEffect(() => {
     if (!timeNotice) return;
+    if (remaining != null && remaining <= 60000) return; // final warning stays visible
     const id = setTimeout(() => setTimeNotice(null), 6000);
     return () => clearTimeout(id);
-  }, [timeNotice]);
+  }, [timeNotice, remaining]);
 
   /* ---- arrow-key navigation (ignored while typing or reviewing) ---- */
   useEffect(() => {
@@ -243,6 +253,7 @@ export function ExamRunner({
           <button
             onClick={requestFullscreen}
             title="Tam ekran"
+            aria-label="Tam ekran rejimi"
             className="flex h-9 w-9 items-center justify-center rounded-[9px] text-fg-muted hover:bg-slate-100 dark:hover:bg-surface-2"
           >
             <Maximize size={17} />
@@ -250,12 +261,14 @@ export function ExamRunner({
 
           {endMs && (
             <span
+              role="timer"
+              aria-label={`Qalan vaxt: ${mins} dəqiqə ${secs} saniyə`}
               className={cn(
                 "flex items-center gap-2 rounded-full px-3.5 py-2 text-white",
                 lowTime ? "bg-danger animate-[pulse-dot_1.2s_ease_infinite]" : "bg-sidebar",
               )}
             >
-              <Clock size={15} className={lowTime ? "text-white" : "text-blue-400"} />
+              <Clock size={15} className={lowTime ? "text-white" : "text-blue-400"} aria-hidden />
               <span className="num text-[16px] font-semibold tracking-wide">
                 {String(mins).padStart(2, "0")}:{String(secs).padStart(2, "0")}
               </span>
@@ -265,7 +278,14 @@ export function ExamRunner({
       </header>
 
       {/* Progress bar */}
-      <div className="h-[5px] flex-none bg-line">
+      <div
+        className="h-[5px] flex-none bg-line"
+        role="progressbar"
+        aria-label="İmtahan gedişatı"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={progress}
+      >
         <div
           className="h-full bg-gradient-to-r from-blue-500 to-blue-700 transition-[width] duration-300"
           style={{ width: `${progress}%` }}
@@ -275,12 +295,13 @@ export function ExamRunner({
       {/* Anti-cheat warning */}
       {anti.warning && (
         <div
+          role="alert"
           className={cn(
             "flex items-center gap-2 px-5 py-2.5 text-[13px] font-medium text-white",
             anti.warning.severity === "CRITICAL" ? "bg-danger" : "bg-warning",
           )}
         >
-          <ShieldAlert size={16} /> {anti.warning.label}
+          <ShieldAlert size={16} aria-hidden /> {anti.warning.label}
         </div>
       )}
 
@@ -294,11 +315,15 @@ export function ExamRunner({
 
       {/* Time threshold notice */}
       {timeNotice && (
-        <div className={cn(
-          "flex items-center gap-2 px-5 py-2.5 text-[13px] font-semibold",
-          warned1Ref.current && remaining != null && remaining <= 60000 ? "bg-danger text-white" : "bg-warning-bg text-warning-fg",
-        )}>
-          <AlertTriangle size={15} /> {timeNotice}
+        <div
+          role="alert"
+          aria-live="assertive"
+          className={cn(
+            "flex items-center gap-2 px-5 py-2.5 text-[13px] font-semibold",
+            warned1Ref.current && remaining != null && remaining <= 60000 ? "bg-danger text-white" : "bg-warning-bg text-warning-fg",
+          )}
+        >
+          <AlertTriangle size={15} aria-hidden /> {timeNotice}
         </div>
       )}
 
@@ -323,6 +348,8 @@ export function ExamRunner({
               </div>
               <button
                 onClick={() => toggleFlag(current.id)}
+                aria-pressed={flagged.has(current.id)}
+                aria-label="Bu sualı sonra üçün işarələ"
                 className={cn(
                   "flex shrink-0 items-center gap-1.5 rounded-[8px] px-2.5 py-1.5 text-[12.5px] font-medium transition-colors",
                   flagged.has(current.id)
@@ -330,7 +357,7 @@ export function ExamRunner({
                     : "text-fg-muted hover:bg-slate-100 dark:hover:bg-surface-2",
                 )}
               >
-                <Flag size={14} className={flagged.has(current.id) ? "fill-current" : ""} />
+                <Flag size={14} className={flagged.has(current.id) ? "fill-current" : ""} aria-hidden />
                 İşarələ
               </button>
             </div>
@@ -389,6 +416,8 @@ export function ExamRunner({
                   <button
                     key={q.id}
                     onClick={() => setCurrentIndex(i)}
+                    aria-current={isCur ? "true" : undefined}
+                    aria-label={`Sual ${i + 1}: ${ans ? "cavablanıb" : "boş"}${isFlag ? ", işarələnib" : ""}`}
                     className={cn(
                       "num flex aspect-square items-center justify-center rounded-[8px] text-[13px] font-semibold transition-colors",
                       isCur

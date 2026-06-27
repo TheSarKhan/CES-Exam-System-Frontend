@@ -32,6 +32,8 @@ export interface SessionStart {
   examTitle: string;
   durationMinutes: number | null;
   startTime: string;
+  /** Server clock at response time; used to correct the countdown for client clock skew. */
+  serverTime?: string;
   questions: SessionQuestion[];
 }
 
