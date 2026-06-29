@@ -7,6 +7,7 @@ import { Lock, Eye, EyeOff, ArrowRight, ArrowLeft, CheckCircle2, AlertTriangle }
 import { publicFetch } from "@/lib/publicApi";
 import { useToast } from "@/lib/toast";
 import { humanizeError } from "@/lib/errors";
+import { passwordError, PASSWORD_HINT } from "@/lib/validate";
 import { AuthShell, AUTH_GOLD as GOLD } from "@/components/app/AuthShell";
 
 export default function ResetPasswordPage() {
@@ -28,7 +29,8 @@ export default function ResetPasswordPage() {
   }, []);
 
   const mismatch = confirm.length > 0 && password !== confirm;
-  const valid = password.length >= 6 && password === confirm;
+  const pwErr = password.length > 0 ? passwordError(password) : null;
+  const valid = !pwErr && password === confirm;
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,8 +105,9 @@ export default function ResetPasswordPage() {
               </div>
               <div className="relative">
                 <Lock size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-white/35" />
-                <input id="pw" type={show ? "text" : "password"} required autoFocus placeholder="Ən azı 6 simvol" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} />
+                <input id="pw" type={show ? "text" : "password"} required autoFocus placeholder="Yeni parol" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} />
               </div>
+              <p className="mt-1.5 text-[11.5px] text-white/45">{pwErr ?? PASSWORD_HINT}</p>
             </div>
 
             <div>

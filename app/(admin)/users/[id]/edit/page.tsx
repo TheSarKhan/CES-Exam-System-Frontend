@@ -6,6 +6,7 @@ import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import type { Department, User } from "@/lib/types";
+import { nameError, passwordError, PASSWORD_HINT } from "@/lib/validate";
 import { Card } from "@/components/ui/Card";
 import { FieldGroup, Input, Select } from "@/components/ui/Field";
 import { Button, buttonClasses } from "@/components/ui/Button";
@@ -51,6 +52,10 @@ export default function EditUserPage() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const fieldErr = nameError(form.firstName, "Ad") || nameError(form.lastName, "Soyad")
+      || (form.password ? passwordError(form.password) : null);
+    if (fieldErr) return setError(fieldErr);
+    if (!form.departmentId) return setError("Şöbə seçilməlidir");
     if (form.roleIds.length === 0) return setError("Ən azı bir rol seçin");
     setSubmitting(true);
     setError("");
@@ -92,7 +97,7 @@ export default function EditUserPage() {
             <FieldGroup label="Soyad"><Input value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} required /></FieldGroup>
           </div>
           <FieldGroup label="E-poçt"><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required /></FieldGroup>
-          <FieldGroup label="Şifrə" hint="Dəyişməmək üçün boş buraxın">
+          <FieldGroup label="Şifrə" hint={`Dəyişməmək üçün boş buraxın. ${PASSWORD_HINT}`}>
             <Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
           </FieldGroup>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">

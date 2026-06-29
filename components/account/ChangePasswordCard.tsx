@@ -5,6 +5,7 @@ import { KeyRound, Eye, EyeOff } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { useToast } from "@/lib/toast";
 import { humanizeError } from "@/lib/errors";
+import { passwordError, PASSWORD_HINT } from "@/lib/validate";
 import { FieldGroup, Input } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 
@@ -18,7 +19,8 @@ export function ChangePasswordCard() {
   const [saving, setSaving] = useState(false);
 
   const mismatch = confirm.length > 0 && next !== confirm;
-  const valid = current.length > 0 && next.length >= 6 && next === confirm;
+  const pwErr = next.length > 0 ? passwordError(next) : null;
+  const valid = current.length > 0 && !pwErr && next === confirm;
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,7 +64,7 @@ export function ChangePasswordCard() {
       <FieldGroup label="Cari parol" htmlFor="current">
         <Input id="current" type={type} autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} />
       </FieldGroup>
-      <FieldGroup label="Yeni parol" htmlFor="next" hint="Ən azı 6 simvol.">
+      <FieldGroup label="Yeni parol" htmlFor="next" hint={PASSWORD_HINT} error={pwErr ?? undefined}>
         <Input id="next" type={type} autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} />
       </FieldGroup>
       <FieldGroup label="Yeni parolu təsdiqlə" htmlFor="confirm" error={mismatch ? "Parollar uyğun gəlmir" : undefined}>

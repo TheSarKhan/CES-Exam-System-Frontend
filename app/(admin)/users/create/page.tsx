@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import type { Department } from "@/lib/types";
+import { nameError, passwordError, PASSWORD_HINT } from "@/lib/validate";
 import { Card } from "@/components/ui/Card";
 import { FieldGroup, Input, Select } from "@/components/ui/Field";
 import { Button, buttonClasses } from "@/components/ui/Button";
@@ -28,13 +29,16 @@ export default function CreateUserPage() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const fieldErr = nameError(form.firstName, "Ad") || nameError(form.lastName, "Soyad") || passwordError(form.password);
+    if (fieldErr) return setError(fieldErr);
+    if (!form.departmentId) return setError("Şöbə seçilməlidir");
     if (form.roleIds.length === 0) return setError("Ən azı bir rol seçin");
     setSubmitting(true);
     setError("");
     try {
       await apiFetch("/api/v1/users", {
         method: "POST",
-        body: JSON.stringify({ ...form, departmentId: form.departmentId ? Number(form.departmentId) : null }),
+        body: JSON.stringify({ ...form, departmentId: Number(form.departmentId) }),
       });
       router.push("/users");
     } catch (e) {
@@ -61,7 +65,7 @@ export default function CreateUserPage() {
             <FieldGroup label="Soyad"><Input value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} required /></FieldGroup>
           </div>
           <FieldGroup label="E-poçt"><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required /></FieldGroup>
-          <FieldGroup label="Şifrə"><Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required /></FieldGroup>
+          <FieldGroup label="Şifrə" hint={PASSWORD_HINT}><Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required /></FieldGroup>
           <FieldGroup label="Şöbə">
             <Select value={form.departmentId} onChange={(e) => setForm({ ...form, departmentId: e.target.value })}>
               <option value="">Şöbə seçin</option>
