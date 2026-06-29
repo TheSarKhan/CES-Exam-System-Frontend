@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Library, PencilLine, Trash2, Pencil, ListChecks, GripVertical,
   ChevronDown, ChevronRight, Copy, Check, RotateCcw, Settings, X,
@@ -54,7 +55,10 @@ interface ExamBuilderProps {
   draftKey?: string;
 }
 
+const MAX_TOTAL_SCORE = 100;
+
 export function ExamBuilder({ initial, submitLabel, onSubmit, draftKey }: ExamBuilderProps) {
+  const router = useRouter();
   const keyRef = useRef(0);
   const nextKey = () => `q${keyRef.current++}`;
 
@@ -206,6 +210,9 @@ export function ExamBuilder({ initial, submitLabel, onSubmit, draftKey }: ExamBu
     e.preventDefault();
     if (!title.trim()) { setError("İmtahanın adını daxil edin"); setMetaOpen(true); return; }
     if (drafts.length === 0) return setError("Ən azı bir sual əlavə edin");
+    if (examType === "EXAM" && totalScore > MAX_TOTAL_SCORE) {
+      return setError(`Ümumi bal ${totalScore} xaldır — maksimum ${MAX_TOTAL_SCORE} bal ola bilər. Sualların ballarını azaldın.`);
+    }
     setSubmitting(true);
     setError("");
     try {
@@ -367,7 +374,9 @@ export function ExamBuilder({ initial, submitLabel, onSubmit, draftKey }: ExamBu
               </div>
               {examType === "EXAM" && (
                 <div className="text-right">
-                  <div className="num text-[22px] font-bold leading-none text-fg">{totalScore}</div>
+                  <div className={cn("num text-[22px] font-bold leading-none", totalScore > MAX_TOTAL_SCORE ? "text-danger-fg" : "text-fg")}>
+                    {totalScore}{totalScore > MAX_TOTAL_SCORE && <span className="ml-1 text-[13px]">/ {MAX_TOTAL_SCORE}</span>}
+                  </div>
                   <div className="text-[11.5px] text-fg-muted">ümumi bal</div>
                 </div>
               )}
@@ -393,7 +402,13 @@ export function ExamBuilder({ initial, submitLabel, onSubmit, draftKey }: ExamBu
             )}
 
             <Button type="submit" loading={submitting} className="w-full">{submitLabel}</Button>
-            <Link href="/exams" className={buttonClasses("ghost", "md", "mt-2 w-full")}>Ləğv et</Link>
+            <button
+              type="button"
+              onClick={() => { clearDraft(); router.push("/exams"); }}
+              className={buttonClasses("ghost", "md", "mt-2 w-full")}
+            >
+              Ləğv et
+            </button>
           </Card>
         </aside>
       </form>
