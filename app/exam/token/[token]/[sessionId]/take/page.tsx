@@ -67,5 +67,5 @@ export default function CandidateTakeExamPage() {
   // 0 = limitsiz → effectively never auto-terminate on tab switches.
   const antiCheatLimit = proctoring ? (tabLimit > 0 ? tabLimit : Number.MAX_SAFE_INTEGER) : Number.MAX_SAFE_INTEGER;
 
-  return <ExamRunner session={session} antiCheatLimit={antiCheatLimit} onSubmit={submit} />;
+  return <ExamRunner session={session} antiCheatLimit={antiCheatLimit} backHref={`/exam/token/${token}`} onSubmit={submit} />;
 }

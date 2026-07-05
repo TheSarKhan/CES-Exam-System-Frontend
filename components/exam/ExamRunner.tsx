@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import {
   Clock,
   Flag,
@@ -39,11 +40,14 @@ export function ExamRunner({
   session,
   takerName,
   antiCheatLimit = 3,
+  backHref,
   onSubmit,
 }: {
   session: SessionStart;
   takerName?: string;
   antiCheatLimit?: number;
+  /** If provided, the logo in the exam header becomes a link to this URL. */
+  backHref?: string;
   onSubmit: (payload: SubmitPayload) => Promise<void>;
 }) {
   const questions = session.questions;
@@ -245,8 +249,15 @@ export function ExamRunner({
       {/* Top bar */}
       <header className="flex h-16 flex-none items-center justify-between border-b border-line bg-surface px-5">
         <div className="flex items-center gap-3 min-w-0">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={markSrc} alt="CES" className="h-9 w-9 shrink-0 object-contain" />
+          {backHref ? (
+            <Link href={backHref} title="Əsas səhifəyə qayıt">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={markSrc} alt="CES" className="h-9 w-9 shrink-0 object-contain" />
+            </Link>
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={markSrc} alt="CES" className="h-9 w-9 shrink-0 object-contain" />
+          )}
           <div className="min-w-0">
             <div className="truncate text-[15px] font-bold tracking-[-0.2px] text-fg">{session.examTitle}</div>
             {takerName && <div className="truncate text-[12px] text-fg-muted">{takerName}</div>}

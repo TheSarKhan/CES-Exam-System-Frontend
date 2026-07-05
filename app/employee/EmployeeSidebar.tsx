@@ -88,7 +88,7 @@ export function EmployeeSidebar() {
       </Link>
 
       {/* Nav */}
-      <nav className="flex flex-1 flex-col gap-1.5">
+      <nav className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto">
         {nav.map((item) => {
           const active = pathname === item.href || pathname.startsWith(item.href + "/");
           const Icon = item.icon;

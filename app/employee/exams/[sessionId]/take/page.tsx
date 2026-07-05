@@ -51,6 +51,7 @@ export default function TakeExamPage() {
     <ExamRunner
       session={session}
       takerName={user ? `${user.firstName} ${user.lastName}` : undefined}
+      backHref="/employee/exams"
       onSubmit={submit}
     />
   );
