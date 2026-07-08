@@ -71,6 +71,7 @@ export function ExamQuestionModal({ open, initial, onClose, onSave }: ExamQuesti
 
   const save = () => {
     if (!qText.trim()) return setError("Sual mətni boş ola bilməz");
+    if (score < 0 || score > 100) return setError("Bal 0 ilə 100 arasında olmalıdır");
     if (hasOptions && options.filter((o) => o.text.trim()).length < 2) return setError("Ən azı 2 variant daxil edin");
     if (hasOptions && !options.some((o) => o.isCorrect)) return setError("Ən azı bir düzgün variant işarələyin");
     onSave({ type: qType, text: qText.trim(), score, options: buildOptions() });
@@ -102,7 +103,14 @@ export function ExamQuestionModal({ open, initial, onClose, onSave }: ExamQuesti
               </Select>
             </FieldGroup>
             <FieldGroup label="Bal">
-              <Input type="number" step="0.5" min="0" value={score} onChange={(e) => setScore(parseFloat(e.target.value) || 0)} />
+              <Input
+                type="number"
+                step="0.5"
+                min="0"
+                max="100"
+                value={score}
+                onChange={(e) => setScore(Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))}
+              />
             </FieldGroup>
           </div>
 

@@ -13,6 +13,7 @@ import { FieldGroup, Input } from "@/components/ui/Field";
 import { Loading } from "@/components/ui/Feedback";
 import { ChangePasswordCard } from "@/components/account/ChangePasswordCard";
 import { formatDate } from "@/lib/format";
+import { isValidName, sanitizeNameInput, NAME_ERROR_MESSAGE } from "@/lib/validation";
 
 export default function AdminAccountPage() {
   const toast = useToast();
@@ -86,7 +87,9 @@ function ProfileForm({ profile, onSaved }: { profile: AccountProfile; onSaved: (
   const [saving, setSaving] = useState(false);
 
   const dirty = firstName.trim() !== profile.firstName || lastName.trim() !== profile.lastName;
-  const valid = firstName.trim().length > 0 && lastName.trim().length > 0;
+  const firstNameValid = isValidName(firstName);
+  const lastNameValid = isValidName(lastName);
+  const valid = firstName.trim().length > 0 && lastName.trim().length > 0 && firstNameValid && lastNameValid;
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,11 +120,23 @@ function ProfileForm({ profile, onSaved }: { profile: AccountProfile; onSaved: (
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <FieldGroup label="Ad" htmlFor="firstName">
-          <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} maxLength={100} />
+        <FieldGroup label="Ad" htmlFor="firstName" error={firstName && !firstNameValid ? NAME_ERROR_MESSAGE : undefined}>
+          <Input
+            id="firstName"
+            value={firstName}
+            onChange={(e) => setFirstName(sanitizeNameInput(e.target.value))}
+            maxLength={100}
+            invalid={!!firstName && !firstNameValid}
+          />
         </FieldGroup>
-        <FieldGroup label="Soyad" htmlFor="lastName">
-          <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} maxLength={100} />
+        <FieldGroup label="Soyad" htmlFor="lastName" error={lastName && !lastNameValid ? NAME_ERROR_MESSAGE : undefined}>
+          <Input
+            id="lastName"
+            value={lastName}
+            onChange={(e) => setLastName(sanitizeNameInput(e.target.value))}
+            maxLength={100}
+            invalid={!!lastName && !lastNameValid}
+          />
         </FieldGroup>
       </div>
 

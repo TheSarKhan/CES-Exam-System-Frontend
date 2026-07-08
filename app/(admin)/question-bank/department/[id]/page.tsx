@@ -13,6 +13,7 @@ import type { Category, Department } from "@/lib/types";
 import { Button, buttonClasses } from "@/components/ui/Button";
 import { FieldGroup, Input } from "@/components/ui/Field";
 import { Loading, EmptyState, Modal } from "@/components/ui/Feedback";
+import { hasLetter, NAME_LETTER_ERROR_MESSAGE } from "@/lib/validation";
 
 export default function DepartmentQuestionBankPage() {
   const params = useParams();
@@ -55,10 +56,13 @@ export default function DepartmentQuestionBankPage() {
       .finally(() => setLoading(false));
   }, [deptId, toast]);
 
+  const newCatName = newCat.trim();
+  const newCatValid = newCatName.length > 0 && hasLetter(newCatName);
+
   const createCategory = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!newCat.trim()) return;
-    const name = newCat.trim();
+    if (!newCatValid) return;
+    const name = newCatName;
     setSubmitting(true);
     try {
       await apiFetch("/api/v1/question-bank/categories", {
@@ -77,8 +81,11 @@ export default function DepartmentQuestionBankPage() {
 
   const openEdit = (c: Category) => { setEditTarget(c); setEditName(c.name); };
 
+  const editNameTrimmed = editName.trim();
+  const editNameValid = editNameTrimmed.length > 0 && hasLetter(editNameTrimmed);
+
   const saveEdit = async () => {
-    if (!editTarget || !editName.trim()) return;
+    if (!editTarget || !editNameValid) return;
     setSavingEdit(true);
     try {
       await apiFetch(`/api/v1/question-bank/categories/${editTarget.id}`, {
@@ -157,7 +164,7 @@ export default function DepartmentQuestionBankPage() {
               {categories.map((c) => (
                 <Link
                   key={c.id}
-                  href={`/question-bank/category/${c.id}`}
+                  href={`/question-bank/category/${c.id}?departmentId=${deptId}`}
                   className="card group relative flex flex-col p-5 transition-all hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-pop"
                 >
                   <div className="mb-3 flex items-start justify-between">
@@ -198,13 +205,13 @@ export default function DepartmentQuestionBankPage() {
         footer={
           <>
             <Button variant="secondary" onClick={() => setCreateOpen(false)} disabled={submitting} className="flex-1">Ləğv et</Button>
-            <Button onClick={() => createCategory()} loading={submitting} className="flex-1">Yarat</Button>
+            <Button onClick={() => createCategory()} loading={submitting} disabled={!newCatValid} className="flex-1">Yarat</Button>
           </>
         }
       >
         <form onSubmit={createCategory} className="mt-1 flex flex-col gap-3">
-          <FieldGroup label="Kateqoriya adı">
-            <Input autoFocus value={newCat} onChange={(e) => setNewCat(e.target.value)} placeholder="məs. Təhlükəsizlik" required />
+          <FieldGroup label="Kateqoriya adı" error={newCat && !newCatValid ? NAME_LETTER_ERROR_MESSAGE : undefined}>
+            <Input autoFocus value={newCat} onChange={(e) => setNewCat(e.target.value)} placeholder="məs. Təhlükəsizlik" invalid={!!newCat && !newCatValid} required />
           </FieldGroup>
           <FieldGroup label="Təsvir (istəyə bağlı)">
             <Input value={newDesc} onChange={(e) => setNewDesc(e.target.value)} placeholder="Qısa təsvir" />
@@ -221,13 +228,19 @@ export default function DepartmentQuestionBankPage() {
         footer={
           <>
             <Button variant="secondary" onClick={() => setEditTarget(null)} disabled={savingEdit} className="flex-1">Ləğv et</Button>
-            <Button onClick={saveEdit} loading={savingEdit} className="flex-1">Yadda saxla</Button>
+            <Button onClick={saveEdit} loading={savingEdit} disabled={!editNameValid} className="flex-1">Yadda saxla</Button>
           </>
         }
       >
-        <div className="mt-1">
-          <Input autoFocus value={editName} onChange={(e) => setEditName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && saveEdit()} />
-        </div>
+        <FieldGroup className="mt-1" error={editName && !editNameValid ? NAME_LETTER_ERROR_MESSAGE : undefined}>
+          <Input
+            autoFocus
+            value={editName}
+            onChange={(e) => setEditName(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && saveEdit()}
+            invalid={!!editName && !editNameValid}
+          />
+        </FieldGroup>
       </Modal>
 
       {/* delete category */}

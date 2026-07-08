@@ -412,7 +412,18 @@ export function ExamBuilder({ initial, submitLabel, onSubmit, draftKey }: ExamBu
                   </Select>
                 </FieldGroup>
                 {examType === "EXAM" && (
-                  <FieldGroup label="Keçid balı (%)"><Input type="number" value={passMark} onChange={(e) => setPassMark(Number(e.target.value))} min={0} max={100} /></FieldGroup>
+                  <FieldGroup label="Keçid balı (%)">
+                    <Input
+                      type="number"
+                      value={String(passMark)}
+                      onChange={(e) => {
+                        const digits = e.target.value.replace(/\D/g, "");
+                        setPassMark(digits === "" ? 0 : Math.min(100, Number(digits)));
+                      }}
+                      min={0}
+                      max={100}
+                    />
+                  </FieldGroup>
                 )}
                 <FieldGroup label="Müddət (dəqiqə)"><Input type="number" value={duration} onChange={(e) => setDuration(Number(e.target.value))} min={1} /></FieldGroup>
               </div>

@@ -12,6 +12,9 @@ import { Button } from "@/components/ui/Button";
 import { Alert, Loading } from "@/components/ui/Feedback";
 import { cn } from "@/lib/cn";
 
+const EMAIL_RE =
+  /^[A-Za-z0-9](?:[A-Za-z0-9._%+-]*[A-Za-z0-9])?@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)+$/;
+
 interface FormState {
   orgName: string;
   supportEmail: string;
@@ -57,9 +60,29 @@ export default function SettingsPage() {
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((f) => (f ? { ...f, [key]: value } : f));
 
+  const orgNameError = (() => {
+    if (!form) return undefined;
+    const trimmed = form.orgName.trim();
+    if (trimmed.length === 0) return "Təşkilat adını daxil edin";
+    if (!/[\p{L}\p{N}]/u.test(trimmed)) return "Etibarlı təşkilat adı daxil edin";
+    return undefined;
+  })();
+
+  const supportEmailError = (() => {
+    if (!form) return undefined;
+    const trimmed = form.supportEmail.trim();
+    if (trimmed.length === 0) return undefined;
+    if (!EMAIL_RE.test(trimmed)) return "Dəstək e-poçtu düzgün deyil";
+    return undefined;
+  })();
+
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form) return;
+    if (orgNameError || supportEmailError) {
+      toast.error(orgNameError || supportEmailError!);
+      return;
+    }
     setSaving(true);
     try {
       const body = {
@@ -101,13 +124,33 @@ export default function SettingsPage() {
       {/* Branding */}
       <Section icon={<Building2 size={17} />} title="Brendinq" desc="Adınız e-poçtlarda və namizəd səhifələrində görünür.">
         <div className="grid gap-4 sm:grid-cols-2">
-          <FieldGroup label="Təşkilat adı" htmlFor="orgName">
-            <Input id="orgName" value={form.orgName} onChange={(e) => set("orgName", e.target.value)} maxLength={120} />
+          <FieldGroup label="Təşkilat adı" htmlFor="orgName" error={orgNameError}>
+            <Input
+              id="orgName"
+              value={form.orgName}
+              onChange={(e) => set("orgName", e.target.value)}
+              maxLength={120}
+              invalid={!!orgNameError}
+              required
+            />
           </FieldGroup>
-          <FieldGroup label="Dəstək e-poçtu" htmlFor="supportEmail" hint="Namizəd e-poçtlarının altında göstərilir.">
+          <FieldGroup
+            label="Dəstək e-poçtu"
+            htmlFor="supportEmail"
+            hint="Namizəd e-poçtlarının altında göstərilir."
+            error={supportEmailError}
+          >
             <div className="relative">
               <Mail size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <Input id="supportEmail" type="email" className="pl-[36px]" value={form.supportEmail} onChange={(e) => set("supportEmail", e.target.value)} placeholder="dəstək@şirkət.az" />
+              <Input
+                id="supportEmail"
+                type="email"
+                className="pl-[36px]"
+                value={form.supportEmail}
+                onChange={(e) => set("supportEmail", e.target.value)}
+                placeholder="dəstək@şirkət.az"
+                invalid={!!supportEmailError}
+              />
             </div>
           </FieldGroup>
         </div>
@@ -181,7 +224,7 @@ export default function SettingsPage() {
       </Section>
 
       <div className="flex justify-end">
-        <Button type="submit" icon={<Save size={15} />} loading={saving}>Yadda saxla</Button>
+        <Button type="submit" icon={<Save size={15} />} loading={saving} disabled={!!orgNameError || !!supportEmailError}>Yadda saxla</Button>
       </div>
     </form>
   );

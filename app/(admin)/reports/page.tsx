@@ -67,6 +67,8 @@ export default function ReportsPage() {
       .catch((e) => setError(e.message));
   }, []);
 
+  const dateRangeInvalid = Boolean(filters.startDate && filters.endDate && filters.startDate > filters.endDate);
+
   const load = useCallback(async (f = filters) => {
     setLoading(true);
     try {
@@ -143,7 +145,7 @@ export default function ReportsPage() {
 
       {/* server-side filters */}
       <Card className="mb-4 p-5">
-        <form onSubmit={(e) => { e.preventDefault(); load(filters); }} className="grid grid-cols-1 items-end gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto_auto_auto]">
+        <form onSubmit={(e) => { e.preventDefault(); if (!dateRangeInvalid) load(filters); }} className="grid grid-cols-1 items-end gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto_auto_auto]">
           <FieldGroup label="Şöbə">
             <Select value={filters.departmentId} onChange={(e) => setFilters({ ...filters, departmentId: e.target.value })}>
               <option value="">Bütün şöbələr</option>
@@ -159,11 +161,11 @@ export default function ReportsPage() {
           <FieldGroup label="Başlanğıc">
             <DatePicker value={filters.startDate} onChange={(v) => setFilters({ ...filters, startDate: v })} />
           </FieldGroup>
-          <FieldGroup label="Son">
+          <FieldGroup label="Son" error={dateRangeInvalid ? "Son tarix başlanğıc tarixindən əvvəl ola bilməz." : undefined}>
             <DatePicker value={filters.endDate} onChange={(v) => setFilters({ ...filters, endDate: v })} />
           </FieldGroup>
           <div className="flex gap-2">
-            <Button type="submit">Tətbiq et</Button>
+            <Button type="submit" disabled={dateRangeInvalid}>Tətbiq et</Button>
             <Button type="button" variant="ghost" onClick={resetFilters}>Sıfırla</Button>
           </div>
         </form>

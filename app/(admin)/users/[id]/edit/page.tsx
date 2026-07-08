@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/Card";
 import { FieldGroup, Input, Select } from "@/components/ui/Field";
 import { Button, buttonClasses } from "@/components/ui/Button";
 import { Loading } from "@/components/ui/Feedback";
+import { isValidName, sanitizeNameInput, NAME_ERROR_MESSAGE } from "@/lib/validation";
 
 export default function EditUserPage() {
   const router = useRouter();
@@ -49,9 +50,13 @@ export default function EditUserPage() {
   const toggleRole = (id: number, checked: boolean) =>
     setForm((f) => ({ ...f, roleIds: checked ? [...f.roleIds, id] : f.roleIds.filter((x) => x !== id) }));
 
+  const firstNameValid = isValidName(form.firstName);
+  const lastNameValid = isValidName(form.lastName);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (form.roleIds.length === 0) return setError("Ən azı bir rol seçin");
+    if (!firstNameValid || !lastNameValid) return setError(NAME_ERROR_MESSAGE);
     setSubmitting(true);
     setError("");
     try {
@@ -88,8 +93,12 @@ export default function EditUserPage() {
       <Card className="p-6">
         <form onSubmit={submit} className="flex flex-col gap-5">
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            <FieldGroup label="Ad"><Input value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} required /></FieldGroup>
-            <FieldGroup label="Soyad"><Input value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} required /></FieldGroup>
+            <FieldGroup label="Ad" error={form.firstName && !firstNameValid ? NAME_ERROR_MESSAGE : undefined}>
+              <Input value={form.firstName} onChange={(e) => setForm({ ...form, firstName: sanitizeNameInput(e.target.value) })} invalid={!!form.firstName && !firstNameValid} maxLength={100} required />
+            </FieldGroup>
+            <FieldGroup label="Soyad" error={form.lastName && !lastNameValid ? NAME_ERROR_MESSAGE : undefined}>
+              <Input value={form.lastName} onChange={(e) => setForm({ ...form, lastName: sanitizeNameInput(e.target.value) })} invalid={!!form.lastName && !lastNameValid} maxLength={100} required />
+            </FieldGroup>
           </div>
           <FieldGroup label="E-poçt"><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required /></FieldGroup>
           <FieldGroup label="Şifrə" hint="Dəyişməmək üçün boş buraxın">
@@ -131,7 +140,7 @@ export default function EditUserPage() {
           </FieldGroup>
           <div className="flex justify-end gap-3 pt-1">
             <Link href="/users" className={buttonClasses("secondary", "md")}>Ləğv et</Link>
-            <Button type="submit" loading={submitting}>Yadda saxla</Button>
+            <Button type="submit" loading={submitting} disabled={!firstNameValid || !lastNameValid}>Yadda saxla</Button>
           </div>
         </form>
       </Card>

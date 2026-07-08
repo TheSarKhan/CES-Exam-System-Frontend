@@ -142,6 +142,7 @@ export function QuestionForm({ topicOptions, initialTopicId, initial, submitLabe
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!topicId) return setError("Mövzu seçin");
+    if (score < 0 || score > 100) return setError("Bal 0 ilə 100 arasında olmalıdır");
     if (hasOptions && options.filter((o) => o.text.trim()).length < 2) return setError("Ən azı 2 variant daxil edin");
     if (hasOptions && !options.some((o) => o.isCorrect)) return setError("Ən azı bir düzgün variant işarələyin");
     setSubmitting(true);
@@ -222,7 +223,15 @@ export function QuestionForm({ topicOptions, initialTopicId, initial, submitLabe
             </Select>
           </FieldGroup>
           <FieldGroup label="Bal">
-            <Input type="number" step="0.5" min="0" value={score} onChange={(e) => setScore(parseFloat(e.target.value) || 0)} required />
+            <Input
+              type="number"
+              step="0.5"
+              min="0"
+              max="100"
+              value={score}
+              onChange={(e) => setScore(Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))}
+              required
+            />
           </FieldGroup>
         </div>
 

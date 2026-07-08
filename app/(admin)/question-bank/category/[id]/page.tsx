@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import {
   ArrowLeft, Package, Plus, Pencil, Trash2, Search, Layers, HelpCircle, X,
 } from "lucide-react";
@@ -15,6 +15,7 @@ import { Table, Tr, Td } from "@/components/ui/Table";
 import { Button, buttonClasses } from "@/components/ui/Button";
 import { FieldGroup, Input } from "@/components/ui/Field";
 import { Loading, EmptyState, Modal } from "@/components/ui/Feedback";
+import { hasLetter, NAME_LETTER_ERROR_MESSAGE } from "@/lib/validation";
 import { questionTypeLabel } from "@/components/exam/QuestionInput";
 import { cn } from "@/lib/cn";
 
@@ -26,6 +27,11 @@ export default function CategoryDetailPage() {
   const params = useParams();
   const categoryId = Number(params.id);
   const toast = useToast();
+
+  // Carried over from the department page's link so the back button is correct
+  // immediately, without waiting for the category fetch below to resolve.
+  const searchParams = useSearchParams();
+  const departmentIdFromQuery = searchParams.get("departmentId");
 
   const [category, setCategory] = useState<Category | null>(null);
   const [topics, setTopics] = useState<Topic[]>([]);
@@ -80,10 +86,13 @@ export default function CategoryDetailPage() {
     );
   }, [questions, topicFilter, diffFilter, search]);
 
+  const newTopicName = newTopic.trim();
+  const newTopicValid = newTopicName.length > 0 && hasLetter(newTopicName);
+
   const createTopic = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!newTopic.trim()) return;
-    const name = newTopic.trim();
+    if (!newTopicValid) return;
+    const name = newTopicName;
     setSavingTopic(true);
     try {
       await apiFetch("/api/v1/question-bank/topics", {
@@ -120,13 +129,16 @@ export default function CategoryDetailPage() {
 
   const createHref = `/question-bank/create?categoryId=${categoryId}${category ? `&departmentId=${category.departmentId}` : ""}${topicFilter !== "ALL" ? `&topicId=${topicFilter}` : ""}`;
 
+  const backDepartmentId = departmentIdFromQuery ?? (category ? String(category.departmentId) : null);
+  const backHref = backDepartmentId ? `/question-bank/department/${backDepartmentId}` : "/question-bank";
+
   return (
     <div className="mx-auto max-w-[1200px]">
       <Link
-        href={category ? `/question-bank/department/${category.departmentId}` : "/question-bank"}
+        href={backHref}
         className="mb-4 inline-flex items-center gap-1.5 text-[13px] font-medium text-fg-muted transition-colors hover:text-fg"
       >
-        <ArrowLeft size={15} /> {category ? "Kateqoriyalar" : "Sual bankı"}
+        <ArrowLeft size={15} /> {backDepartmentId ? "Kateqoriyalar" : "Sual bankı"}
       </Link>
 
       {loading ? (
@@ -272,13 +284,13 @@ export default function CategoryDetailPage() {
         footer={
           <>
             <Button variant="secondary" onClick={() => setTopicOpen(false)} disabled={savingTopic} className="flex-1">Ləğv et</Button>
-            <Button onClick={() => createTopic()} loading={savingTopic} className="flex-1">Yarat</Button>
+            <Button onClick={() => createTopic()} loading={savingTopic} disabled={!newTopicValid} className="flex-1">Yarat</Button>
           </>
         }
       >
         <form onSubmit={createTopic} className="mt-1">
-          <FieldGroup label="Mövzu adı">
-            <Input autoFocus value={newTopic} onChange={(e) => setNewTopic(e.target.value)} placeholder="məs. Yanğın təhlükəsizliyi" required />
+          <FieldGroup label="Mövzu adı" error={newTopic && !newTopicValid ? NAME_LETTER_ERROR_MESSAGE : undefined}>
+            <Input autoFocus value={newTopic} onChange={(e) => setNewTopic(e.target.value)} placeholder="məs. Yanğın təhlükəsizliyi" invalid={!!newTopic && !newTopicValid} required />
           </FieldGroup>
         </form>
       </Modal>

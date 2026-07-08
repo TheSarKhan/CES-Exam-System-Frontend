@@ -150,7 +150,7 @@ export function NotificationBell({
       {open && (
         <div
           className={cn(
-            "absolute z-50 w-[368px] overflow-hidden rounded-[14px] border border-line bg-surface shadow-[0_12px_32px_rgba(15,23,42,0.16)]",
+            "absolute z-[60] w-[368px] overflow-hidden rounded-[14px] border border-line bg-surface shadow-[0_12px_32px_rgba(15,23,42,0.16)]",
             isSidebar ? "bottom-0 left-full ml-2" : "right-0 top-[46px]",
           )}
         >
