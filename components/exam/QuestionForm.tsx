@@ -229,7 +229,13 @@ export function QuestionForm({ topicOptions, initialTopicId, initial, submitLabe
               min="0"
               max="100"
               value={score}
-              onChange={(e) => setScore(Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))}
+              onChange={(e) => {
+                const clamped = Math.min(100, Math.max(0, parseFloat(e.target.value) || 0));
+                // Force the DOM back in sync when the raw value is out of range: a controlled
+                // number input won't re-render if the clamped value equals the current state.
+                if (String(clamped) !== e.target.value) e.target.value = String(clamped);
+                setScore(clamped);
+              }}
               required
             />
           </FieldGroup>

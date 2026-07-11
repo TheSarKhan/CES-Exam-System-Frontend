@@ -57,7 +57,7 @@ export function AdminSidebar() {
   return (
     <aside
       className={cn(
-        "sticky top-0 flex h-screen flex-none flex-col border-r border-line bg-surface px-3 py-4 transition-[width] duration-200",
+        "sticky top-0 z-40 flex h-screen flex-none flex-col border-r border-line bg-surface px-3 py-4 transition-[width] duration-200",
         collapsed ? "w-[74px]" : "w-[238px]",
       )}
     >

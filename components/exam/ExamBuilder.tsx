@@ -418,7 +418,11 @@ export function ExamBuilder({ initial, submitLabel, onSubmit, draftKey }: ExamBu
                       value={String(passMark)}
                       onChange={(e) => {
                         const digits = e.target.value.replace(/\D/g, "");
-                        setPassMark(digits === "" ? 0 : Math.min(100, Number(digits)));
+                        const clamped = digits === "" ? 0 : Math.min(100, Number(digits));
+                        // Force the DOM back in sync when out of range: a controlled input
+                        // won't re-render if the clamped value equals the current state.
+                        if (String(clamped) !== e.target.value) e.target.value = String(clamped);
+                        setPassMark(clamped);
                       }}
                       min={0}
                       max={100}
