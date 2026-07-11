@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import type { Department } from "@/lib/types";
-import { nameError, passwordError, PASSWORD_HINT } from "@/lib/validate";
+import { nameError, passwordError, sanitizeName, PASSWORD_HINT } from "@/lib/validate";
 import { Card } from "@/components/ui/Card";
 import { FieldGroup, Input, Select } from "@/components/ui/Field";
 import { Button, buttonClasses } from "@/components/ui/Button";
@@ -61,8 +61,8 @@ export default function CreateUserPage() {
       <Card className="p-6">
         <form onSubmit={submit} className="flex flex-col gap-5">
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            <FieldGroup label="Ad"><Input value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} required /></FieldGroup>
-            <FieldGroup label="Soyad"><Input value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} required /></FieldGroup>
+            <FieldGroup label="Ad"><Input value={form.firstName} onChange={(e) => setForm({ ...form, firstName: sanitizeName(e.target.value) })} required /></FieldGroup>
+            <FieldGroup label="Soyad"><Input value={form.lastName} onChange={(e) => setForm({ ...form, lastName: sanitizeName(e.target.value) })} required /></FieldGroup>
           </div>
           <FieldGroup label="E-poçt"><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required /></FieldGroup>
           <FieldGroup label="Şifrə" hint={PASSWORD_HINT}><Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required /></FieldGroup>
