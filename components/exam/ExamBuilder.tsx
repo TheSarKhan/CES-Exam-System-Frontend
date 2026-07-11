@@ -417,10 +417,13 @@ export function ExamBuilder({ initial, submitLabel, onSubmit, draftKey }: ExamBu
                       type="number"
                       value={String(passMark)}
                       onChange={(e) => {
-                        const digits = e.target.value.replace(/\D/g, "");
+                        // Digits only, dropping leading zeros so a stray "0" left in the
+                        // field turns "0" + "100" into "100" rather than "0100".
+                        const digits = e.target.value.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
                         const clamped = digits === "" ? 0 : Math.min(100, Number(digits));
-                        // Force the DOM back in sync when out of range: a controlled input
-                        // won't re-render if the clamped value equals the current state.
+                        // A controlled number input won't reset when the numeric value is
+                        // unchanged (e.g. "1000" clamps to 100 while state is already 100),
+                        // so push the normalized text back to the DOM ourselves.
                         if (String(clamped) !== e.target.value) e.target.value = String(clamped);
                         setPassMark(clamped);
                       }}
