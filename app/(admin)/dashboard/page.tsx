@@ -266,11 +266,11 @@ function WeeklyActivity({ data }: { data: { label: string; count: number }[] }) 
   }
   const max = Math.max(1, ...data.map((d) => d.count));
   return (
-    <div className="flex items-end gap-2.5">
+    <div className="flex items-end gap-1.5 sm:gap-2.5">
       {data.map((d, i) => {
         const h = Math.round((d.count / max) * 150);
         return (
-          <div key={i} className="flex flex-1 flex-col items-center gap-1.5">
+          <div key={i} className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
             <span className="num text-[11px] font-semibold text-fg-muted">{d.count > 0 ? d.count : ""}</span>
             <div className="flex w-full items-end justify-center" style={{ height: 150 }}>
               <div
@@ -278,7 +278,7 @@ function WeeklyActivity({ data }: { data: { label: string; count: number }[] }) 
                 style={{ height: d.count > 0 ? Math.max(4, h) : 3, background: d.count > 0 ? scoreColor(70) : "#E2E8F0" }}
               />
             </div>
-            <span className="num text-[10.5px] text-fg-faint">{d.label}</span>
+            <span className="num w-full truncate text-center text-[10.5px] text-fg-faint">{d.label}</span>
           </div>
         );
       })}

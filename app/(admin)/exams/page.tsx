@@ -172,14 +172,14 @@ export default function ExamsPage() {
                 )}
 
                 {/* footer */}
-                <div className="mt-auto flex gap-2 border-t border-line pt-4">
+                <div className="mt-auto flex flex-wrap gap-2 border-t border-line pt-4">
                   <Link href={`/exams/${ex.id}/analytics`} className={buttonClasses("outline", "sm")} title="Analitika">
                     <PieChart size={15} />
                   </Link>
-                  <Link href={`/exams/${ex.id}/results`} className={buttonClasses("outline", "sm", "flex-1")}>
+                  <Link href={`/exams/${ex.id}/results`} className={buttonClasses("outline", "sm", "min-w-0 flex-1")}>
                     <BarChart3 size={15} /> Nəticələr
                   </Link>
-                  <Link href={`/exams/assign?examId=${ex.id}`} className={buttonClasses("secondary", "sm", "flex-1")}>
+                  <Link href={`/exams/assign?examId=${ex.id}`} className={buttonClasses("secondary", "sm", "min-w-0 flex-1")}>
                     <Send size={15} /> Təyin et
                   </Link>
                 </div>

@@ -264,9 +264,9 @@ export function BankPickerModal({ open, onClose, onAdd, excludeIds = [] }: BankP
         </div>
 
         {/* footer */}
-        <div className="flex items-center justify-between gap-3 border-t border-line px-5 py-3.5">
-          <span className="text-[13px] text-fg-muted">{selectedCount > 0 ? <>Seçilib: <b className="num text-fg">{selectedCount}</b></> : "Sual seçilməyib"}</span>
-          <div className="flex gap-2.5">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2.5 border-t border-line px-5 py-3.5">
+          <span className="min-w-0 text-[13px] text-fg-muted">{selectedCount > 0 ? <>Seçilib: <b className="num text-fg">{selectedCount}</b></> : "Sual seçilməyib"}</span>
+          <div className="flex shrink-0 gap-2.5">
             <Button variant="secondary" onClick={onClose}>Bağla</Button>
             <Button onClick={confirm} disabled={selectedCount === 0}>İmtahana əlavə et</Button>
           </div>

@@ -311,7 +311,7 @@ export default function ExamResultsPage() {
                           )}
                         </div>
                       </div>
-                      <div className="flex shrink-0 items-center gap-1.5">
+                      <div className="flex flex-wrap items-center justify-end gap-1.5">
                         <button
                           onClick={() => openInvite(l)}
                           className="inline-flex items-center gap-1.5 rounded-[8px] border border-line px-2.5 py-1.5 text-[12.5px] font-medium text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg"
