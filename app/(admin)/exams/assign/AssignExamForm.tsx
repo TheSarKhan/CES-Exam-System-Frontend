@@ -245,7 +245,7 @@ export default function AssignExamForm() {
           <FieldGroup label="İmtahan seçin">
             <Select value={examId} onChange={(e) => setExamId(e.target.value)} required>
               <option value="">— İmtahan seçin —</option>
-              {exams.map((ex) => <option key={ex.id} value={ex.id}>{ex.title}</option>)}
+              {exams.filter((ex) => ex.status !== "DRAFT").map((ex) => <option key={ex.id} value={ex.id}>{ex.title}</option>)}
             </Select>
           </FieldGroup>
 

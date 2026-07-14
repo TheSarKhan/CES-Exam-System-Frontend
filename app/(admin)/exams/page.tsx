@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   Plus, Send, Pencil, Trash2, ListChecks, Target, Clock, ClipboardList,
-  Users, TrendingUp, BarChart3, Search, PieChart,
+  Users, TrendingUp, BarChart3, Search, PieChart, FileEdit,
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import type { Exam } from "@/lib/types";
@@ -32,9 +32,16 @@ export default function ExamsPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  // Half-finished exams auto-saved while building — shown as resumable cards, newest first.
+  const drafts = useMemo(
+    () => exams.filter((e) => e.status === "DRAFT").sort((a, b) => b.id - a.id),
+    [exams],
+  );
+  const published = useMemo(() => exams.filter((e) => e.status !== "DRAFT"), [exams]);
+
   const view = useMemo(() => {
     const s = search.trim().toLowerCase();
-    let list = exams.filter((e) =>
+    let list = published.filter((e) =>
       (typeFilter === "all" || e.type === typeFilter) &&
       (!s || e.title.toLowerCase().includes(s)));
     list = [...list].sort((a, b) => {
@@ -43,7 +50,7 @@ export default function ExamsPage() {
       return b.id - a.id; // newest
     });
     return list;
-  }, [exams, search, typeFilter, sortBy]);
+  }, [published, search, typeFilter, sortBy]);
 
   const confirmDelete = async () => {
     if (!deleteTarget) return;
@@ -80,7 +87,40 @@ export default function ExamsPage() {
 
       {error && <div className="mb-4 rounded-[11px] border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[13px] text-danger-fg">{error}</div>}
 
-      {!loading && exams.length > 0 && (
+      {/* Draft (unfinished) exams — resume or discard. */}
+      {!loading && drafts.length > 0 && (
+        <div className="mb-6">
+          <h3 className="mb-2.5 flex items-center gap-2 text-[13px] font-semibold uppercase tracking-wider text-fg-faint">
+            <FileEdit size={15} /> Qaralamalar <span className="num rounded-full bg-amber-100 px-1.5 text-[11px] font-semibold text-amber-700 dark:bg-amber-500/15 dark:text-amber-400">{drafts.length}</span>
+          </h3>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {drafts.map((d) => {
+              const total = d.questionCount ?? 0;
+              return (
+                <Card key={d.id} className="group flex flex-col border-dashed p-5">
+                  <div className="mb-3 flex items-start justify-between gap-2">
+                    <span className="inline-flex rounded-[7px] bg-amber-50 px-2.5 py-1 text-[11.5px] font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">Qaralama</span>
+                    <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                      <button onClick={() => setDeleteTarget(d)} className="flex h-8 w-8 items-center justify-center rounded-[8px] text-fg-muted hover:bg-danger-bg hover:text-danger" title="Sil"><Trash2 size={15} /></button>
+                    </div>
+                  </div>
+                  <h3 className="text-[16px] font-semibold leading-snug text-fg line-clamp-2">{d.title.trim() || "Adsız qaralama"}</h3>
+                  <div className="mt-4 flex items-center gap-1.5 text-[12.5px] text-fg-muted">
+                    <ListChecks size={14} className="text-fg-faint" /> <span className="num font-semibold text-fg">{total}</span> sual
+                  </div>
+                  <div className="mt-auto flex gap-2 border-t border-line pt-4">
+                    <Link href={`/exams/${d.id}/edit`} className={buttonClasses("primary", "sm", "flex-1")}>
+                      <Pencil size={15} /> Davam et
+                    </Link>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {!loading && published.length > 0 && (
         <div className="mb-5 flex flex-col gap-2.5 sm:flex-row sm:items-center">
           <div className="relative flex-1">
             <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -101,15 +141,17 @@ export default function ExamsPage() {
 
       {loading ? (
         <Loading />
-      ) : exams.length === 0 ? (
-        <Card>
-          <EmptyState
-            icon={<ClipboardList size={22} />}
-            title="Hələ imtahan yoxdur"
-            description="İlk imtahanınızı yaradın və istifadəçilərə təyin edin."
-            action={<Link href="/exams/create" className={buttonClasses("primary", "sm")}><Plus size={15} /> Yeni imtahan</Link>}
-          />
-        </Card>
+      ) : published.length === 0 ? (
+        drafts.length === 0 ? (
+          <Card>
+            <EmptyState
+              icon={<ClipboardList size={22} />}
+              title="Hələ imtahan yoxdur"
+              description="İlk imtahanınızı yaradın və istifadəçilərə təyin edin."
+              action={<Link href="/exams/create" className={buttonClasses("primary", "sm")}><Plus size={15} /> Yeni imtahan</Link>}
+            />
+          </Card>
+        ) : null
       ) : view.length === 0 ? (
         <Card><EmptyState icon={<Search size={22} />} title="Nəticə yoxdur" description="Axtarış/filtrə uyğun imtahan tapılmadı." /></Card>
       ) : (

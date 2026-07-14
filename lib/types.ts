@@ -227,6 +227,7 @@ export interface Exam {
   title: string;
   description: string | null;
   type: string;
+  status: "DRAFT" | "PUBLISHED";
   passMark: number | null;
   durationMinutes: number | null;
   questionCount: number | null;

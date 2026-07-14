@@ -5,9 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Library, PencilLine, Trash2, Pencil, ListChecks, GripVertical,
-  ChevronDown, ChevronRight, Copy, Check, RotateCcw, Settings, X,
+  ChevronDown, ChevronRight, Copy, Check, Settings, X,
 } from "lucide-react";
 import type { Question } from "@/lib/types";
+import { apiFetch } from "@/lib/api";
+import { humanizeError } from "@/lib/errors";
 import { Card } from "@/components/ui/Card";
 import { FieldGroup, Input, Select, Textarea } from "@/components/ui/Field";
 import { Button, buttonClasses } from "@/components/ui/Button";
@@ -52,14 +54,17 @@ export interface ExamBuilderInitial {
 interface ExamBuilderProps {
   initial?: ExamBuilderInitial;
   submitLabel: string;
-  onSubmit: (body: Record<string, unknown>) => Promise<void>;
-  /** When set, the draft auto-saves to localStorage under this key (create mode). */
-  draftKey?: string;
+  mode: "create" | "edit";
+  /** Present in edit mode: the exam being edited. */
+  examId?: number;
+  /** The exam's current status in edit mode ("DRAFT" resumes a draft, "PUBLISHED" edits a live exam). */
+  initialStatus?: "DRAFT" | "PUBLISHED";
 }
 
 const MAX_TOTAL_SCORE = 100;
+const AUTOSAVE_DEBOUNCE_MS = 800;
 
-export function ExamBuilder({ initial, submitLabel, onSubmit, draftKey }: ExamBuilderProps) {
+export function ExamBuilder({ initial, submitLabel, mode, examId, initialStatus }: ExamBuilderProps) {
   const router = useRouter();
   const keyRef = useRef(0);
   const nextKey = () => `q${keyRef.current++}`;
@@ -89,48 +94,69 @@ export function ExamBuilder({ initial, submitLabel, onSubmit, draftKey }: ExamBu
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [dragIndex, setDragIndex] = useState<number | null>(null);
 
-  const [hydrated, setHydrated] = useState(false);
-  const [restored, setRestored] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // ---- draft autosave (create mode only) ----
-  useEffect(() => {
-    if (!draftKey) { setHydrated(true); return; }
-    try {
-      const raw = localStorage.getItem(draftKey);
-      if (raw) {
-        const d = JSON.parse(raw);
-        setTitle(d.title ?? "");
-        setDescription(d.description ?? "");
-        setExamType(d.examType ?? "EXAM");
-        setPassMark(d.passMark ?? 70);
-        setDuration(d.duration ?? 60);
-        const ds: Draft[] = Array.isArray(d.drafts) ? d.drafts : [];
-        setDrafts(ds);
-        keyRef.current = ds.reduce((m, x) => {
-          const n = parseInt(String(x.key).replace(/\D/g, ""), 10);
-          return isNaN(n) ? m : Math.max(m, n + 1);
-        }, 0);
-        if (ds.length > 0 || d.title) setRestored(true);
+  // ---- backend draft persistence ----
+  // A create session (or a resumed DRAFT) auto-saves to the backend as a DRAFT
+  // exam while the admin works, so leaving the page keeps an editable "draft card"
+  // in the exam list. Publishing (submit) flips the same record to PUBLISHED.
+  const autoDraft = mode === "create" || initialStatus === "DRAFT";
+  const savedIdRef = useRef<number | null>(examId ?? null);
+  // Serializes writes so a POST and a following PUT never race into two records.
+  const savingRef = useRef<Promise<unknown>>(Promise.resolve());
+  // Set once the user publishes/cancels, to stop further background autosaves.
+  const stoppedRef = useRef(false);
+  // Skip the autosave that would otherwise fire on the initial mount.
+  const firstAutosaveRef = useRef(true);
+
+  const buildBody = (status: "DRAFT" | "PUBLISHED") => ({
+    title,
+    description: description.trim() || null,
+    type: examType,
+    status,
+    passMark: examType === "EXAM" ? passMark : null,
+    durationMinutes: duration,
+    questions: drafts.map((d) =>
+      d.questionId != null
+        ? { questionId: d.questionId }
+        : {
+            type: d.type,
+            text: d.text,
+            imageUrl: d.imageUrl ?? null,
+            score: d.score,
+            options: d.options.length
+              ? d.options.map((o, i) => ({ text: o.text, isCorrect: o.isCorrect, imageUrl: o.imageUrl ?? null, sortOrder: i }))
+              : undefined,
+          },
+    ),
+  });
+
+  const persist = async (status: "DRAFT" | "PUBLISHED") => {
+    const body = buildBody(status);
+    const run = async () => {
+      if (savedIdRef.current == null) {
+        const res = await apiFetch<{ id: number }>("/api/v1/exams", { method: "POST", body: JSON.stringify(body) });
+        savedIdRef.current = res.id;
+      } else {
+        await apiFetch(`/api/v1/exams/${savedIdRef.current}`, { method: "PUT", body: JSON.stringify(body) });
       }
-    } catch { /* ignore corrupt draft */ }
-    setHydrated(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (!hydrated || !draftKey) return;
-    try {
-      localStorage.setItem(draftKey, JSON.stringify({ title, description, examType, passMark, duration, drafts }));
-    } catch { /* quota / unavailable */ }
-  }, [hydrated, draftKey, title, description, examType, passMark, duration, drafts]);
-
-  const clearDraft = () => {
-    if (draftKey) localStorage.removeItem(draftKey);
-    setTitle(""); setDescription(""); setExamType("EXAM"); setPassMark(70); setDuration(60);
-    setDrafts([]); setRestored(false);
+    };
+    const next = savingRef.current.then(run, run);
+    savingRef.current = next.catch(() => {});
+    return next;
   };
+
+  // Debounced background autosave. Skips empty content so we never create a blank draft.
+  useEffect(() => {
+    if (!autoDraft) return;
+    if (firstAutosaveRef.current) { firstAutosaveRef.current = false; return; }
+    if (stoppedRef.current) return;
+    if (!(title.trim() || drafts.length > 0)) return;
+    const t = setTimeout(() => { if (!stoppedRef.current) void persist("DRAFT"); }, AUTOSAVE_DEBOUNCE_MS);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoDraft, title, description, examType, passMark, duration, drafts]);
 
   // ---- summary ----
   const totalScore = useMemo(() => drafts.reduce((s, d) => s + (d.score || 0), 0), [drafts]);
@@ -223,6 +249,7 @@ export function ExamBuilder({ initial, submitLabel, onSubmit, draftKey }: ExamBu
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [totalScore, examType]);
 
+  // Publish: flip the (possibly already auto-saved) draft to a live PUBLISHED exam.
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) { setError(TITLE_REQUIRED_MSG); setMetaOpen(true); return; }
@@ -232,43 +259,30 @@ export function ExamBuilder({ initial, submitLabel, onSubmit, draftKey }: ExamBu
     }
     setSubmitting(true);
     setError("");
+    stoppedRef.current = true;
     try {
-      await onSubmit({
-        title,
-        description: description || null,
-        type: examType,
-        passMark: examType === "EXAM" ? passMark : null,
-        durationMinutes: duration,
-        questions: drafts.map((d) =>
-          d.questionId != null
-            ? { questionId: d.questionId }
-            : {
-                type: d.type,
-                text: d.text,
-                imageUrl: d.imageUrl ?? null,
-                score: d.score,
-                options: d.options.length
-                  ? d.options.map((o, i) => ({ text: o.text, isCorrect: o.isCorrect, imageUrl: o.imageUrl ?? null, sortOrder: i }))
-                  : undefined,
-              },
-        ),
-      });
-      if (draftKey) localStorage.removeItem(draftKey);
+      await savingRef.current;        // let any in-flight autosave settle so we reuse its id
+      await persist("PUBLISHED");
+      router.push("/exams");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Yadda saxlanmadı");
+      setError(humanizeError(e, "Yadda saxlanmadı"));
       setSubmitting(false);
+      stoppedRef.current = false;     // re-enable autosave so the user can fix and retry
     }
+  };
+
+  // Cancel: a create session discards its auto-saved draft; editing just leaves.
+  const cancel = async () => {
+    stoppedRef.current = true;
+    try { await savingRef.current; } catch { /* ignore */ }
+    if (mode === "create" && savedIdRef.current != null) {
+      try { await apiFetch(`/api/v1/exams/${savedIdRef.current}`, { method: "DELETE" }); } catch { /* best-effort */ }
+    }
+    router.push("/exams");
   };
 
   return (
     <>
-      {restored && (
-        <div className="mb-4 flex items-center justify-between gap-3 rounded-[11px] border border-blue-200 bg-blue-50/60 px-4 py-2.5 text-[13px] text-blue-800 dark:bg-blue-600/10 dark:text-blue-200">
-          <span className="flex items-center gap-2"><RotateCcw size={15} /> Yarımçıq qalmış layihə bərpa edildi.</span>
-          <button type="button" onClick={clearDraft} className="font-medium text-blue-700 hover:underline dark:text-blue-300">Təmizlə</button>
-        </div>
-      )}
-
       {error && <div className="mb-4 rounded-[11px] border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[13px] text-danger-fg">{error}</div>}
 
       <form onSubmit={submit} className="grid items-start gap-5 lg:grid-cols-[1fr_320px]">
@@ -421,7 +435,8 @@ export function ExamBuilder({ initial, submitLabel, onSubmit, draftKey }: ExamBu
             <Button type="submit" loading={submitting} className="w-full">{submitLabel}</Button>
             <button
               type="button"
-              onClick={() => { clearDraft(); router.push("/exams"); }}
+              onClick={cancel}
+              disabled={submitting}
               className={buttonClasses("ghost", "md", "mt-2 w-full")}
             >
               Ləğv et
