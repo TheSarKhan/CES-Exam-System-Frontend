@@ -23,3 +23,12 @@ export function nameError(name: string, label = "Ad"): string | null {
 export function sanitizeName(value: string): string {
   return value.replace(/[^\p{L} '-]/gu, "");
 }
+
+// Client-side mirror of the backend @Email check; the message stays in
+// Azerbaijani so email validation matches every other field's message.
+export function emailError(email: string): string | null {
+  const v = (email ?? "").trim();
+  if (!v) return "E-poçt tələb olunur";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return "E-poçt düzgün deyil";
+  return null;
+}
