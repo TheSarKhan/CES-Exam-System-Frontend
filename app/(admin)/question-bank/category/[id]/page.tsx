@@ -15,6 +15,7 @@ import { Table, Tr, Td } from "@/components/ui/Table";
 import { Button, buttonClasses } from "@/components/ui/Button";
 import { FieldGroup, Input } from "@/components/ui/Field";
 import { Loading, EmptyState, Modal } from "@/components/ui/Feedback";
+import { nameError } from "@/lib/validate";
 import { questionTypeLabel } from "@/components/exam/QuestionInput";
 import { cn } from "@/lib/cn";
 
@@ -80,9 +81,11 @@ export default function CategoryDetailPage() {
     );
   }, [questions, topicFilter, diffFilter, search]);
 
+  const newTopicError = nameError(newTopic, "Mövzu adı");
+
   const createTopic = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!newTopic.trim()) return;
+    if (newTopicError) return toast.error(newTopicError);
     const name = newTopic.trim();
     setSavingTopic(true);
     try {
@@ -272,13 +275,13 @@ export default function CategoryDetailPage() {
         footer={
           <>
             <Button variant="secondary" onClick={() => setTopicOpen(false)} disabled={savingTopic} className="flex-1">Ləğv et</Button>
-            <Button onClick={() => createTopic()} loading={savingTopic} className="flex-1">Yarat</Button>
+            <Button onClick={() => createTopic()} loading={savingTopic} disabled={!!newTopicError} className="flex-1">Yarat</Button>
           </>
         }
       >
         <form onSubmit={createTopic} className="mt-1">
-          <FieldGroup label="Mövzu adı">
-            <Input autoFocus value={newTopic} onChange={(e) => setNewTopic(e.target.value)} placeholder="məs. Yanğın təhlükəsizliyi" required />
+          <FieldGroup label="Mövzu adı" error={newTopic.trim() ? newTopicError ?? undefined : undefined}>
+            <Input autoFocus value={newTopic} onChange={(e) => setNewTopic(e.target.value)} placeholder="məs. Yanğın təhlükəsizliyi" invalid={!!(newTopic.trim() && newTopicError)} required />
           </FieldGroup>
         </form>
       </Modal>

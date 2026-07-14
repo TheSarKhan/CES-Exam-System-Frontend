@@ -105,10 +105,16 @@ export default function AssignExamForm() {
 
   const selectedTotal = selUsers.size + selDepts.size;
 
+  const dateError =
+    startDate && endDate && new Date(endDate) <= new Date(startDate)
+      ? "Son tarix başlama tarixindən sonra olmalıdır."
+      : "";
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     if (delivery === "internal" && selectedTotal === 0) { setError("Ən azı bir istifadəçi və ya şöbə seçin."); return; }
+    if (dateError) { setError(dateError); return; }
     setSubmitting(true);
     try {
       const dates = { startDate: startDate ? `${startDate}:00` : null, endDate: endDate ? `${endDate}:00` : null };
@@ -403,14 +409,14 @@ export default function AssignExamForm() {
             <FieldGroup label="Başlama tarixi">
               <DatePicker value={startDate} onChange={setStartDate} withTime />
             </FieldGroup>
-            <FieldGroup label="Son tarix">
+            <FieldGroup label="Son tarix" error={dateError}>
               <DatePicker value={endDate} onChange={setEndDate} withTime />
             </FieldGroup>
           </div>
 
           <div className="flex justify-end gap-3 pt-1">
             <Link href="/exams" className={buttonClasses("secondary", "md")}>Ləğv et</Link>
-            <Button type="submit" loading={submitting}>{delivery === "link" ? "Link yarat" : `Təyin et${selectedTotal > 0 ? ` (${selectedTotal})` : ""}`}</Button>
+            <Button type="submit" loading={submitting} disabled={!!dateError}>{delivery === "link" ? "Link yarat" : `Təyin et${selectedTotal > 0 ? ` (${selectedTotal})` : ""}`}</Button>
           </div>
         </form>
       </Card>

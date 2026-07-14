@@ -130,8 +130,10 @@ export function ExamRunner({
     }
   }, [answers, questions, onSubmit, storageKey]);
 
+  // Anti-cheat is for exams only — surveys are free-form, so no monitoring/restrictions apply.
+  const isSurvey = session.examType === "SURVEY";
   const anti = useAntiCheat({
-    enabled: true,
+    enabled: !isSurvey,
     limit: antiCheatLimit,
     onTerminate: (vios) => {
       // Use the list passed in (includes the terminating strike) — the synced ref may lag a tick.
@@ -265,16 +267,18 @@ export function ExamRunner({
         </div>
 
         <div className="flex items-center gap-2.5">
-          <span
-            className={cn(
-              "hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[12.5px] font-semibold sm:flex",
-              anti.count > 0 ? "bg-warning-bg text-warning-fg" : "bg-slate-100 text-slate-500 dark:bg-surface-2",
-            )}
-            title="Anti-cheat xəbərdarlıqları"
-          >
-            <ShieldAlert size={14} />
-            <span className="num">{anti.count}/{anti.limit}</span> xəbərdarlıq
-          </span>
+          {!isSurvey && (
+            <span
+              className={cn(
+                "hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[12.5px] font-semibold sm:flex",
+                anti.count > 0 ? "bg-warning-bg text-warning-fg" : "bg-slate-100 text-slate-500 dark:bg-surface-2",
+              )}
+              title="Anti-cheat xəbərdarlıqları"
+            >
+              <ShieldAlert size={14} />
+              <span className="num">{anti.count}/{anti.limit}</span> xəbərdarlıq
+            </span>
+          )}
 
           <button
             onClick={requestFullscreen}

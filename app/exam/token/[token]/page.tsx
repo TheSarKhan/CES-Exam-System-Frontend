@@ -35,7 +35,8 @@ export default function CandidateExamLandingPage() {
       .catch(() => { /* branding optional */ });
   }, [token]);
 
-  const proctoring = settings?.proctoringEnabled ?? true;
+  // Anti-cheat applies to exams only, so surveys never show the monitoring notice.
+  const proctoring = (settings?.proctoringEnabled ?? true) && info?.examType !== "SURVEY";
 
   const start = async () => {
     setStarting(true);

@@ -115,7 +115,20 @@ export function ExamQuestionModal({ open, initial, onClose, onSave }: ExamQuesti
               </Select>
             </FieldGroup>
             <FieldGroup label="Bal">
-              <Input type="number" step="0.5" min="0" value={score} onChange={(e) => setScore(parseFloat(e.target.value) || 0)} />
+              <Input
+                type="number"
+                step="0.5"
+                min="0"
+                max="100"
+                value={score}
+                onChange={(e) => {
+                  const raw = parseFloat(e.target.value) || 0;
+                  // Cap points at 100. Only rewrite the field when the entry
+                  // goes over — so a mid-entry decimal like "50." still types.
+                  if (raw > 100) e.target.value = "100";
+                  setScore(Math.min(100, raw));
+                }}
+              />
             </FieldGroup>
           </div>
 

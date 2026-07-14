@@ -18,6 +18,8 @@ import { questionTypeLabel } from "@/components/exam/QuestionInput";
 import { cn } from "@/lib/cn";
 
 const CHOICE_TYPES = ["SINGLE_CHOICE", "MULTIPLE_CHOICE", "TRUE_FALSE"];
+const TITLE_REQUIRED_MSG = "İmtahanın adını daxil edin";
+const NO_QUESTIONS_MSG = "Ən azı bir sual əlavə edin";
 
 interface Draft {
   key: string;
@@ -206,10 +208,25 @@ export function ExamBuilder({ initial, submitLabel, onSubmit, draftKey }: ExamBu
 
   const editingDraft = editingKey ? drafts.find((d) => d.key === editingKey) : undefined;
 
+  // Each validation banner clears itself the moment its own condition is fixed, instead of
+  // lingering on screen (stale) until the next submit attempt re-evaluates it.
+  useEffect(() => {
+    if (error === TITLE_REQUIRED_MSG && title.trim()) setError("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [title]);
+  useEffect(() => {
+    if (error === NO_QUESTIONS_MSG && drafts.length > 0) setError("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drafts.length]);
+  useEffect(() => {
+    if (error.startsWith("Ümumi bal") && (examType !== "EXAM" || totalScore <= MAX_TOTAL_SCORE)) setError("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [totalScore, examType]);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) { setError("İmtahanın adını daxil edin"); setMetaOpen(true); return; }
-    if (drafts.length === 0) return setError("Ən azı bir sual əlavə edin");
+    if (!title.trim()) { setError(TITLE_REQUIRED_MSG); setMetaOpen(true); return; }
+    if (drafts.length === 0) return setError(NO_QUESTIONS_MSG);
     if (examType === "EXAM" && totalScore > MAX_TOTAL_SCORE) {
       return setError(`Ümumi bal ${totalScore} xaldır — maksimum ${MAX_TOTAL_SCORE} bal ola bilər. Sualların ballarını azaldın.`);
     }
@@ -432,9 +449,9 @@ export function ExamBuilder({ initial, submitLabel, onSubmit, draftKey }: ExamBu
                   </Select>
                 </FieldGroup>
                 {examType === "EXAM" && (
-                  <FieldGroup label="Keçid balı (%)"><Input type="number" value={passMark} onChange={(e) => setPassMark(Number(e.target.value))} min={0} max={100} /></FieldGroup>
+                  <FieldGroup label="Keçid balı (%)"><Input type="number" value={String(passMark)} onChange={(e) => { const d = e.target.value.replace(/\D/g, ""); setPassMark(d === "" ? 0 : Math.min(100, Number(d))); }} min={0} max={100} /></FieldGroup>
                 )}
-                <FieldGroup label="Müddət (dəqiqə)"><Input type="number" value={duration} onChange={(e) => setDuration(Number(e.target.value))} min={1} /></FieldGroup>
+                <FieldGroup label="Müddət (dəqiqə)"><Input type="number" value={String(duration)} onChange={(e) => { const d = e.target.value.replace(/\D/g, ""); setDuration(d === "" ? 0 : Number(d)); }} min={1} /></FieldGroup>
               </div>
             </div>
             <div className="mt-6 flex justify-end">

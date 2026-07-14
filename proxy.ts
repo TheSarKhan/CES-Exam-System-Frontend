@@ -46,13 +46,17 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/employee/dashboard", request.url));
   }
 
-  if (
-    pathname.startsWith("/employee") &&
-    !hasRole(roles, "EMPLOYEE") &&
-    !hasRole(roles, "CANDIDATE") &&
-    !hasRole(roles, "ADMIN")
-  ) {
-    return NextResponse.redirect(new URL("/login", request.url));
+  if (pathname.startsWith("/employee")) {
+    // Admins belong in the admin area. Without this, an admin who lands on an
+    // employee URL — e.g. a tab left open under a previous employee session and
+    // then refreshed after re-login — keeps rendering the employee shell and
+    // menus. Redirect them to the admin home so the UI matches the active role.
+    if (hasRole(roles, "ADMIN")) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+    if (!hasRole(roles, "EMPLOYEE") && !hasRole(roles, "CANDIDATE")) {
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
   }
 
   return NextResponse.next();

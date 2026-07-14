@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Bell, CheckCheck, ClipboardCheck, ShieldAlert, CheckCircle2, XCircle } from "lucide-react";
 import { apiFetch } from "@/lib/api";
@@ -43,6 +44,8 @@ export function NotificationBell({
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [panelPos, setPanelPos] = useState<React.CSSProperties | null>(null);
   const isSidebar = variant === "sidebar";
 
   const load = useCallback(async () => {
@@ -65,7 +68,10 @@ export function NotificationBell({
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
+      const t = e.target as Node;
+      if (wrapRef.current?.contains(t)) return;
+      if (panelRef.current?.contains(t)) return;
+      setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
     document.addEventListener("mousedown", onDown);
@@ -75,6 +81,31 @@ export function NotificationBell({
       document.removeEventListener("keydown", onKey);
     };
   }, [open]);
+
+  // Reposition the (portaled) panel relative to the trigger button. Rendering the panel into
+  // document.body — rather than nesting it inside the sidebar's `position: sticky` element —
+  // keeps it out of the sidebar's own stacking context, so page content that forms its own
+  // stacking context (sticky headers, transforms, etc.) can never paint over it.
+  useLayoutEffect(() => {
+    if (!open) { setPanelPos(null); return; }
+    const reposition = () => {
+      const el = wrapRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      if (isSidebar) {
+        setPanelPos({ left: rect.right + 8, bottom: window.innerHeight - rect.bottom });
+      } else {
+        setPanelPos({ top: rect.top + 46, right: window.innerWidth - rect.right });
+      }
+    };
+    reposition();
+    window.addEventListener("resize", reposition);
+    window.addEventListener("scroll", reposition, true);
+    return () => {
+      window.removeEventListener("resize", reposition);
+      window.removeEventListener("scroll", reposition, true);
+    };
+  }, [open, isSidebar]);
 
   const toggle = () => {
     const next = !open;
@@ -147,12 +178,11 @@ export function NotificationBell({
         </button>
       )}
 
-      {open && (
+      {open && panelPos && typeof document !== "undefined" && createPortal(
         <div
-          className={cn(
-            "absolute z-50 w-[368px] overflow-hidden rounded-[14px] border border-line bg-surface shadow-[0_12px_32px_rgba(15,23,42,0.16)]",
-            isSidebar ? "bottom-0 left-full ml-2" : "right-0 top-[46px]",
-          )}
+          ref={panelRef}
+          style={{ position: "fixed", ...panelPos }}
+          className="z-[100] w-[368px] overflow-hidden rounded-[14px] border border-line bg-surface shadow-[0_12px_32px_rgba(15,23,42,0.16)]"
         >
           <div className="flex items-center justify-between border-b border-line px-4 py-3">
             <div className="flex items-center gap-2">
@@ -237,7 +267,8 @@ export function NotificationBell({
           >
             İdarə panelinə keç
           </Link>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );
