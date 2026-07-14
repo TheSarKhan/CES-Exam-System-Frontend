@@ -20,6 +20,7 @@ import type { AccountProfile } from "@/lib/types";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { FieldGroup, Input } from "@/components/ui/Field";
+import { sanitizeName } from "@/lib/validate";
 import { Alert, Loading } from "@/components/ui/Feedback";
 import { ChangePasswordCard } from "@/components/account/ChangePasswordCard";
 import { formatDate } from "@/lib/format";
@@ -190,10 +191,10 @@ function ProfileForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <FieldGroup label="Ad" htmlFor="firstName">
-          <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} maxLength={100} />
+          <Input id="firstName" value={firstName} onChange={(e) => setFirstName(sanitizeName(e.target.value))} maxLength={100} />
         </FieldGroup>
         <FieldGroup label="Soyad" htmlFor="lastName">
-          <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} maxLength={100} />
+          <Input id="lastName" value={lastName} onChange={(e) => setLastName(sanitizeName(e.target.value))} maxLength={100} />
         </FieldGroup>
       </div>
 

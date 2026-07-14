@@ -6,6 +6,7 @@ import { Mail, ArrowRight, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { publicFetch } from "@/lib/publicApi";
 import { useToast } from "@/lib/toast";
 import { humanizeError } from "@/lib/errors";
+import { emailError } from "@/lib/validate";
 import { AuthShell, AUTH_GOLD as GOLD } from "@/components/app/AuthShell";
 
 export default function ForgotPasswordPage() {
@@ -16,6 +17,8 @@ export default function ForgotPasswordPage() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const ee = emailError(email);
+    if (ee) return toast.error(ee);
     setSubmitting(true);
     try {
       await publicFetch<void>("/api/v1/auth/forgot-password", {
@@ -49,7 +52,7 @@ export default function ForgotPasswordPage() {
             E-poçt ünvanınızı yazın — parolu bərpa etmək üçün link göndərək.
           </p>
 
-          <form onSubmit={submit} className="mt-7 flex flex-col gap-5">
+          <form onSubmit={submit} noValidate className="mt-7 flex flex-col gap-5">
             <div>
               <label htmlFor="email" className="mb-2 block text-[12px] font-semibold uppercase tracking-wide text-white/55">
                 E-poçt <span style={{ color: GOLD }}>*</span>
