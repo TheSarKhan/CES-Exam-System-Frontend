@@ -6,6 +6,7 @@ import { FieldGroup, Input, Select, Textarea } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 import { ImageUploader } from "@/components/exam/ImageUploader";
+import { hasMeaningfulText, MEANINGFUL_TEXT_MSG } from "@/lib/validate";
 
 const TYPE_OPTIONS = [
   { value: "SINGLE_CHOICE", label: "Tək seçim" },
@@ -81,7 +82,10 @@ export function ExamQuestionModal({ open, initial, onClose, onSave }: ExamQuesti
 
   const save = () => {
     if (!qText.trim()) return setError("Sual mətni boş ola bilməz");
+    if (!hasMeaningfulText(qText)) return setError(`Sual mətni: ${MEANINGFUL_TEXT_MSG}`);
     if (hasOptions && options.filter((o) => o.text.trim()).length < 2) return setError("Ən azı 2 variant daxil edin");
+    // Every filled-in variant must be real text, not just "." / "," / "-".
+    if (options.some((o) => o.text.trim() && !hasMeaningfulText(o.text))) return setError(`Variantlar: ${MEANINGFUL_TEXT_MSG}`);
     if (hasOptions && !options.some((o) => o.isCorrect)) return setError("Ən azı bir düzgün variant işarələyin");
     if (isImageQuestion && !qImageUrl) return setError("Sual üçün şəkil yükləyin");
     if (isImageChoice && options.filter((o) => o.imageUrl).length < 2) return setError("Ən azı 2 variant şəkli yükləyin");

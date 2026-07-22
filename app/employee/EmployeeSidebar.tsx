@@ -58,12 +58,19 @@ export function EmployeeSidebar() {
   const justify = collapsed ? "justify-center" : "justify-start";
 
   return (
+    // The <aside> owns the surface (background + right border) and stretches to the full
+    // document height, so it is never cut off on pages taller than the viewport. The inner
+    // wrapper is what sticks, keeping the nav pinned within the viewport as the page scrolls.
     <aside
       className={cn(
-        "sticky top-0 flex h-screen flex-none flex-col border-r border-line bg-surface px-3 py-4 transition-[width] duration-200",
+        "flex-none self-stretch border-r border-line bg-surface transition-[width] duration-200",
         collapsed ? "w-[74px]" : "w-[238px]",
       )}
     >
+    {/* `sticky` creates a stacking context, so the z-index that lifts the sidebar
+        (and the collapse toggle overflowing out of it) above the page content must
+        live on this element — page cards are positioned and paint later. */}
+    <div className="sticky top-0 z-40 flex h-screen flex-col px-3 py-4">
       {/* Collapse toggle — round button straddling the right border */}
       <button
         onClick={toggleCollapsed}
@@ -151,6 +158,7 @@ export function EmployeeSidebar() {
           {collapsed && <Tooltip label="Çıxış" />}
         </button>
       </div>
+    </div>
     </aside>
   );
 }

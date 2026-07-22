@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Clock, CalendarClock, FileText, CheckCircle2 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
@@ -16,12 +16,27 @@ export default function EmployeeExamsPage() {
   const [error, setError] = useState("");
   const [starting, setStarting] = useState<number | null>(null);
 
-  useEffect(() => {
-    apiFetch<MyAssignment[]>("/api/v1/assignments/my")
+  const load = useCallback(() => {
+    return apiFetch<MyAssignment[]>("/api/v1/assignments/my")
       .then(setItems)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  // `start()` navigates away with window.location.href and deliberately leaves the button
+  // spinning. Coming back — e.g. abandoning the exam and pressing Back — restores this page
+  // from the bfcache with its JS state intact, so that spinner would never clear. Reset it
+  // (and refresh the now-stale assignment list) whenever the page is shown again.
+  useEffect(() => {
+    const onShow = (e: PageTransitionEvent) => {
+      setStarting(null);
+      if (e.persisted) load();
+    };
+    window.addEventListener("pageshow", onShow);
+    return () => window.removeEventListener("pageshow", onShow);
+  }, [load]);
 
   // Only active work belongs here; finished exams live under "Nəticələrim".
   const active = items.filter((a) => a.status !== "COMPLETED");

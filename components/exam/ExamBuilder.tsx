@@ -18,9 +18,12 @@ import { BankPickerModal } from "@/components/exam/BankPickerModal";
 import { ExamQuestionModal, type DraftValue } from "@/components/exam/ExamQuestionModal";
 import { questionTypeLabel } from "@/components/exam/QuestionInput";
 import { cn } from "@/lib/cn";
+import { hasMeaningfulText, MEANINGFUL_TEXT_MSG } from "@/lib/validate";
 
 const CHOICE_TYPES = ["SINGLE_CHOICE", "MULTIPLE_CHOICE", "TRUE_FALSE"];
 const TITLE_REQUIRED_MSG = "İmtahanın adını daxil edin";
+const TITLE_INVALID_MSG = `İmtahanın adı: ${MEANINGFUL_TEXT_MSG}`;
+const DESC_INVALID_MSG = `Təsvir: ${MEANINGFUL_TEXT_MSG}`;
 const NO_QUESTIONS_MSG = "Ən azı bir sual əlavə edin";
 
 interface Draft {
@@ -234,12 +237,22 @@ export function ExamBuilder({ initial, submitLabel, mode, examId, initialStatus 
 
   const editingDraft = editingKey ? drafts.find((d) => d.key === editingKey) : undefined;
 
+  // Flagged only once something has been typed, so an untouched field never
+  // shows an error. Empty title is still caught on submit.
+  const titleInvalid = !!title.trim() && !hasMeaningfulText(title);
+  const descInvalid = !!description.trim() && !hasMeaningfulText(description);
+
   // Each validation banner clears itself the moment its own condition is fixed, instead of
   // lingering on screen (stale) until the next submit attempt re-evaluates it.
   useEffect(() => {
     if (error === TITLE_REQUIRED_MSG && title.trim()) setError("");
+    if (error === TITLE_INVALID_MSG && hasMeaningfulText(title)) setError("");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [title]);
+  useEffect(() => {
+    if (error === DESC_INVALID_MSG && (!description.trim() || hasMeaningfulText(description))) setError("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [description]);
   useEffect(() => {
     if (error === NO_QUESTIONS_MSG && drafts.length > 0) setError("");
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -253,6 +266,9 @@ export function ExamBuilder({ initial, submitLabel, mode, examId, initialStatus 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) { setError(TITLE_REQUIRED_MSG); setMetaOpen(true); return; }
+    if (!hasMeaningfulText(title)) { setError(TITLE_INVALID_MSG); setMetaOpen(true); return; }
+    // Description is optional, but when filled it must not be symbols alone.
+    if (description.trim() && !hasMeaningfulText(description)) { setError(DESC_INVALID_MSG); setMetaOpen(true); return; }
     if (drafts.length === 0) return setError(NO_QUESTIONS_MSG);
     if (examType === "EXAM" && totalScore > MAX_TOTAL_SCORE) {
       return setError(`Ümumi bal ${totalScore} xaldır — maksimum ${MAX_TOTAL_SCORE} bal ola bilər. Sualların ballarını azaldın.`);
@@ -454,8 +470,12 @@ export function ExamBuilder({ initial, submitLabel, mode, examId, initialStatus 
               <button type="button" onClick={() => setMetaOpen(false)} className="rounded-md p-1 text-fg-muted hover:text-fg"><X size={18} /></button>
             </div>
             <div className="flex flex-col gap-5">
-              <FieldGroup label="İmtahanın adı"><Input autoFocus value={title} onChange={(e) => setTitle(e.target.value)} placeholder="məs. Q1 Bilik Yoxlaması" /></FieldGroup>
-              <FieldGroup label="Təsvir"><Textarea rows={2} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="İmtahan haqqında qısa məlumat…" /></FieldGroup>
+              <FieldGroup label="İmtahanın adı" error={titleInvalid ? MEANINGFUL_TEXT_MSG : undefined}>
+                <Input autoFocus value={title} onChange={(e) => setTitle(e.target.value)} placeholder="məs. Q1 Bilik Yoxlaması" invalid={titleInvalid} />
+              </FieldGroup>
+              <FieldGroup label="Təsvir" error={descInvalid ? MEANINGFUL_TEXT_MSG : undefined}>
+                <Textarea rows={2} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="İmtahan haqqında qısa məlumat…" invalid={descInvalid} />
+              </FieldGroup>
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
                 <FieldGroup label="Növ">
                   <Select value={examType} onChange={(e) => setExamType(e.target.value)}>
@@ -470,7 +490,7 @@ export function ExamBuilder({ initial, submitLabel, mode, examId, initialStatus 
               </div>
             </div>
             <div className="mt-6 flex justify-end">
-              <Button type="button" onClick={() => setMetaOpen(false)}>Hazır</Button>
+              <Button type="button" onClick={() => setMetaOpen(false)} disabled={titleInvalid || descInvalid}>Hazır</Button>
             </div>
           </div>
         </div>

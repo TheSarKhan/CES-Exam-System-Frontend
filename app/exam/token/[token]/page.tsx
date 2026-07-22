@@ -35,6 +35,15 @@ export default function CandidateExamLandingPage() {
       .catch(() => { /* branding optional */ });
   }, [token]);
 
+  // `start()` navigates away and deliberately leaves the button spinning. If the candidate
+  // comes back — e.g. abandoning the exam and pressing Back — the page can be restored with
+  // its JS state intact, which would leave that spinner stuck forever. Clear it on re-show.
+  useEffect(() => {
+    const onShow = () => setStarting(false);
+    window.addEventListener("pageshow", onShow);
+    return () => window.removeEventListener("pageshow", onShow);
+  }, []);
+
   // Anti-cheat applies to exams only, so surveys never show the monitoring notice.
   const proctoring = (settings?.proctoringEnabled ?? true) && info?.examType !== "SURVEY";
 

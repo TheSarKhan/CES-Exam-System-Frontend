@@ -24,6 +24,26 @@ export function sanitizeName(value: string): string {
   return value.replace(/[^\p{L} '-]/gu, "");
 }
 
+export const MEANINGFUL_TEXT_MSG =
+  "Zəhmət olmasa, düzgün mətn daxil edin (ən azı bir hərf və ya rəqəm olmalıdır).";
+
+/**
+ * Free-text content check: the value must carry at least one letter or digit, so
+ * entries made only of punctuation/whitespace (".", ",", "-") are rejected.
+ * `\p{L}` covers every alphabet (Azerbaijani ə/ö/ü/ı/ş/ç/ğ included), `\p{N}` digits.
+ */
+export function hasMeaningfulText(text: string): boolean {
+  return /[\p{L}\p{N}]/u.test(text ?? "");
+}
+
+/** Required free-text field: non-empty *and* not made of symbols alone. */
+export function textError(text: string, label = "Mətn"): string | null {
+  const v = (text ?? "").trim();
+  if (!v) return `${label} boş ola bilməz`;
+  if (!hasMeaningfulText(v)) return MEANINGFUL_TEXT_MSG;
+  return null;
+}
+
 // Client-side mirror of the backend @Email check; the message stays in
 // Azerbaijani so email validation matches every other field's message.
 export function emailError(email: string): string | null {
