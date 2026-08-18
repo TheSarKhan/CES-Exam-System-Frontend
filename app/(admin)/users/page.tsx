@@ -8,7 +8,7 @@ import { useAuth } from "@/lib/auth";
 import { useToast } from "@/lib/toast";
 import { humanizeError } from "@/lib/errors";
 import type { Department, User, UserStats } from "@/lib/types";
-import { nameError, passwordError, PASSWORD_HINT } from "@/lib/validate";
+import { nameError, passwordError, sanitizeName, emailError, PASSWORD_HINT } from "@/lib/validate";
 import { PageHeader } from "@/components/app/PageHeader";
 import { Table, Tr, Td } from "@/components/ui/Table";
 import { Avatar } from "@/components/ui/Avatar";
@@ -164,6 +164,7 @@ export default function UsersPage() {
     e.preventDefault();
     if (!editTarget) return;
     const fieldErr = nameError(editForm.firstName, "Ad") || nameError(editForm.lastName, "Soyad")
+      || emailError(editForm.email)
       || (editForm.password ? passwordError(editForm.password) : null);
     if (fieldErr) return setEditError(fieldErr);
     if (!editForm.departmentId) return setEditError("Şöbə seçilməlidir");
@@ -204,15 +205,21 @@ export default function UsersPage() {
   };
 
   const genPassword = () => {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789@#%";
+    const letters = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+    const digits = "23456789";
+    const chars = letters + digits + "@#%";
     const arr = new Uint32Array(14);
     crypto.getRandomValues(arr);
-    setNewPassword(Array.from(arr, (n) => chars[n % chars.length]).join(""));
+    const pick = (set: string, n: number) => set[n % set.length];
+    // Guarantee the policy (≥1 letter and ≥1 digit) so a generated password never fails validation.
+    const body = Array.from(arr.subarray(2), (n) => pick(chars, n));
+    body.unshift(pick(letters, arr[0]), pick(digits, arr[1]));
+    setNewPassword(body.join(""));
     setShowPw(true);
   };
 
   const submitReset = async () => {
-    if (!resetTarget || newPassword.length < 6) return;
+    if (!resetTarget || passwordError(newPassword)) return;
     setResetting(true);
     setResetError("");
     try {
@@ -360,8 +367,8 @@ export default function UsersPage() {
         <form onSubmit={submitEdit} className="mt-2 flex flex-col gap-4 text-fg">
           {editError && <Alert tone="danger">{editError}</Alert>}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <FieldGroup label="Ad"><Input value={editForm.firstName} onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })} required /></FieldGroup>
-            <FieldGroup label="Soyad"><Input value={editForm.lastName} onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })} required /></FieldGroup>
+            <FieldGroup label="Ad"><Input value={editForm.firstName} onChange={(e) => setEditForm({ ...editForm, firstName: sanitizeName(e.target.value) })} required /></FieldGroup>
+            <FieldGroup label="Soyad"><Input value={editForm.lastName} onChange={(e) => setEditForm({ ...editForm, lastName: sanitizeName(e.target.value) })} required /></FieldGroup>
           </div>
           <FieldGroup label="E-poçt"><Input type="email" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} required /></FieldGroup>
           <FieldGroup label="Şifrə" hint={`Dəyişməmək üçün boş buraxın. ${PASSWORD_HINT}`}>
@@ -437,7 +444,7 @@ export default function UsersPage() {
           ) : (
             <>
               <Button variant="secondary" onClick={() => setResetTarget(null)} disabled={resetting} className="flex-1">Ləğv et</Button>
-              <Button onClick={submitReset} loading={resetting} disabled={newPassword.length < 6} className="flex-1">Yenilə</Button>
+              <Button onClick={submitReset} loading={resetting} disabled={!!passwordError(newPassword)} className="flex-1">Yenilə</Button>
             </>
           )
         }
@@ -483,7 +490,11 @@ export default function UsersPage() {
                   </button>
                 </div>
               </div>
-              <p className="mt-1.5 text-[12px] text-fg-faint">Ən azı 6 simvol. <button type="button" onClick={genPassword} className="font-medium text-blue-600 hover:underline dark:text-blue-400">Təsadüfi yarat</button></p>
+              {newPassword && passwordError(newPassword) ? (
+                <p className="mt-1.5 text-[12px] text-danger">{passwordError(newPassword)}</p>
+              ) : (
+                <p className="mt-1.5 text-[12px] text-fg-faint">{PASSWORD_HINT} <button type="button" onClick={genPassword} className="font-medium text-blue-600 hover:underline dark:text-blue-400">Təsadüfi yarat</button></p>
+              )}
             </div>
             {resetError && <Alert tone="danger">{resetError}</Alert>}
           </div>

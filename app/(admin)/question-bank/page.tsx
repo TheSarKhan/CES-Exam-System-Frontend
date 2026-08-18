@@ -78,12 +78,12 @@ export default function QuestionBankPage() {
 
                 <h3 className="text-[16px] font-semibold text-fg">{d.name}</h3>
 
-                <div className="mt-4 flex items-center justify-between border-t border-line pt-3">
-                  <div className="flex items-center gap-3 text-[12px] text-fg-muted">
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 border-t border-line pt-3">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-fg-muted">
                     <span className="inline-flex items-center gap-1"><FolderTree size={13} className="text-fg-faint" /><span className="num font-semibold text-fg">{s.categories}</span> kateqoriya</span>
                     <span className="inline-flex items-center gap-1"><HelpCircle size={13} className="text-fg-faint" /><span className="num font-semibold text-fg">{s.questions}</span> sual</span>
                   </div>
-                  <span className="inline-flex items-center gap-1 text-[12px] font-medium text-blue-600 dark:text-blue-400">
+                  <span className="inline-flex shrink-0 items-center gap-1 text-[12px] font-medium text-blue-600 dark:text-blue-400">
                     Bax <ArrowRight size={13} className="transition-transform group-hover:translate-x-0.5" />
                   </span>
                 </div>

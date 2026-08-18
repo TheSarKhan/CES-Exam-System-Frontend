@@ -11,6 +11,12 @@ import { FieldGroup, Input } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 import { Alert, Loading } from "@/components/ui/Feedback";
 import { cn } from "@/lib/cn";
+import { nameError } from "@/lib/validate";
+
+// Org name is required and must contain at least one letter (rejects "" and ".", "---" …).
+function orgNameErrorFor(value: string): string | undefined {
+  return nameError(value, "Təşkilat adı") ?? undefined;
+}
 
 interface FormState {
   orgName: string;
@@ -46,6 +52,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [loadError, setLoadError] = useState("");
+  const [triedSubmit, setTriedSubmit] = useState(false);
 
   useEffect(() => {
     apiFetch<AppSettings>("/api/v1/admin/settings")
@@ -60,6 +67,14 @@ export default function SettingsPage() {
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form) return;
+    setTriedSubmit(true);
+    // Required field — validate on the client so an empty or letterless (e.g. ".")
+    // org name never reaches the backend.
+    const orgNameError = orgNameErrorFor(form.orgName);
+    if (orgNameError) {
+      toast.error(orgNameError);
+      return;
+    }
     setSaving(true);
     try {
       const body = {
@@ -101,8 +116,18 @@ export default function SettingsPage() {
       {/* Branding */}
       <Section icon={<Building2 size={17} />} title="Brendinq" desc="Adınız e-poçtlarda və namizəd səhifələrində görünür.">
         <div className="grid gap-4 sm:grid-cols-2">
-          <FieldGroup label="Təşkilat adı" htmlFor="orgName">
-            <Input id="orgName" value={form.orgName} onChange={(e) => set("orgName", e.target.value)} maxLength={120} />
+          <FieldGroup
+            label="Təşkilat adı"
+            htmlFor="orgName"
+            error={(triedSubmit || form.orgName.length > 0) ? orgNameErrorFor(form.orgName) : undefined}
+          >
+            <Input
+              id="orgName"
+              value={form.orgName}
+              onChange={(e) => set("orgName", e.target.value)}
+              maxLength={120}
+              invalid={(triedSubmit || form.orgName.length > 0) && !!orgNameErrorFor(form.orgName)}
+            />
           </FieldGroup>
           <FieldGroup label="Dəstək e-poçtu" htmlFor="supportEmail" hint="Namizəd e-poçtlarının altında göstərilir.">
             <div className="relative">

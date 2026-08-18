@@ -32,6 +32,8 @@ export interface SessionStart {
   sessionId: number;
   assignmentId: number;
   examTitle: string;
+  /** "EXAM" or "SURVEY" — anti-cheat monitoring is disabled for surveys. */
+  examType?: string;
   durationMinutes: number | null;
   startTime: string;
   /** Server clock at response time; used to correct the countdown for client clock skew. */
@@ -257,6 +259,7 @@ export interface Exam {
   title: string;
   description: string | null;
   type: string;
+  status: "DRAFT" | "PUBLISHED";
   passMark: number | null;
   durationMinutes: number | null;
   questionCount: number | null;
@@ -526,6 +529,8 @@ export interface AuditLog {
 export interface TokenAssignment {
   examTitle: string;
   examDescription: string | null;
+  /** "EXAM" or "SURVEY" — the proctoring notice is hidden for surveys. */
+  examType?: string;
   candidateName: string | null;
   durationMinutes: number | null;
   startDate: string | null;

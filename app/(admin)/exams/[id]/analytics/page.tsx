@@ -163,11 +163,13 @@ export default function ExamAnalyticsPage() {
                   </h3>
                   <div className="flex flex-col gap-3">
                     {data.departmentStats.map((d) => (
-                      <div key={d.departmentName} className="flex items-center gap-3">
-                        <span className="w-[150px] shrink-0 truncate text-[13px] text-fg">{d.departmentName}</span>
-                        <div className="flex-1"><ProgressBar value={d.avgScore ?? 0} /></div>
-                        <span className="num w-[52px] shrink-0 text-right text-[13px] font-semibold text-fg">{d.avgScore ?? 0}%</span>
-                        <span className="num w-[64px] shrink-0 text-right text-[12px] text-fg-muted">{d.participants} nəfər</span>
+                      <div key={d.departmentName} className="flex items-center gap-2 sm:gap-3">
+                        <span className="w-[92px] shrink-0 truncate text-[13px] text-fg sm:w-[150px]">{d.departmentName}</span>
+                        <div className="min-w-0 flex-1"><ProgressBar value={d.avgScore ?? 0} /></div>
+                        <span className="num w-[38px] shrink-0 text-right text-[13px] font-semibold text-fg sm:w-[52px]">{d.avgScore ?? 0}%</span>
+                        <span className="num w-[48px] shrink-0 text-right text-[12px] text-fg-muted sm:w-[64px]">
+                          {d.participants}<span className="hidden sm:inline"> nəfər</span>
+                        </span>
                       </div>
                     ))}
                   </div>

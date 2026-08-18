@@ -6,6 +6,7 @@ import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/lib/toast";
 import { humanizeError } from "@/lib/errors";
+import { emailError } from "@/lib/validate";
 
 const GOLD = "#C9A24B";
 
@@ -19,6 +20,8 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const ee = emailError(email);
+    if (ee) return toast.error(ee, "Giriş uğursuz oldu");
     setSubmitting(true);
     try {
       await login(email, password);
@@ -63,7 +66,7 @@ export default function LoginPage() {
             </h1>
             <p className="mt-3 text-[14px] text-white/50">Hesabınıza daxil olun və işinizi davam etdirin.</p>
 
-            <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-5">
+            <form onSubmit={handleSubmit} noValidate className="mt-8 flex flex-col gap-5">
               {/* email */}
               <div>
                 <label htmlFor="email" className="mb-2 block text-[12px] font-semibold uppercase tracking-wide text-white/55">

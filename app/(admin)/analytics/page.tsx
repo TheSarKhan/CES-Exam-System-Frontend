@@ -200,16 +200,16 @@ export default function AnalyticsPage() {
 
               {/* Anti-cheat log summary */}
               <Card className="p-0">
-                <div className="flex items-center justify-between border-b border-line px-5 py-4">
-                  <div className="flex items-center gap-2">
-                    <ShieldAlert size={17} className="text-red-500" />
-                    <h3 className="text-[15px] font-semibold text-fg">Anti-cheat jurnalı</h3>
+                <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-line px-4 py-4 sm:px-5">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <ShieldAlert size={17} className="shrink-0 text-red-500" />
+                    <h3 className="whitespace-nowrap text-[15px] font-semibold text-fg">Anti-cheat jurnalı</h3>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="num rounded-full bg-red-50 px-2.5 py-1 text-[11.5px] font-semibold text-red-700 dark:bg-red-500/10 dark:text-red-400">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="num whitespace-nowrap rounded-full bg-red-50 px-2.5 py-1 text-[11.5px] font-semibold text-red-700 dark:bg-red-500/10 dark:text-red-400">
                       {insights.totalViolations} hadisə
                     </span>
-                    <span className="num rounded-full bg-surface-2 px-2.5 py-1 text-[11.5px] font-semibold text-fg-muted">
+                    <span className="num whitespace-nowrap rounded-full bg-surface-2 px-2.5 py-1 text-[11.5px] font-semibold text-fg-muted">
                       {insights.flaggedSessions} sessiya
                     </span>
                   </div>
@@ -217,14 +217,19 @@ export default function AnalyticsPage() {
                 {insights.violationStats.length === 0 ? (
                   <EmptyState icon={<ShieldAlert size={22} />} title="Pozuntu yoxdur" description="İmtahanlar zamanı anti-cheat pozuntusu qeydə alınmayıb." />
                 ) : (
-                  <div className="flex flex-col gap-3 p-5">
+                  <div className="flex flex-col gap-3 p-4 sm:p-5">
                     {insights.violationStats.map((v) => {
                       const pct = insights.totalViolations > 0 ? (v.count / insights.totalViolations) * 100 : 0;
                       return (
-                        <div key={v.type} className="flex items-center gap-3">
-                          <span className="w-[200px] shrink-0 truncate text-[13px] text-fg-soft">{v.label || v.type}</span>
-                          <div className="flex-1"><ProgressBar value={pct} color="#DC2626" /></div>
-                          <span className="num w-[40px] shrink-0 text-right text-[13px] font-semibold text-fg">{v.count}</span>
+                        <div key={v.type} className="flex items-center gap-2 sm:gap-3">
+                          {/* Label may shrink on narrow screens (floored by min-w) instead of
+                              starving the bar; the bar keeps a min width so it never
+                              collapses to 0, and the count never shrinks out of the card. */}
+                          <span className="min-w-[92px] max-w-[200px] flex-1 truncate text-[13px] text-fg-soft sm:w-[200px] sm:flex-none">
+                            {v.label || v.type}
+                          </span>
+                          <div className="min-w-[44px] flex-1"><ProgressBar value={pct} color="#DC2626" /></div>
+                          <span className="num w-[34px] shrink-0 text-right text-[13px] font-semibold text-fg sm:w-[40px]">{v.count}</span>
                         </div>
                       );
                     })}

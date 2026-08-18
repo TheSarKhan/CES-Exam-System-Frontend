@@ -41,6 +41,11 @@ export function useAntiCheat({
   const onTerminateRef = useRef(onTerminate);
   onTerminateRef.current = onTerminate;
   const allRef = useRef<ACViolation[]>([]);
+  // Tracks whether the user is currently *outside* the exam window. Leaving
+  // fires several native events for one action (a tab switch triggers both
+  // `visibilitychange` and `blur`), so we count one strike on the transition
+  // into the "away" state and ignore the rest until the user returns.
+  const awayRef = useRef(false);
 
   const push = useCallback((v: ACViolation) => {
     allRef.current = [...allRef.current, v];
@@ -84,10 +89,24 @@ export function useAntiCheat({
   useEffect(() => {
     if (!enabled) return;
 
-    const onVisibility = () => {
-      if (document.hidden) strike("TAB_SWITCH", "Başqa tab/pəncərəyə keçid");
+    // One user action (tab switch, app switch) can raise `blur` and
+    // `visibilitychange` together. Register a single strike on the transition
+    // into "away" and mark the state; the paired event is then ignored. The
+    // state clears once the exam window regains focus/visibility, so the next
+    // genuine departure counts again — even if it happens right away.
+    const leave = (type: string, label: string) => {
+      if (awayRef.current) return;
+      awayRef.current = true;
+      strike(type, label);
     };
-    const onBlur = () => strike("WINDOW_BLUR", "Pəncərə fokusdan çıxdı");
+    const back = () => { awayRef.current = false; };
+
+    const onVisibility = () => {
+      if (document.hidden) leave("TAB_SWITCH", "Başqa tab/pəncərəyə keçid");
+      else back();
+    };
+    const onBlur = () => leave("WINDOW_BLUR", "Pəncərə fokusdan çıxdı");
+    const onFocus = () => back();
     const onFullscreen = () => {
       if (!document.fullscreenElement) log("FULLSCREEN_EXIT", "Tam ekran rejimindən çıxış");
     };
@@ -111,6 +130,7 @@ export function useAntiCheat({
 
     document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("blur", onBlur);
+    window.addEventListener("focus", onFocus);
     document.addEventListener("fullscreenchange", onFullscreen);
     document.addEventListener("contextmenu", onContextMenu);
     document.addEventListener("copy", onCopy);
@@ -119,13 +139,17 @@ export function useAntiCheat({
     window.addEventListener("beforeunload", onBeforeUnload);
     window.addEventListener("keydown", onKeyDown);
 
-    // Devtools-size heuristic
+    // Devtools-size heuristic — log only on the closed→open transition so a
+    // single open session produces one record, not one every 4 seconds.
+    let devtoolsOpen = false;
     const devtoolsCheck = setInterval(() => {
       const wDiff = window.outerWidth - window.innerWidth;
       const hDiff = window.outerHeight - window.innerHeight;
-      if (wDiff > 200 || hDiff > 220) {
+      const open = wDiff > 200 || hDiff > 220;
+      if (open && !devtoolsOpen) {
         log("DEVTOOLS", "Developer Tools açıq ola bilər");
       }
+      devtoolsOpen = open;
     }, 4000);
 
     // Inactivity
@@ -140,6 +164,7 @@ export function useAntiCheat({
     return () => {
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("blur", onBlur);
+      window.removeEventListener("focus", onFocus);
       document.removeEventListener("fullscreenchange", onFullscreen);
       document.removeEventListener("contextmenu", onContextMenu);
       document.removeEventListener("copy", onCopy);

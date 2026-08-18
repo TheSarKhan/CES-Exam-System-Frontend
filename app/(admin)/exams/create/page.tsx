@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import type { AppSettings } from "@/lib/types";
@@ -10,7 +9,6 @@ import { ExamBuilder } from "@/components/exam/ExamBuilder";
 import { Loading } from "@/components/ui/Feedback";
 
 export default function CreateExamPage() {
-  const router = useRouter();
   const [defaults, setDefaults] = useState<{ passMark: number; duration: number } | null>(null);
 
   useEffect(() => {
@@ -30,13 +28,9 @@ export default function CreateExamPage() {
         <Loading />
       ) : (
         <ExamBuilder
+          mode="create"
           submitLabel="İmtahanı yarat"
-          draftKey="ces_exam_create_draft"
           initial={{ passMark: defaults.passMark, duration: defaults.duration }}
-          onSubmit={async (body) => {
-            await apiFetch("/api/v1/exams", { method: "POST", body: JSON.stringify(body) });
-            router.push("/exams");
-          }}
         />
       )}
     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight, Clock, FileText, CheckCircle2, TrendingUp, Hourglass,
@@ -22,19 +22,40 @@ export default function EmployeeDashboardPage() {
   const [error, setError] = useState("");
   const [starting, setStarting] = useState<number | null>(null);
 
-  useEffect(() => {
-    apiFetch<MyAssignment[]>("/api/v1/assignments/my")
+  const load = useCallback(() => {
+    return apiFetch<MyAssignment[]>("/api/v1/assignments/my")
       .then(setItems)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  // `start()` navigates away with window.location.href and deliberately leaves the button
+  // spinning. Coming back — e.g. abandoning the exam and pressing Back — restores this page
+  // from the bfcache with its JS state intact, so that spinner would never clear. Reset it
+  // (and refresh the now-stale assignment list) whenever the page is shown again.
+  useEffect(() => {
+    const onShow = (e: PageTransitionEvent) => {
+      setStarting(null);
+      if (e.persisted) load();
+    };
+    window.addEventListener("pageshow", onShow);
+    return () => window.removeEventListener("pageshow", onShow);
+  }, [load]);
 
   const pending = items.filter((a) => a.status !== "COMPLETED");
   const completed = items.filter((a) => a.status === "COMPLETED");
   const scored = completed.filter((a) => a.score != null);
   const avg = scored.length ? Math.round(scored.reduce((s, a) => s + (a.score ?? 0), 0) / scored.length) : 0;
 
+  // Mirrors the backend's `now > endDate` deadline check; in-progress sessions
+  // run on their own timer, so they are never treated as expired.
+  const isExpired = (a: MyAssignment) =>
+    a.status !== "IN_PROGRESS" && !!a.endDate && new Date(a.endDate).getTime() < Date.now();
+
   const start = async (a: MyAssignment) => {
+    if (isExpired(a)) return; // deadline passed — backend would reject anyway
     setStarting(a.assignmentId);
     try {
       if (a.status === "IN_PROGRESS" && a.sessionId) {
@@ -108,7 +129,9 @@ export default function EmployeeDashboardPage() {
       {pending.length > 0 && (
         <Section title="Gözləyən imtahanlar" href={pending.length > 3 ? "/employee/exams" : undefined} linkLabel="Hamısı">
           <div className="flex flex-col gap-2.5">
-            {pending.slice(0, 3).map((a) => (
+            {pending.slice(0, 3).map((a) => {
+              const expired = isExpired(a);
+              return (
               <div key={a.assignmentId} className="card flex flex-wrap items-center gap-4 p-4">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[11px] bg-blue-50 text-blue-700 dark:bg-blue-600/15 dark:text-blue-400">
                   <FileText size={18} />
@@ -121,16 +144,23 @@ export default function EmployeeDashboardPage() {
                     {a.endDate && <span className="flex items-center gap-1"><CalendarClock size={12} /> <span className="num">{formatDate(a.endDate)}</span></span>}
                   </div>
                 </div>
-                <button
-                  onClick={() => start(a)}
-                  disabled={starting === a.assignmentId}
-                  className={cn(buttonClasses("primary", "sm"), "shrink-0")}
-                >
-                  {starting === a.assignmentId ? "Başlanır…" : a.status === "IN_PROGRESS" ? "Davam et" : "Başla"}
-                  <ArrowRight size={15} />
-                </button>
+                {expired ? (
+                  <span className="shrink-0 rounded-full bg-slate-100 px-3 py-1 text-[12.5px] font-semibold text-slate-500 dark:bg-surface-2 dark:text-fg-muted">
+                    Müddəti bitib
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => start(a)}
+                    disabled={starting === a.assignmentId}
+                    className={cn(buttonClasses("primary", "sm"), "shrink-0")}
+                  >
+                    {starting === a.assignmentId ? "Başlanır…" : a.status === "IN_PROGRESS" ? "Davam et" : "Başla"}
+                    <ArrowRight size={15} />
+                  </button>
+                )}
               </div>
-            ))}
+              );
+            })}
           </div>
         </Section>
       )}

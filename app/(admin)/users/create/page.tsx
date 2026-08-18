@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import type { Department } from "@/lib/types";
-import { nameError, passwordError, PASSWORD_HINT } from "@/lib/validate";
+import { nameError, passwordError, sanitizeName, emailError, PASSWORD_HINT } from "@/lib/validate";
 import { Card } from "@/components/ui/Card";
 import { FieldGroup, Input, Select } from "@/components/ui/Field";
 import { Button, buttonClasses } from "@/components/ui/Button";
@@ -29,7 +29,7 @@ export default function CreateUserPage() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const fieldErr = nameError(form.firstName, "Ad") || nameError(form.lastName, "Soyad") || passwordError(form.password);
+    const fieldErr = nameError(form.firstName, "Ad") || nameError(form.lastName, "Soyad") || emailError(form.email) || passwordError(form.password);
     if (fieldErr) return setError(fieldErr);
     if (!form.departmentId) return setError("Şöbə seçilməlidir");
     if (form.roleIds.length === 0) return setError("Ən azı bir rol seçin");
@@ -59,10 +59,10 @@ export default function CreateUserPage() {
       {error && <div className="mb-4 rounded-[11px] border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[13px] text-danger-fg">{error}</div>}
 
       <Card className="p-6">
-        <form onSubmit={submit} className="flex flex-col gap-5">
+        <form onSubmit={submit} noValidate className="flex flex-col gap-5">
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            <FieldGroup label="Ad"><Input value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} required /></FieldGroup>
-            <FieldGroup label="Soyad"><Input value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} required /></FieldGroup>
+            <FieldGroup label="Ad"><Input value={form.firstName} onChange={(e) => setForm({ ...form, firstName: sanitizeName(e.target.value) })} required /></FieldGroup>
+            <FieldGroup label="Soyad"><Input value={form.lastName} onChange={(e) => setForm({ ...form, lastName: sanitizeName(e.target.value) })} required /></FieldGroup>
           </div>
           <FieldGroup label="E-poçt"><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required /></FieldGroup>
           <FieldGroup label="Şifrə" hint={PASSWORD_HINT}><Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required /></FieldGroup>

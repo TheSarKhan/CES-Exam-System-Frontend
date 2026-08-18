@@ -10,6 +10,7 @@ import { FieldGroup, Input, Select, Textarea } from "@/components/ui/Field";
 import { Button, buttonClasses } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 import { ImageUploader } from "@/components/exam/ImageUploader";
+import { hasMeaningfulText, MEANINGFUL_TEXT_MSG } from "@/lib/validate";
 
 const TYPE_OPTIONS: { value: string; label: string }[] = [
   { value: "SINGLE_CHOICE", label: "Tək seçim" },
@@ -153,7 +154,11 @@ export function QuestionForm({ topicOptions, initialTopicId, initial, submitLabe
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!topicId) return setError("Mövzu seçin");
+    if (!qText.trim()) return setError("Sual mətni boş ola bilməz");
+    if (!hasMeaningfulText(qText)) return setError(`Sual mətni: ${MEANINGFUL_TEXT_MSG}`);
     if (hasOptions && options.filter((o) => o.text.trim()).length < 2) return setError("Ən azı 2 variant daxil edin");
+    // Every filled-in variant must be real text, not just "." / "," / "-".
+    if (options.some((o) => o.text.trim() && !hasMeaningfulText(o.text))) return setError(`Variantlar: ${MEANINGFUL_TEXT_MSG}`);
     if (hasOptions && !options.some((o) => o.isCorrect)) return setError("Ən azı bir düzgün variant işarələyin");
     if (isImageQuestion && !qImageUrl) return setError("Sual üçün şəkil yükləyin");
     if (isImageChoice && options.filter((o) => o.imageUrl).length < 2) return setError("Ən azı 2 variant şəkli yükləyin");
@@ -237,7 +242,21 @@ export function QuestionForm({ topicOptions, initialTopicId, initial, submitLabe
             </Select>
           </FieldGroup>
           <FieldGroup label="Bal">
-            <Input type="number" step="0.5" min="0" value={score} onChange={(e) => setScore(parseFloat(e.target.value) || 0)} required />
+            <Input
+              type="number"
+              step="0.5"
+              min="0"
+              max="100"
+              value={score}
+              onChange={(e) => {
+                const raw = parseFloat(e.target.value) || 0;
+                // Cap points at 100. Only rewrite the field when the entry
+                // goes over — so a mid-entry decimal like "50." still types.
+                if (raw > 100) e.target.value = "100";
+                setScore(Math.min(100, raw));
+              }}
+              required
+            />
           </FieldGroup>
         </div>
 

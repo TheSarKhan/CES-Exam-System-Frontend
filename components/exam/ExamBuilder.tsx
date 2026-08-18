@@ -3,9 +3,11 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Library, Plus, ListChecks, RotateCcw, Settings, X, Check,
+  Library, Plus, ListChecks, Settings, X, Check,
 } from "lucide-react";
 import type { Question } from "@/lib/types";
+import { apiFetch } from "@/lib/api";
+import { humanizeError } from "@/lib/errors";
 import { Card } from "@/components/ui/Card";
 import { FieldGroup, Input, Select, Textarea } from "@/components/ui/Field";
 import { Button, buttonClasses } from "@/components/ui/Button";
@@ -14,8 +16,13 @@ import { BankPickerModal } from "@/components/exam/BankPickerModal";
 import { QuestionCard, QuestionPreview, defaultOptionsFor } from "@/components/exam/QuestionCard";
 import { questionTypeLabel } from "@/components/exam/QuestionInput";
 import { cn } from "@/lib/cn";
+import { hasMeaningfulText, MEANINGFUL_TEXT_MSG } from "@/lib/validate";
 
 const CHOICE_TYPES = ["SINGLE_CHOICE", "MULTIPLE_CHOICE", "TRUE_FALSE"];
+const TITLE_REQUIRED_MSG = "İmtahanın adını daxil edin";
+const TITLE_INVALID_MSG = `İmtahanın adı: ${MEANINGFUL_TEXT_MSG}`;
+const DESC_INVALID_MSG = `Təsvir: ${MEANINGFUL_TEXT_MSG}`;
+const NO_QUESTIONS_MSG = "Ən azı bir sual əlavə edin";
 
 interface Draft {
   key: string;
@@ -48,12 +55,15 @@ export interface ExamBuilderInitial {
 interface ExamBuilderProps {
   initial?: ExamBuilderInitial;
   submitLabel: string;
-  onSubmit: (body: Record<string, unknown>) => Promise<void>;
-  /** When set, the draft auto-saves to localStorage under this key (create mode). Also switches the builder into the 3-step wizard. */
-  draftKey?: string;
+  mode: "create" | "edit";
+  /** Present in edit mode: the exam being edited. */
+  examId?: number;
+  /** The exam's current status in edit mode ("DRAFT" resumes a draft, "PUBLISHED" edits a live exam). */
+  initialStatus?: "DRAFT" | "PUBLISHED";
 }
 
 const MAX_TOTAL_SCORE = 100;
+const AUTOSAVE_DEBOUNCE_MS = 800;
 
 type WizardStep = 1 | 2 | 3;
 const WIZARD_STEPS: { n: WizardStep; label: string }[] = [
@@ -96,9 +106,9 @@ function Stepper({ step, maxStep, onJump }: { step: WizardStep; maxStep: WizardS
   );
 }
 
-export function ExamBuilder({ initial, submitLabel, onSubmit, draftKey }: ExamBuilderProps) {
+export function ExamBuilder({ initial, submitLabel, mode, examId, initialStatus }: ExamBuilderProps) {
   const router = useRouter();
-  const isWizard = !!draftKey;
+  const isWizard = mode === "create" || initialStatus === "DRAFT";
   const keyRef = useRef(0);
   const nextKey = () => `q${keyRef.current++}`;
 
@@ -133,52 +143,71 @@ export function ExamBuilder({ initial, submitLabel, onSubmit, draftKey }: ExamBu
   const [step, setStep] = useState<WizardStep>(1);
   const [maxStep, setMaxStep] = useState<WizardStep>(1);
 
-  const [hydrated, setHydrated] = useState(false);
-  const [restored, setRestored] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // ---- draft autosave (create mode only) ----
-  useEffect(() => {
-    if (!draftKey) { setHydrated(true); return; }
-    try {
-      const raw = localStorage.getItem(draftKey);
-      if (raw) {
-        const d = JSON.parse(raw);
-        setTitle(d.title ?? "");
-        setDescription(d.description ?? "");
-        setExamType(d.examType ?? "EXAM");
-        setPassMark(d.passMark ?? 70);
-        setDuration(d.duration ?? 60);
-        const ds: Draft[] = Array.isArray(d.drafts) ? d.drafts : [];
-        setDrafts(ds);
-        keyRef.current = ds.reduce((m, x) => {
-          const n = parseInt(String(x.key).replace(/\D/g, ""), 10);
-          return isNaN(n) ? m : Math.max(m, n + 1);
-        }, 0);
-        if (ds.length > 0 || d.title) setRestored(true);
+  // ---- backend draft persistence ----
+  // A create session (or a resumed DRAFT) auto-saves to the backend as a DRAFT
+  // exam while the admin works, so leaving the page keeps an editable "draft card"
+  // in the exam list. Publishing (submit) flips the same record to PUBLISHED.
+  const autoDraft = mode === "create" || initialStatus === "DRAFT";
+  const savedIdRef = useRef<number | null>(examId ?? null);
+  // Serializes writes so a POST and a following PUT never race into two records.
+  const savingRef = useRef<Promise<unknown>>(Promise.resolve());
+  // Set once the user publishes/cancels, to stop further background autosaves.
+  const stoppedRef = useRef(false);
+  // Skip the autosave that would otherwise fire on the initial mount.
+  const firstAutosaveRef = useRef(true);
+
+  const buildBody = (status: "DRAFT" | "PUBLISHED") => ({
+    title,
+    description: description.trim() || null,
+    type: examType,
+    status,
+    passMark: examType === "EXAM" ? passMark : null,
+    durationMinutes: duration,
+    questions: drafts.map((d) => {
+      if (d.questionId != null) return { questionId: d.questionId };
+      const finalOptions = d.type === "IMAGE_CHOICE"
+        ? d.options.filter((o) => o.imageUrl)
+        : d.options.filter((o) => o.text.trim());
+      return {
+        type: d.type,
+        text: d.text.trim(),
+        imageUrl: d.imageUrl ?? null,
+        score: d.score,
+        options: finalOptions.length
+          ? finalOptions.map((o, i) => ({ text: o.text.trim() || `Variant ${i + 1}`, isCorrect: o.isCorrect, imageUrl: o.imageUrl ?? null, sortOrder: i }))
+          : undefined,
+      };
+    }),
+  });
+
+  const persist = async (status: "DRAFT" | "PUBLISHED") => {
+    const body = buildBody(status);
+    const run = async () => {
+      if (savedIdRef.current == null) {
+        const res = await apiFetch<{ id: number }>("/api/v1/exams", { method: "POST", body: JSON.stringify(body) });
+        savedIdRef.current = res.id;
+      } else {
+        await apiFetch(`/api/v1/exams/${savedIdRef.current}`, { method: "PUT", body: JSON.stringify(body) });
       }
-    } catch { /* ignore corrupt draft */ }
-    setHydrated(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (!hydrated || !draftKey) return;
-    try {
-      localStorage.setItem(draftKey, JSON.stringify({ title, description, examType, passMark, duration, drafts }));
-    } catch { /* quota / unavailable */ }
-  }, [hydrated, draftKey, title, description, examType, passMark, duration, drafts]);
-
-  const clearDraft = () => {
-    if (draftKey) localStorage.removeItem(draftKey);
-    setTitle(""); setDescription(""); setExamType("EXAM"); setPassMark(70); setDuration(60);
-    setDrafts([{
-      key: nextKey(), fromBank: false, type: "SINGLE_CHOICE", text: "", imageUrl: null, score: 1,
-      options: defaultOptionsFor("SINGLE_CHOICE"),
-    }]);
-    setRestored(false); setStep(1); setMaxStep(1);
+    };
+    const next = savingRef.current.then(run, run);
+    savingRef.current = next.catch(() => {});
+    return next;
   };
+
+  // Debounced background autosave. Skips empty content so we never create a blank draft.
+  useEffect(() => {
+    if (!autoDraft) return;
+    if (firstAutosaveRef.current) { firstAutosaveRef.current = false; return; }
+    if (stoppedRef.current) return;
+    if (!(title.trim() || drafts.length > 0)) return;
+    const t = setTimeout(() => { if (!stoppedRef.current) void persist("DRAFT"); }, AUTOSAVE_DEBOUNCE_MS);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoDraft, title, description, examType, passMark, duration, drafts]);
 
   // ---- summary ----
   const totalScore = useMemo(() => drafts.reduce((s, d) => s + (d.score || 0), 0), [drafts]);
@@ -249,8 +278,11 @@ export function ExamBuilder({ initial, submitLabel, onSubmit, draftKey }: ExamBu
   const draftError = (d: Draft): string | null => {
     if (d.fromBank) return null;
     if (!d.text.trim()) return "sual mətni boş ola bilməz";
+    if (!hasMeaningfulText(d.text)) return MEANINGFUL_TEXT_MSG;
     if (CHOICE_TYPES.includes(d.type) && d.type !== "TRUE_FALSE") {
-      if (d.options.filter((o) => o.text.trim()).length < 2) return "ən azı 2 variant daxil edin";
+      const filled = d.options.filter((o) => o.text.trim());
+      if (filled.length < 2) return "ən azı 2 variant daxil edin";
+      if (filled.some((o) => !hasMeaningfulText(o.text))) return MEANINGFUL_TEXT_MSG;
       if (!d.options.some((o) => o.isCorrect)) return "düzgün variantı işarələyin";
     }
     if (d.type === "IMAGE_QUESTION" && !d.imageUrl) return "sual üçün şəkil yükləyin";
@@ -262,7 +294,7 @@ export function ExamBuilder({ initial, submitLabel, onSubmit, draftKey }: ExamBu
   };
 
   const questionsError = (): string | null => {
-    if (drafts.length === 0) return "Ən azı bir sual əlavə edin";
+    if (drafts.length === 0) return NO_QUESTIONS_MSG;
     for (let i = 0; i < drafts.length; i++) {
       const err = draftError(drafts[i]);
       if (err) return `Sual ${i + 1}: ${err}`;
@@ -273,9 +305,42 @@ export function ExamBuilder({ initial, submitLabel, onSubmit, draftKey }: ExamBu
     return null;
   };
 
+  // Flagged only once something has been typed, so an untouched field never
+  // shows an error. Empty title is still caught on submit.
+  const titleInvalid = !!title.trim() && !hasMeaningfulText(title);
+  const descInvalid = !!description.trim() && !hasMeaningfulText(description);
+
+  // Each validation banner clears itself the moment its own condition is fixed, instead of
+  // lingering on screen (stale) until the next submit attempt re-evaluates it.
+  useEffect(() => {
+    if (error === TITLE_REQUIRED_MSG && title.trim()) setError("");
+    if (error === TITLE_INVALID_MSG && hasMeaningfulText(title)) setError("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [title]);
+  useEffect(() => {
+    if (error === DESC_INVALID_MSG && (!description.trim() || hasMeaningfulText(description))) setError("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [description]);
+  useEffect(() => {
+    if (error === NO_QUESTIONS_MSG && drafts.length > 0) setError("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drafts.length]);
+  useEffect(() => {
+    if (error.startsWith("Ümumi bal") && (examType !== "EXAM" || totalScore <= MAX_TOTAL_SCORE)) setError("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [totalScore, examType]);
+
+  const titleStepError = (): string | null => {
+    if (!title.trim()) return TITLE_REQUIRED_MSG;
+    if (!hasMeaningfulText(title)) return TITLE_INVALID_MSG;
+    if (description.trim() && !hasMeaningfulText(description)) return DESC_INVALID_MSG;
+    return null;
+  };
+
   const goNext = () => {
     if (step === 1) {
-      if (!title.trim()) return setError("İmtahanın adını daxil edin");
+      const err = titleStepError();
+      if (err) return setError(err);
       setError("");
       setStep(2);
       setMaxStep((m) => (m < 2 ? 2 : m));
@@ -290,56 +355,54 @@ export function ExamBuilder({ initial, submitLabel, onSubmit, draftKey }: ExamBu
 
   const goBack = () => { setError(""); setStep((s) => (s > 1 ? ((s - 1) as WizardStep) : s)); };
 
+  // Publish: flip the (possibly already auto-saved) draft to a live PUBLISHED exam.
   const submit = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!title.trim()) {
-      setError("İmtahanın adını daxil edin");
+    const tErr = titleStepError();
+    if (tErr) {
+      setError(tErr);
       if (!isWizard) setMetaOpen(true); else setStep(1);
       return;
     }
-    const err = questionsError();
-    if (err) {
-      setError(err);
+    const qErr = questionsError();
+    if (qErr) {
+      setError(qErr);
       if (isWizard) setStep(2);
       return;
     }
     setSubmitting(true);
     setError("");
+    stoppedRef.current = true;
     try {
-      await onSubmit({
-        title,
-        description: description || null,
-        type: examType,
-        passMark: examType === "EXAM" ? passMark : null,
-        durationMinutes: duration,
-        questions: drafts.map((d) => {
-          if (d.questionId != null) return { questionId: d.questionId };
-          const finalOptions = d.type === "IMAGE_CHOICE"
-            ? d.options.filter((o) => o.imageUrl)
-            : d.options.filter((o) => o.text.trim());
-          return {
-            type: d.type,
-            text: d.text.trim(),
-            imageUrl: d.imageUrl ?? null,
-            score: d.score,
-            options: finalOptions.length
-              ? finalOptions.map((o, i) => ({ text: o.text.trim() || `Variant ${i + 1}`, isCorrect: o.isCorrect, imageUrl: o.imageUrl ?? null, sortOrder: i }))
-              : undefined,
-          };
-        }),
-      });
-      if (draftKey) localStorage.removeItem(draftKey);
+      await savingRef.current;        // let any in-flight autosave settle so we reuse its id
+      await persist("PUBLISHED");
+      router.push("/exams");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Yadda saxlanmadı");
+      setError(humanizeError(e, "Yadda saxlanmadı"));
       setSubmitting(false);
+      stoppedRef.current = false;     // re-enable autosave so the user can fix and retry
     }
+  };
+
+  // Cancel: a create session discards its auto-saved draft; editing just leaves.
+  const cancel = async () => {
+    stoppedRef.current = true;
+    try { await savingRef.current; } catch { /* ignore */ }
+    if (mode === "create" && savedIdRef.current != null) {
+      try { await apiFetch(`/api/v1/exams/${savedIdRef.current}`, { method: "DELETE" }); } catch { /* best-effort */ }
+    }
+    router.push("/exams");
   };
 
   // ---- shared fragments (used by both the wizard and the single-page edit layout) ----
   const metaFieldsJsx = (
     <div className="flex flex-col gap-5">
-      <FieldGroup label="İmtahanın adı"><Input autoFocus value={title} onChange={(e) => setTitle(e.target.value)} placeholder="məs. Q1 Bilik Yoxlaması" /></FieldGroup>
-      <FieldGroup label="Təsvir"><Textarea rows={2} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="İmtahan haqqında qısa məlumat…" /></FieldGroup>
+      <FieldGroup label="İmtahanın adı" error={titleInvalid ? MEANINGFUL_TEXT_MSG : undefined}>
+        <Input autoFocus value={title} onChange={(e) => setTitle(e.target.value)} placeholder="məs. Q1 Bilik Yoxlaması" invalid={titleInvalid} />
+      </FieldGroup>
+      <FieldGroup label="Təsvir" error={descInvalid ? MEANINGFUL_TEXT_MSG : undefined}>
+        <Textarea rows={2} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="İmtahan haqqında qısa məlumat…" invalid={descInvalid} />
+      </FieldGroup>
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
         <FieldGroup label="Növ">
           <Select value={examType} onChange={(e) => setExamType(e.target.value)}>
@@ -348,9 +411,13 @@ export function ExamBuilder({ initial, submitLabel, onSubmit, draftKey }: ExamBu
           </Select>
         </FieldGroup>
         {examType === "EXAM" && (
-          <FieldGroup label="Keçid balı (%)"><Input type="number" value={passMark} onChange={(e) => setPassMark(Number(e.target.value))} min={0} max={100} /></FieldGroup>
+          <FieldGroup label="Keçid balı (%)">
+            <Input type="number" value={String(passMark)} onChange={(e) => { const d = e.target.value.replace(/\D/g, ""); setPassMark(d === "" ? 0 : Math.min(100, Number(d))); }} min={0} max={100} />
+          </FieldGroup>
         )}
-        <FieldGroup label="Müddət (dəqiqə)"><Input type="number" value={duration} onChange={(e) => setDuration(Number(e.target.value))} min={1} /></FieldGroup>
+        <FieldGroup label="Müddət (dəqiqə)">
+          <Input type="number" value={String(duration)} onChange={(e) => { const d = e.target.value.replace(/\D/g, ""); setDuration(d === "" ? 0 : Number(d)); }} min={1} />
+        </FieldGroup>
       </div>
     </div>
   );
@@ -430,7 +497,8 @@ export function ExamBuilder({ initial, submitLabel, onSubmit, draftKey }: ExamBu
       <Button type="submit" loading={submitting} className="w-full">{submitLabel}</Button>
       <button
         type="button"
-        onClick={() => { clearDraft(); router.push("/exams"); }}
+        onClick={cancel}
+        disabled={submitting}
         className={buttonClasses("ghost", "md", "mt-2 w-full")}
       >
         Ləğv et
@@ -440,13 +508,6 @@ export function ExamBuilder({ initial, submitLabel, onSubmit, draftKey }: ExamBu
 
   return (
     <>
-      {restored && (
-        <div className="mb-4 flex items-center justify-between gap-3 rounded-[11px] border border-blue-200 bg-blue-50/60 px-4 py-2.5 text-[13px] text-blue-800 dark:bg-blue-600/10 dark:text-blue-200">
-          <span className="flex items-center gap-2"><RotateCcw size={15} /> Yarımçıq qalmış layihə bərpa edildi.</span>
-          <button type="button" onClick={clearDraft} className="font-medium text-blue-700 hover:underline dark:text-blue-300">Təmizlə</button>
-        </div>
-      )}
-
       {error && <div className="mb-4 rounded-[11px] border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[13px] text-danger-fg">{error}</div>}
 
       {isWizard ? (
@@ -516,7 +577,10 @@ export function ExamBuilder({ initial, submitLabel, onSubmit, draftKey }: ExamBu
           )}
 
           <div className="mt-5 flex items-center justify-between">
-            <Button type="button" variant="secondary" onClick={goBack} disabled={step === 1}>Geri</Button>
+            <div className="flex items-center gap-3">
+              <Button type="button" variant="secondary" onClick={goBack} disabled={step === 1}>Geri</Button>
+              <button type="button" onClick={cancel} disabled={submitting} className="text-[13px] font-medium text-fg-muted hover:text-fg">Ləğv et</button>
+            </div>
             {step < 3 ? (
               <Button type="button" onClick={goNext}>Növbəti</Button>
             ) : (
@@ -569,7 +633,7 @@ export function ExamBuilder({ initial, submitLabel, onSubmit, draftKey }: ExamBu
             </div>
             {metaFieldsJsx}
             <div className="mt-6 flex justify-end">
-              <Button type="button" onClick={() => setMetaOpen(false)}>Hazır</Button>
+              <Button type="button" onClick={() => setMetaOpen(false)} disabled={titleInvalid || descInvalid}>Hazır</Button>
             </div>
           </div>
         </div>

@@ -13,6 +13,7 @@ import type { Category, Department } from "@/lib/types";
 import { Button, buttonClasses } from "@/components/ui/Button";
 import { FieldGroup, Input } from "@/components/ui/Field";
 import { Loading, EmptyState, Modal } from "@/components/ui/Feedback";
+import { nameError } from "@/lib/validate";
 
 export default function DepartmentQuestionBankPage() {
   const params = useParams();
@@ -55,9 +56,12 @@ export default function DepartmentQuestionBankPage() {
       .finally(() => setLoading(false));
   }, [deptId, toast]);
 
+  const newCatError = nameError(newCat, "Kateqoriya adı");
+  const editNameError = nameError(editName, "Kateqoriya adı");
+
   const createCategory = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!newCat.trim()) return;
+    if (newCatError) return toast.error(newCatError);
     const name = newCat.trim();
     setSubmitting(true);
     try {
@@ -78,7 +82,8 @@ export default function DepartmentQuestionBankPage() {
   const openEdit = (c: Category) => { setEditTarget(c); setEditName(c.name); };
 
   const saveEdit = async () => {
-    if (!editTarget || !editName.trim()) return;
+    if (!editTarget) return;
+    if (editNameError) return toast.error(editNameError);
     setSavingEdit(true);
     try {
       await apiFetch(`/api/v1/question-bank/categories/${editTarget.id}`, {
@@ -173,12 +178,12 @@ export default function DepartmentQuestionBankPage() {
                   <h3 className="text-[16px] font-semibold text-fg">{c.name}</h3>
                   {c.description && <p className="mt-1 line-clamp-2 text-[12.5px] text-fg-muted">{c.description}</p>}
 
-                  <div className="mt-4 flex items-center justify-between border-t border-line pt-3">
-                    <div className="flex items-center gap-3 text-[12px] text-fg-muted">
+                  <div className="mt-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 border-t border-line pt-3">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-fg-muted">
                       <span className="inline-flex items-center gap-1"><Layers size={13} className="text-fg-faint" /><span className="num font-semibold text-fg">{c.topicCount ?? 0}</span> mövzu</span>
                       <span className="inline-flex items-center gap-1"><HelpCircle size={13} className="text-fg-faint" /><span className="num font-semibold text-fg">{c.questionCount ?? 0}</span> sual</span>
                     </div>
-                    <span className="inline-flex items-center gap-1 text-[12px] font-medium text-blue-600 dark:text-blue-400">
+                    <span className="inline-flex shrink-0 items-center gap-1 text-[12px] font-medium text-blue-600 dark:text-blue-400">
                       Bax <ArrowRight size={13} className="transition-transform group-hover:translate-x-0.5" />
                     </span>
                   </div>
@@ -198,13 +203,13 @@ export default function DepartmentQuestionBankPage() {
         footer={
           <>
             <Button variant="secondary" onClick={() => setCreateOpen(false)} disabled={submitting} className="flex-1">Ləğv et</Button>
-            <Button onClick={() => createCategory()} loading={submitting} className="flex-1">Yarat</Button>
+            <Button onClick={() => createCategory()} loading={submitting} disabled={!!newCatError} className="flex-1">Yarat</Button>
           </>
         }
       >
         <form onSubmit={createCategory} className="mt-1 flex flex-col gap-3">
-          <FieldGroup label="Kateqoriya adı">
-            <Input autoFocus value={newCat} onChange={(e) => setNewCat(e.target.value)} placeholder="məs. Təhlükəsizlik" required />
+          <FieldGroup label="Kateqoriya adı" error={newCat.trim() ? newCatError ?? undefined : undefined}>
+            <Input autoFocus value={newCat} onChange={(e) => setNewCat(e.target.value)} placeholder="məs. Təhlükəsizlik" invalid={!!(newCat.trim() && newCatError)} required />
           </FieldGroup>
           <FieldGroup label="Təsvir (istəyə bağlı)">
             <Input value={newDesc} onChange={(e) => setNewDesc(e.target.value)} placeholder="Qısa təsvir" />
@@ -221,12 +226,14 @@ export default function DepartmentQuestionBankPage() {
         footer={
           <>
             <Button variant="secondary" onClick={() => setEditTarget(null)} disabled={savingEdit} className="flex-1">Ləğv et</Button>
-            <Button onClick={saveEdit} loading={savingEdit} className="flex-1">Yadda saxla</Button>
+            <Button onClick={saveEdit} loading={savingEdit} disabled={!!editNameError} className="flex-1">Yadda saxla</Button>
           </>
         }
       >
         <div className="mt-1">
-          <Input autoFocus value={editName} onChange={(e) => setEditName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && saveEdit()} />
+          <FieldGroup label="Kateqoriya adı" error={editName.trim() ? editNameError ?? undefined : undefined}>
+            <Input autoFocus value={editName} onChange={(e) => setEditName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && saveEdit()} invalid={!!(editName.trim() && editNameError)} />
+          </FieldGroup>
         </div>
       </Modal>
 

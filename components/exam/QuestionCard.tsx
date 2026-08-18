@@ -152,8 +152,12 @@ export function QuestionCard({
             <label className="flex items-center gap-1.5 text-[13px] text-fg-muted">
               Bal:
               <Input
-                type="number" step="0.5" min="0" value={score}
-                onChange={(e) => onChange({ score: parseFloat(e.target.value) || 0 })}
+                type="number" step="0.5" min="0" max="100" value={score}
+                onChange={(e) => {
+                  const raw = parseFloat(e.target.value) || 0;
+                  if (raw > 100) e.target.value = "100";
+                  onChange({ score: Math.min(100, raw) });
+                }}
                 disabled={fromBank}
                 className="num w-[64px] text-center"
               />

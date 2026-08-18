@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Clock, CalendarClock, FileText, CheckCircle2 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
@@ -16,17 +16,43 @@ export default function EmployeeExamsPage() {
   const [error, setError] = useState("");
   const [starting, setStarting] = useState<number | null>(null);
 
-  useEffect(() => {
-    apiFetch<MyAssignment[]>("/api/v1/assignments/my")
+  const load = useCallback(() => {
+    return apiFetch<MyAssignment[]>("/api/v1/assignments/my")
       .then(setItems)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => { load(); }, [load]);
+
+  // `start()` navigates away with window.location.href and deliberately leaves the button
+  // spinning. Coming back — e.g. abandoning the exam and pressing Back — restores this page
+  // from the bfcache with its JS state intact, so that spinner would never clear. Reset it
+  // (and refresh the now-stale assignment list) whenever the page is shown again.
+  useEffect(() => {
+    const onShow = (e: PageTransitionEvent) => {
+      setStarting(null);
+      if (e.persisted) load();
+    };
+    window.addEventListener("pageshow", onShow);
+    return () => window.removeEventListener("pageshow", onShow);
+  }, [load]);
+
   // Only active work belongs here; finished exams live under "Nəticələrim".
   const active = items.filter((a) => a.status !== "COMPLETED");
 
+  // Mirrors the backend's `now > endDate` deadline check (ExamSessionService
+  // #validateAssignmentDates). An in-progress session is governed by its own
+  // timer, not the assignment window, so it is never treated as expired here.
+  const isExpired = (a: MyAssignment) =>
+    a.status !== "IN_PROGRESS" && !!a.endDate && new Date(a.endDate).getTime() < Date.now();
+
+  // Expired assignments still appear (so the user sees why), but they no longer
+  // count as work "waiting" for them.
+  const activeCount = active.filter((a) => !isExpired(a)).length;
+
   const start = async (a: MyAssignment) => {
+    if (isExpired(a)) return; // deadline passed — backend would reject anyway
     setStarting(a.assignmentId);
     try {
       if (a.status === "IN_PROGRESS" && a.sessionId) {
@@ -51,9 +77,9 @@ export default function EmployeeExamsPage() {
           <h2 className="text-[22px] font-bold tracking-[-0.4px] text-fg">İmtahanlarım</h2>
           <p className="mt-0.5 text-[13.5px] text-fg-muted">Səni gözləyən aktiv imtahan və sorğular</p>
         </div>
-        {active.length > 0 && (
+        {activeCount > 0 && (
           <span className="num rounded-full bg-blue-50 px-3 py-1 text-[12.5px] font-semibold text-blue-700 dark:bg-blue-600/15 dark:text-blue-300">
-            {active.length} aktiv
+            {activeCount} aktiv
           </span>
         )}
       </div>
@@ -75,13 +101,17 @@ export default function EmployeeExamsPage() {
         <div className="grid gap-3 sm:grid-cols-2">
           {active.map((a) => {
             const inProgress = a.status === "IN_PROGRESS";
+            const expired = isExpired(a);
             return (
               <div key={a.assignmentId} className="card flex flex-col gap-4 p-5">
                 <div className="flex items-start justify-between gap-3">
                   <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] bg-blue-50 text-blue-700 dark:bg-blue-600/15 dark:text-blue-400">
                     <FileText size={20} />
                   </span>
-                  <StatusPill status={inProgress ? "active" : "scheduled"} label={inProgress ? "Davam edir" : "Gözləyir"} />
+                  <StatusPill
+                    status={expired ? "expired" : inProgress ? "active" : "scheduled"}
+                    label={expired ? "Müddəti bitib" : inProgress ? "Davam edir" : "Gözləyir"}
+                  />
                 </div>
 
                 <div className="min-w-0 flex-1">
@@ -93,14 +123,20 @@ export default function EmployeeExamsPage() {
                   </div>
                 </div>
 
-                <Button
-                  className="w-full"
-                  loading={starting === a.assignmentId}
-                  iconRight={<ArrowRight size={16} />}
-                  onClick={() => start(a)}
-                >
-                  {inProgress ? "Davam et" : "İmtahana başla"}
-                </Button>
+                {expired ? (
+                  <Button variant="secondary" className="w-full" disabled>
+                    Müddəti bitib
+                  </Button>
+                ) : (
+                  <Button
+                    className="w-full"
+                    loading={starting === a.assignmentId}
+                    iconRight={<ArrowRight size={16} />}
+                    onClick={() => start(a)}
+                  >
+                    {inProgress ? "Davam et" : "İmtahana başla"}
+                  </Button>
+                )}
               </div>
             );
           })}
