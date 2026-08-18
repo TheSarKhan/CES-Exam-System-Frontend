@@ -20,10 +20,12 @@ interface Options {
 
 /**
  * Anti-cheat monitor for the exam screen.
- * - "Strike" events (tab switch, window blur, fullscreen exit) escalate and
- *   auto-terminate after `limit` strikes (default 3, admin-configurable).
- * - Other events (copy/paste/right-click/devtools/refresh/offline/inactivity)
- *   are logged with a timestamp but do not by themselves terminate the exam.
+ * - Leaving the tab ("TAB_SWITCH", via `visibilitychange`) is the only "strike"
+ *   event — it escalates and auto-terminates after `limit` strikes (default 3,
+ *   admin-configurable).
+ * - Every other event (window blur, fullscreen exit, copy/paste/right-click/
+ *   devtools/refresh/offline/inactivity) is logged with a timestamp but does
+ *   not by itself terminate the exam.
  */
 export function useAntiCheat({
   enabled = true,
@@ -41,11 +43,6 @@ export function useAntiCheat({
   const onTerminateRef = useRef(onTerminate);
   onTerminateRef.current = onTerminate;
   const allRef = useRef<ACViolation[]>([]);
-  // Tracks whether the user is currently *outside* the exam window. Leaving
-  // fires several native events for one action (a tab switch triggers both
-  // `visibilitychange` and `blur`), so we count one strike on the transition
-  // into the "away" state and ignore the rest until the user returns.
-  const awayRef = useRef(false);
 
   const push = useCallback((v: ACViolation) => {
     allRef.current = [...allRef.current, v];
@@ -89,24 +86,20 @@ export function useAntiCheat({
   useEffect(() => {
     if (!enabled) return;
 
-    // One user action (tab switch, app switch) can raise `blur` and
-    // `visibilitychange` together. Register a single strike on the transition
-    // into "away" and mark the state; the paired event is then ignored. The
-    // state clears once the exam window regains focus/visibility, so the next
-    // genuine departure counts again — even if it happens right away.
-    const leave = (type: string, label: string) => {
-      if (awayRef.current) return;
-      awayRef.current = true;
-      strike(type, label);
-    };
-    const back = () => { awayRef.current = false; };
-
+    // `visibilitychange` is the one reliable, unambiguous signal that the
+    // candidate actually left the exam tab — it fires exactly once per
+    // departure. `blur`/`focus` are NOT used to strike: they also fire for
+    // reasons that have nothing to do with leaving the exam (opening a native
+    // <select>, a browser save-password prompt, clicking the address bar…),
+    // and their firing order relative to `visibilitychange` isn't guaranteed
+    // across browsers — pairing them via a shared flag let a single tab
+    // switch register two strikes instead of one. Window blur is still
+    // logged (visible in the violation history) without counting toward
+    // the auto-terminate limit.
     const onVisibility = () => {
-      if (document.hidden) leave("TAB_SWITCH", "Başqa tab/pəncərəyə keçid");
-      else back();
+      if (document.hidden) strike("TAB_SWITCH", "Başqa tab/pəncərəyə keçid");
     };
-    const onBlur = () => leave("WINDOW_BLUR", "Pəncərə fokusdan çıxdı");
-    const onFocus = () => back();
+    const onBlur = () => log("WINDOW_BLUR", "Pəncərə fokusdan çıxdı");
     const onFullscreen = () => {
       if (!document.fullscreenElement) log("FULLSCREEN_EXIT", "Tam ekran rejimindən çıxış");
     };
@@ -130,7 +123,6 @@ export function useAntiCheat({
 
     document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("blur", onBlur);
-    window.addEventListener("focus", onFocus);
     document.addEventListener("fullscreenchange", onFullscreen);
     document.addEventListener("contextmenu", onContextMenu);
     document.addEventListener("copy", onCopy);
@@ -164,7 +156,6 @@ export function useAntiCheat({
     return () => {
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("blur", onBlur);
-      window.removeEventListener("focus", onFocus);
       document.removeEventListener("fullscreenchange", onFullscreen);
       document.removeEventListener("contextmenu", onContextMenu);
       document.removeEventListener("copy", onCopy);
