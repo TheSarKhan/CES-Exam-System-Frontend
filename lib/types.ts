@@ -157,6 +157,38 @@ export interface User {
   roles: { id: number; name: string }[];
 }
 
+export interface UserStats {
+  total: number;
+  active: number;
+  admins: number;
+  employees: number;
+  candidates: number;
+}
+
+export interface UserExamHistoryItem {
+  sessionId: number;
+  examId: number;
+  examTitle: string;
+  score: number | null;
+  passed: boolean | null;
+  startTime: string;
+  endTime: string | null;
+}
+
+export interface UserDetail {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  departmentName: string | null;
+  status: string;
+  roles: string[];
+  completedExams: number;
+  avgScore: number | null;
+  passRate: number | null;
+  examHistory: UserExamHistoryItem[];
+}
+
 export type Difficulty = "EASY" | "MEDIUM" | "HARD";
 
 export interface Category {

@@ -2,19 +2,21 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, Pencil, Ban, CheckCircle2, Search, KeyRound, Eye, EyeOff, RefreshCw, Copy, Check } from "lucide-react";
+import { Plus, Pencil, Ban, CheckCircle2, Search, KeyRound, Eye, EyeOff, RefreshCw, Copy, Check, Users, ShieldCheck, Briefcase, GraduationCap } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/lib/toast";
 import { humanizeError } from "@/lib/errors";
-import type { Department, User } from "@/lib/types";
+import type { Department, User, UserStats } from "@/lib/types";
+import { nameError, passwordError, PASSWORD_HINT } from "@/lib/validate";
 import { PageHeader } from "@/components/app/PageHeader";
 import { Table, Tr, Td } from "@/components/ui/Table";
 import { Avatar } from "@/components/ui/Avatar";
 import { RoleBadge } from "@/components/ui/Badge";
 import { Button, buttonClasses } from "@/components/ui/Button";
-import { Select } from "@/components/ui/Field";
+import { FieldGroup, Input, Select } from "@/components/ui/Field";
 import { Alert, Loading, Modal } from "@/components/ui/Feedback";
+import { KpiCard } from "@/components/ui/DataViz";
 
 type RoleFilter = "platform" | "admin" | "employee" | "candidate" | "all";
 
@@ -28,6 +30,7 @@ export default function UsersPage() {
 
   const [users, setUsers] = useState<User[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
@@ -42,6 +45,13 @@ export default function UsersPage() {
   const [deactivateTarget, setDeactivateTarget] = useState<User | null>(null);
   const [busy, setBusy] = useState(false);
 
+  // edit user
+  const [roles, setRoles] = useState<{ id: number; name: string }[]>([]);
+  const [editTarget, setEditTarget] = useState<User | null>(null);
+  const [editForm, setEditForm] = useState({ firstName: "", lastName: "", email: "", password: "", departmentId: "", roleIds: [] as number[], status: "ACTIVE" });
+  const [editError, setEditError] = useState("");
+  const [editSubmitting, setEditSubmitting] = useState(false);
+
   // password reset
   const [resetTarget, setResetTarget] = useState<User | null>(null);
   const [newPassword, setNewPassword] = useState("");
@@ -51,12 +61,22 @@ export default function UsersPage() {
   const [resetError, setResetError] = useState("");
   const [copied, setCopied] = useState(false);
 
-  // Departments load once for the filter dropdown.
+  const loadStats = useCallback(() => {
+    apiFetch<UserStats>("/api/v1/users/stats")
+      .then(setStats)
+      .catch(() => { /* KPI cards stay empty */ });
+  }, []);
+
+  // Departments, roles and KPI stats load once, for the filter dropdown, the edit form and the KPI cards.
   useEffect(() => {
     apiFetch<Department[]>("/api/v1/departments")
       .then(setDepartments)
       .catch(() => { /* dropdown stays empty */ });
-  }, []);
+    apiFetch<{ id: number; name: string }[]>("/api/v1/roles")
+      .then(setRoles)
+      .catch(() => { /* role picker stays empty */ });
+    loadStats();
+  }, [loadStats]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -96,6 +116,7 @@ export default function UsersPage() {
     try {
       await apiFetch(`/api/v1/users/${id}/activate`, { method: "POST" });
       await load();
+      loadStats();
       toast.success("İstifadəçi aktivləşdirildi");
     } catch (e) {
       toast.error(humanizeError(e, "Aktivləşdirilmədi"));
@@ -112,6 +133,7 @@ export default function UsersPage() {
       await apiFetch(`/api/v1/users/${deactivateTarget.id}`, { method: "DELETE" });
       setDeactivateTarget(null);
       await load();
+      loadStats();
       toast.success(`${name} deaktiv edildi`);
     } catch (e) {
       toast.error(humanizeError(e, "Deaktiv edilmədi"));
@@ -120,6 +142,57 @@ export default function UsersPage() {
       setBusy(false);
     }
   };
+
+  const openEdit = (u: User) => {
+    setEditTarget(u);
+    setEditForm({
+      firstName: u.firstName,
+      lastName: u.lastName,
+      email: u.email,
+      password: "",
+      departmentId: u.departmentId ? String(u.departmentId) : "",
+      roleIds: u.roles?.map((r) => r.id) ?? [],
+      status: u.status,
+    });
+    setEditError("");
+  };
+
+  const toggleEditRole = (id: number, checked: boolean) =>
+    setEditForm((f) => ({ ...f, roleIds: checked ? [...f.roleIds, id] : f.roleIds.filter((x) => x !== id) }));
+
+  const submitEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editTarget) return;
+    const fieldErr = nameError(editForm.firstName, "Ad") || nameError(editForm.lastName, "Soyad")
+      || (editForm.password ? passwordError(editForm.password) : null);
+    if (fieldErr) return setEditError(fieldErr);
+    if (!editForm.departmentId) return setEditError("Şöbə seçilməlidir");
+    if (editForm.roleIds.length === 0) return setEditError("Ən azı bir rol seçin");
+    setEditSubmitting(true);
+    setEditError("");
+    try {
+      const payload: Record<string, unknown> = {
+        firstName: editForm.firstName,
+        lastName: editForm.lastName,
+        email: editForm.email,
+        departmentId: editForm.departmentId ? Number(editForm.departmentId) : null,
+        roleIds: editForm.roleIds,
+        status: editForm.status,
+      };
+      if (editForm.password) payload.password = editForm.password;
+      await apiFetch(`/api/v1/users/${editTarget.id}`, { method: "PUT", body: JSON.stringify(payload) });
+      setEditTarget(null);
+      await load();
+      loadStats();
+      toast.success("İstifadəçi yeniləndi");
+    } catch (e) {
+      setEditError(humanizeError(e, "İstifadəçi yenilənmədi"));
+    } finally {
+      setEditSubmitting(false);
+    }
+  };
+
+  const roleLabel = (n: string) => (n.includes("ADMIN") ? "Admin" : n.includes("CANDIDATE") ? "Namizəd" : "İşçi");
 
   const openReset = (u: User) => {
     setResetTarget(u);
@@ -175,6 +248,15 @@ export default function UsersPage() {
           </Link>
         }
       />
+
+      {/* KPIs */}
+      <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-5">
+        <KpiCard icon={<Users size={18} />} tone="blue" value={stats?.total ?? "—"} label="Ümumi istifadəçi" />
+        <KpiCard icon={<CheckCircle2 size={18} />} tone="green" value={stats?.active ?? "—"} label="Aktiv" />
+        <KpiCard icon={<ShieldCheck size={18} />} tone="purple" value={stats?.admins ?? "—"} label="Admin" />
+        <KpiCard icon={<Briefcase size={18} />} tone="amber" value={stats?.employees ?? "—"} label="İşçi" />
+        <KpiCard icon={<GraduationCap size={18} />} tone="red" value={stats?.candidates ?? "—"} label="Namizəd" />
+      </div>
 
       {/* filter bar */}
       <div className="mb-4 flex flex-col gap-2.5 sm:flex-row sm:items-center">
@@ -233,7 +315,8 @@ export default function UsersPage() {
               </Td>
               <Td>
                 <div className="flex items-center gap-3">
-                  <Link href={`/users/${u.id}/edit`} className="text-fg-muted hover:text-fg" title="Düzəliş"><Pencil size={15} /></Link>
+                  <Link href={`/users/${u.id}`} className="text-fg-muted hover:text-fg" title="İmtahan tarixçəsinə bax"><Eye size={15} /></Link>
+                  <button onClick={() => openEdit(u)} className="text-fg-muted hover:text-fg" title="Düzəliş"><Pencil size={15} /></button>
                   <button onClick={() => openReset(u)} className="text-fg-muted hover:text-blue-600 dark:hover:text-blue-400" title="Parolu yenilə"><KeyRound size={15} /></button>
                   {u.id === currentUser?.id ? (
                     <span className="text-[11px] font-medium text-fg-faint" title="Bu sizsiniz">Siz</span>
@@ -265,6 +348,65 @@ export default function UsersPage() {
           </div>
         </div>
       )}
+
+      {/* edit user */}
+      <Modal
+        open={editTarget != null}
+        onClose={() => !editSubmitting && setEditTarget(null)}
+        icon={<Pencil size={18} />}
+        title="İstifadəçi düzəlişi"
+        maxWidth="600px"
+      >
+        <form onSubmit={submitEdit} className="mt-2 flex flex-col gap-4 text-fg">
+          {editError && <Alert tone="danger">{editError}</Alert>}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <FieldGroup label="Ad"><Input value={editForm.firstName} onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })} required /></FieldGroup>
+            <FieldGroup label="Soyad"><Input value={editForm.lastName} onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })} required /></FieldGroup>
+          </div>
+          <FieldGroup label="E-poçt"><Input type="email" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} required /></FieldGroup>
+          <FieldGroup label="Şifrə" hint={`Dəyişməmək üçün boş buraxın. ${PASSWORD_HINT}`}>
+            <Input type="password" value={editForm.password} onChange={(e) => setEditForm({ ...editForm, password: e.target.value })} />
+          </FieldGroup>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <FieldGroup label="Şöbə">
+              <Select value={editForm.departmentId} onChange={(e) => setEditForm({ ...editForm, departmentId: e.target.value })}>
+                <option value="">Şöbə seçin</option>
+                {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+              </Select>
+            </FieldGroup>
+            <FieldGroup label="Status">
+              <Select value={editForm.status} onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}>
+                <option value="ACTIVE">Aktiv</option>
+                <option value="INACTIVE">Deaktiv</option>
+              </Select>
+            </FieldGroup>
+          </div>
+          <FieldGroup label="Rollar">
+            <div className="flex flex-wrap gap-2">
+              {roles.map((r) => {
+                const checked = editForm.roleIds.includes(r.id);
+                return (
+                  <button
+                    key={r.id}
+                    type="button"
+                    onClick={() => toggleEditRole(r.id, !checked)}
+                    className={
+                      "rounded-[9px] border px-3.5 py-2 text-[13px] font-medium transition-colors " +
+                      (checked ? "border-blue-600 bg-blue-50 text-blue-700 dark:bg-blue-600/10" : "border-line text-fg-muted hover:bg-surface-2")
+                    }
+                  >
+                    {roleLabel(r.name)}
+                  </button>
+                );
+              })}
+            </div>
+          </FieldGroup>
+          <div className="flex justify-end gap-3 pt-1">
+            <Button type="button" variant="secondary" onClick={() => setEditTarget(null)} disabled={editSubmitting}>Ləğv et</Button>
+            <Button type="submit" loading={editSubmitting}>Yadda saxla</Button>
+          </div>
+        </form>
+      </Modal>
 
       <Modal
         open={deactivateTarget != null}

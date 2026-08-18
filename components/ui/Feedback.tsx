@@ -79,6 +79,7 @@ export function Modal({
   title,
   children,
   footer,
+  maxWidth = "400px",
 }: {
   open: boolean;
   onClose: () => void;
@@ -87,6 +88,7 @@ export function Modal({
   title: React.ReactNode;
   children?: React.ReactNode;
   footer?: React.ReactNode;
+  maxWidth?: string;
 }) {
   if (!open) return null;
   const tones = {
@@ -102,7 +104,8 @@ export function Modal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-[400px] rounded-[16px] bg-surface p-6 shadow-[0_12px_32px_rgba(15,23,42,0.16)]"
+        className="w-full max-h-[90vh] overflow-y-auto rounded-[16px] bg-surface p-6 shadow-[0_12px_32px_rgba(15,23,42,0.16)]"
+        style={{ maxWidth }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between">
@@ -114,7 +117,7 @@ export function Modal({
               {icon}
             </div>
           )}
-          <button onClick={onClose} className="btn-ghost rounded-md p-1 text-fg-muted">
+          <button onClick={onClose} className="btn-ghost ml-auto rounded-md p-1 text-fg-muted">
             <X size={18} />
           </button>
         </div>
