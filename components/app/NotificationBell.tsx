@@ -3,11 +3,29 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { Bell, CheckCheck, ClipboardCheck, ShieldAlert, CheckCircle2, XCircle } from "lucide-react";
+import { Bell, CheckCheck, ClipboardCheck, ShieldAlert, CheckCircle2, XCircle, FileText, Clock } from "lucide-react";
 import { apiFetch } from "@/lib/api";
-import type { NotificationFeed, NotificationItem } from "@/lib/types";
+import type { NotificationFeed, NotificationItem, EmployeeNotificationFeed, EmployeeNotificationItem } from "@/lib/types";
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/cn";
+
+type Audience = "admin" | "employee";
+type Feed = NotificationFeed | EmployeeNotificationFeed;
+
+const AUDIENCE_CONFIG: Record<Audience, { feedUrl: string; readUrl: string; footerHref: string; footerLabel: string }> = {
+  admin: {
+    feedUrl: "/api/v1/admin/notifications",
+    readUrl: "/api/v1/admin/notifications/read",
+    footerHref: "/dashboard",
+    footerLabel: "İdarə panelinə keç",
+  },
+  employee: {
+    feedUrl: "/api/v1/account/notifications",
+    readUrl: "/api/v1/account/notifications/read",
+    footerHref: "/employee/exams",
+    footerLabel: "İmtahanlarıma bax",
+  },
+};
 
 function relTime(iso: string | null): string {
   if (!iso) return "";
@@ -33,14 +51,41 @@ function itemVisual(item: NotificationItem) {
   return { icon: <CheckCircle2 size={16} />, bg: "#DCFCE7", fg: "#15803D" };
 }
 
+function employeeVisual(item: EmployeeNotificationItem) {
+  if (item.type === "RESULT") {
+    if (item.passed === false) return { icon: <XCircle size={16} />, bg: "#FEE2E2", fg: "#B91C1C" };
+    return { icon: <CheckCircle2 size={16} />, bg: "#DCFCE7", fg: "#15803D" };
+  }
+  if (item.type === "DEADLINE") return { icon: <Clock size={16} />, bg: "#FEF3C7", fg: "#B45309" };
+  return { icon: <FileText size={16} />, bg: "#F7EFD8", fg: "#8E6F17" };
+}
+
+function employeeMessage(item: EmployeeNotificationItem) {
+  if (item.type === "RESULT") {
+    const verdict = item.passed == null ? "tamamlandı" : item.passed ? "keçdin ✓" : "keçə bilmədin";
+    const score = item.score != null ? ` — ${Math.round(item.score)}%` : "";
+    return { title: "Nəticən hazırdır", detail: `${item.examTitle}${score} · ${verdict}` };
+  }
+  if (item.type === "DEADLINE") return { title: "Son tarix yaxınlaşır", detail: `${item.examTitle} · ${formatDate(item.deadline)}` };
+  return { title: "Yeni imtahan təyin olundu", detail: item.examTitle };
+}
+
+function employeeHref(item: EmployeeNotificationItem): string {
+  if (item.type === "RESULT" && item.sessionId) return `/employee/exams/${item.sessionId}/result`;
+  return "/employee/exams";
+}
+
 export function NotificationBell({
   variant = "bar",
   collapsed = false,
+  audience = "admin",
 }: {
   variant?: "bar" | "sidebar";
   collapsed?: boolean;
+  audience?: Audience;
 }) {
-  const [feed, setFeed] = useState<NotificationFeed>({ unreadCount: 0, items: [] });
+  const config = AUDIENCE_CONFIG[audience];
+  const [feed, setFeed] = useState<Feed>({ unreadCount: 0, items: [] });
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -50,12 +95,12 @@ export function NotificationBell({
 
   const load = useCallback(async () => {
     try {
-      const f = await apiFetch<NotificationFeed>("/api/v1/admin/notifications");
+      const f = await apiFetch<Feed>(config.feedUrl);
       setFeed(f);
     } catch {
       /* notifications must never break the shell */
     }
-  }, []);
+  }, [config.feedUrl]);
 
   // initial load + poll the badge every 60s
   useEffect(() => {
@@ -116,8 +161,8 @@ export function NotificationBell({
   const markAllRead = async () => {
     setLoading(true);
     try {
-      await apiFetch<void>("/api/v1/admin/notifications/read", { method: "POST" });
-      setFeed((f) => ({ unreadCount: 0, items: f.items.map((i) => ({ ...i, unread: false })) }));
+      await apiFetch<void>(config.readUrl, { method: "POST" });
+      setFeed((f) => ({ unreadCount: 0, items: f.items.map((i) => ({ ...i, unread: false })) } as Feed));
     } catch {
       /* ignore */
     } finally {
@@ -213,16 +258,49 @@ export function NotificationBell({
                 <p className="text-[13px] text-fg-muted">Hələ bildiriş yoxdur</p>
               </div>
             ) : (
-              feed.items.map((item) => {
-                const v = itemVisual(item);
+              feed.items.map((item, i) => {
+                if (audience === "employee") {
+                  const it = item as EmployeeNotificationItem;
+                  const v = employeeVisual(it);
+                  const m = employeeMessage(it);
+                  return (
+                    <Link
+                      key={`${it.assignmentId}-${i}`}
+                      href={employeeHref(it)}
+                      onClick={() => setOpen(false)}
+                      className={cn(
+                        "flex gap-3 border-b border-line px-4 py-3 transition-colors last:border-b-0 hover:bg-surface-2",
+                        it.unread && "bg-blue-50/50 dark:bg-blue-600/5",
+                      )}
+                    >
+                      <span
+                        className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px]"
+                        style={{ background: v.bg, color: v.fg }}
+                      >
+                        {v.icon}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[13px] font-medium leading-snug text-fg">{m.title}</p>
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                          <span className="truncate text-[12px] text-fg-muted">{m.detail}</span>
+                          <span className="ml-auto shrink-0 text-[11px] text-fg-faint">{relTime(it.time)}</span>
+                        </div>
+                      </div>
+                      {it.unread && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-blue-600" />}
+                    </Link>
+                  );
+                }
+
+                const it = item as NotificationItem;
+                const v = itemVisual(it);
                 return (
                   <Link
-                    key={item.sessionId}
-                    href={`/exams/${item.examId}/results`}
+                    key={it.sessionId}
+                    href={`/exams/${it.examId}/results`}
                     onClick={() => setOpen(false)}
                     className={cn(
                       "flex gap-3 border-b border-line px-4 py-3 transition-colors last:border-b-0 hover:bg-surface-2",
-                      item.unread && "bg-blue-50/50 dark:bg-blue-600/5",
+                      it.unread && "bg-blue-50/50 dark:bg-blue-600/5",
                     )}
                   >
                     <span
@@ -233,27 +311,27 @@ export function NotificationBell({
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="text-[13px] leading-snug text-fg">
-                        <b>{item.userName}</b>{" "}
-                        <span className="text-fg-muted">“{item.examTitle}” imtahanını tamamladı</span>
+                        <b>{it.userName}</b>{" "}
+                        <span className="text-fg-muted">“{it.examTitle}” imtahanını tamamladı</span>
                       </p>
                       <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                        {item.score != null && item.pendingGrading === 0 && (
-                          <span className="num text-[11.5px] font-semibold text-fg">{Math.round(item.score)}%</span>
+                        {it.score != null && it.pendingGrading === 0 && (
+                          <span className="num text-[11.5px] font-semibold text-fg">{Math.round(it.score)}%</span>
                         )}
-                        {item.pendingGrading > 0 && (
+                        {it.pendingGrading > 0 && (
                           <span className="num inline-flex items-center gap-1 rounded-full bg-amber-50 px-1.5 py-0.5 text-[10.5px] font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
-                            <ClipboardCheck size={10} /> {item.pendingGrading} qiymətləndir
+                            <ClipboardCheck size={10} /> {it.pendingGrading} qiymətləndir
                           </span>
                         )}
-                        {item.violations > 0 && (
+                        {it.violations > 0 && (
                           <span className="num inline-flex items-center gap-1 rounded-full bg-danger-bg px-1.5 py-0.5 text-[10.5px] font-semibold text-danger-fg">
-                            <ShieldAlert size={10} /> {item.violations} pozuntu
+                            <ShieldAlert size={10} /> {it.violations} pozuntu
                           </span>
                         )}
-                        <span className="ml-auto shrink-0 text-[11px] text-fg-faint">{relTime(item.time)}</span>
+                        <span className="ml-auto shrink-0 text-[11px] text-fg-faint">{relTime(it.time)}</span>
                       </div>
                     </div>
-                    {item.unread && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-blue-600" />}
+                    {it.unread && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-blue-600" />}
                   </Link>
                 );
               })
@@ -261,11 +339,11 @@ export function NotificationBell({
           </div>
 
           <Link
-            href="/dashboard"
+            href={config.footerHref}
             onClick={() => setOpen(false)}
             className="block border-t border-line py-2.5 text-center text-[12.5px] font-medium text-fg-muted hover:bg-surface-2 hover:text-fg"
           >
-            İdarə panelinə keç
+            {config.footerLabel}
           </Link>
         </div>,
         document.body,

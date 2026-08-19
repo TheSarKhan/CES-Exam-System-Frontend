@@ -4,23 +4,21 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutGrid, ClipboardList, Trophy, TrendingUp, Bell, LogOut, Sun, Moon, ChevronLeft, ChevronRight,
+  LayoutGrid, ClipboardList, Trophy, TrendingUp, LogOut, Sun, Moon, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useTheme } from "@/lib/theme";
-import { apiFetch } from "@/lib/api";
 import { Avatar } from "@/components/ui/Avatar";
 import { BrandLogo } from "@/components/app/BrandLogo";
+import { NotificationBell } from "@/components/app/NotificationBell";
 import { cn } from "@/lib/cn";
 
-const NOTIF_HREF = "/employee/notifications";
 const nav: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/employee/dashboard", label: "İdarə paneli", icon: LayoutGrid },
   { href: "/employee/exams", label: "İmtahanlarım", icon: ClipboardList },
   { href: "/employee/results", label: "Nəticələrim", icon: Trophy },
   { href: "/employee/progress", label: "İnkişafım", icon: TrendingUp },
-  { href: NOTIF_HREF, label: "Bildirişlər", icon: Bell },
 ];
 
 const STORAGE_KEY = "ces_emp_sidebar_collapsed";
@@ -41,13 +39,6 @@ export function EmployeeSidebar() {
     setCollapsed(localStorage.getItem(STORAGE_KEY) === "1");
   }, []);
 
-  // Unread notification badge — refetch on navigation so it clears after viewing.
-  const [unread, setUnread] = useState(0);
-  useEffect(() => {
-    apiFetch<{ unreadCount: number }>("/api/v1/account/notifications")
-      .then((f) => setUnread(f.unreadCount))
-      .catch(() => { /* keep silent */ });
-  }, [pathname]);
   const toggleCollapsed = () =>
     setCollapsed((c) => {
       const next = !c;
@@ -99,7 +90,6 @@ export function EmployeeSidebar() {
         {nav.map((item) => {
           const active = pathname === item.href || pathname.startsWith(item.href + "/");
           const Icon = item.icon;
-          const badge = item.href === NOTIF_HREF ? unread : 0;
           return (
             <Link
               key={item.href}
@@ -107,26 +97,18 @@ export function EmployeeSidebar() {
               title={item.label}
               className={cn(rowBase, justify, active ? rowActive : rowIdle)}
             >
-              <span className="relative shrink-0">
-                <Icon size={19} strokeWidth={2} />
-                {collapsed && badge > 0 && (
-                  <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border-2 border-surface bg-danger" />
-                )}
-              </span>
+              <Icon size={19} strokeWidth={2} className="shrink-0" />
               {!collapsed && <span className="flex-1">{item.label}</span>}
-              {!collapsed && badge > 0 && (
-                <span className="num shrink-0 rounded-full bg-danger px-1.5 text-[10.5px] font-bold leading-[17px] text-white">
-                  {badge > 9 ? "9+" : badge}
-                </span>
-              )}
               {collapsed && <Tooltip label={item.label} />}
             </Link>
           );
         })}
       </nav>
 
-      {/* Bottom — profile, theme, logout */}
+      {/* Bottom — notifications, profile, theme, logout */}
       <div className="mt-2 flex flex-col gap-1.5 border-t border-line pt-3">
+        <NotificationBell variant="sidebar" collapsed={collapsed} audience="employee" />
+
         <Link
           href="/employee/profile"
           title="Profil"
