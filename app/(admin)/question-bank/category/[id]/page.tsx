@@ -23,6 +23,8 @@ type DeleteTarget =
   | { kind: "topic"; id: number; name: string }
   | { kind: "question"; id: number; name: string };
 
+const CHOICE_TYPES = new Set(["SINGLE_CHOICE", "MULTIPLE_CHOICE", "TRUE_FALSE", "IMAGE_CHOICE"]);
+
 export default function CategoryDetailPage() {
   const params = useParams();
   const categoryId = Number(params.id);
@@ -242,7 +244,17 @@ export default function CategoryDetailPage() {
                         <span className="num mt-0.5 text-[11px] font-semibold text-fg-faint">#{q.id}</span>
                         <div className="min-w-0">
                           <p className="font-medium text-fg">{q.text}</p>
-                          {!q.isActive && <span className="mt-1 inline-block rounded-[5px] bg-slate-100 px-1.5 py-0.5 text-[10.5px] text-slate-500 dark:bg-surface-2">Deaktiv</span>}
+                          <div className="mt-1 flex flex-wrap gap-1">
+                            {!q.isActive && <span className="inline-block rounded-[5px] bg-slate-100 px-1.5 py-0.5 text-[10.5px] text-slate-500 dark:bg-surface-2">Deaktiv</span>}
+                            {CHOICE_TYPES.has(q.type) && (q.options?.every((o) => !o.isCorrect) ?? false) && (
+                              <span
+                                className="inline-block rounded-[5px] bg-amber-100 px-1.5 py-0.5 text-[10.5px] font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-400"
+                                title="Bu sualın düzgün cavabı yoxdur — imtahanda istifadə edilə bilməz"
+                              >
+                                Cavabsız
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </Td>

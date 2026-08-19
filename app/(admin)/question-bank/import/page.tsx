@@ -3,11 +3,11 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowUpFromLine, Download, FileText, FileSpreadsheet, Check, X, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ArrowUpFromLine, FileText, FileSpreadsheet, Check, X, AlertTriangle, CheckCircle2, Link2, Image as ImageIcon } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { loadTopicOptions, type TopicOption } from "@/lib/questionBank";
 import type { Difficulty, BulkImportResult } from "@/lib/types";
-import { parseCsv, downloadCsv } from "@/lib/csv";
+import { parseCsv } from "@/lib/csv";
 import { parseExcelToRows, downloadExcelTemplate } from "@/lib/excel";
 import { Card } from "@/components/ui/Card";
 import { Button, buttonClasses } from "@/components/ui/Button";
@@ -37,15 +37,11 @@ interface Draft {
   difficulty: Difficulty;
   score: number;
   options?: { text: string; isCorrect: boolean; sortOrder: number }[];
+  imageUrl?: string;
   error?: string;
+  /** Non-blocking issue — row is still importable, just flagged (e.g. no correct answer marked). */
+  warning?: string;
 }
-
-const TEMPLATE =
-  "type,text,difficulty,score,optionA,optionB,optionC,optionD,correct\n" +
-  'SINGLE_CHOICE,"Azərbaycanın paytaxtı hansıdır?",EASY,1,Bakı,Gəncə,Sumqayıt,Şəki,A\n' +
-  'MULTIPLE_CHOICE,"Hansılar proqramlaşdırma dilidir?",MEDIUM,2,Java,HTML,Python,CSS,A C\n' +
-  'TRUE_FALSE,"Yer Günəş ətrafında fırlanır.",EASY,1,,,,,A\n' +
-  'SHORT_TEXT,"HTTP abreviaturası nəyi bildirir?",MEDIUM,2,,,,,\n';
 
 function parseCorrect(raw: string): Set<string> {
   const set = new Set<string>();
@@ -66,15 +62,27 @@ function buildDraft(cells: string[], row: number): Draft {
   const difficulty = DIFF_MAP[rawDiff] ?? "MEDIUM";
   const scoreRaw = get(3);
   const score = scoreRaw === "" ? 1 : Number(scoreRaw.replace(",", "."));
+  const imageUrl = get(9);
   const d: Draft = { row, type, text, difficulty, score };
+  if (imageUrl) d.imageUrl = imageUrl;
 
   if (!type) { d.error = `Tip tanınmadı: "${get(0)}"`; return d; }
   if (!text) { d.error = "Sual mətni boşdur"; return d; }
   if (rawDiff && !DIFF_MAP[rawDiff]) { d.error = `Çətinlik tanınmadı: "${get(2)}"`; return d; }
   if (Number.isNaN(score)) { d.error = `Bal rəqəm deyil: "${scoreRaw}"`; return d; }
 
+  const NO_ANSWER_WARNING = "Düzgün cavab qeyd olunmayıb — sual bankına əlavə olunacaq, amma imtahanda istifadə edilə bilməz";
+
   if (type === "TRUE_FALSE") {
     const correctRaw = get(8).trim().toUpperCase();
+    if (!correctRaw) {
+      d.options = [
+        { text: "Doğru", isCorrect: false, sortOrder: 0 },
+        { text: "Yanlış", isCorrect: false, sortOrder: 1 },
+      ];
+      d.warning = NO_ANSWER_WARNING;
+      return d;
+    }
     const correctIsTrue = TRUE_VALUES.has(correctRaw);
     const valid = correctIsTrue || ["B", "YANLIŞ", "YANLIS", "FALSE", "0", "XEYR", "NO"].includes(correctRaw);
     if (!valid) { d.error = `Doğru/Yanlış cavabı tanınmadı: "${get(8)}"`; return d; }
@@ -97,9 +105,9 @@ function buildDraft(cells: string[], row: number): Draft {
     });
     if (opts.length < 2) { d.error = "Ən azı 2 variant lazımdır"; return d; }
     const nCorrect = opts.filter((o) => o.isCorrect).length;
-    if (nCorrect < 1) { d.error = "Düzgün variant qeyd olunmayıb (correct sütunu)"; return d; }
-    if (type === "SINGLE_CHOICE" && nCorrect !== 1) { d.error = "Tək seçimdə dəqiq 1 düzgün variant olmalıdır"; return d; }
+    if (type === "SINGLE_CHOICE" && nCorrect > 1) { d.error = "Tək seçimdə birdən çox düzgün variant ola bilməz"; return d; }
     d.options = opts;
+    if (nCorrect < 1) d.warning = NO_ANSWER_WARNING;
     return d;
   }
 
@@ -119,6 +127,10 @@ export default function ImportQuestionsPage() {
   const [result, setResult] = useState<BulkImportResult | null>(null);
   const [error, setError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+  const [mode, setMode] = useState<"file" | "link">("file");
+  const [linkUrl, setLinkUrl] = useState("");
+  const [linkLoading, setLinkLoading] = useState(false);
+  const [linkWarnings, setLinkWarnings] = useState<string[]>([]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -140,6 +152,19 @@ export default function ImportQuestionsPage() {
   const valid = drafts.filter((d) => !d.error);
   const invalid = drafts.filter((d) => d.error);
 
+  // Row-level import selection — every non-error row starts checked; the user
+  // can uncheck any it doesn't want (including rows with no correct answer marked).
+  // Reset explicitly wherever a new source is loaded (see onFile/onImportLink/clearSheet).
+  const [unchecked, setUnchecked] = useState<Set<number>>(new Set());
+  const toggleSelect = (row: number) => {
+    setUnchecked((prev) => {
+      const next = new Set(prev);
+      if (next.has(row)) next.delete(row); else next.add(row);
+      return next;
+    });
+  };
+  const selected = valid.filter((d) => !unchecked.has(d.row));
+
   const onFile = async (file: File) => {
     setError("");
     const isExcel = /\.xlsx?$/i.test(file.name);
@@ -150,6 +175,7 @@ export default function ImportQuestionsPage() {
         setSheetRows(rows);
         setSheetName(file.name);
         setCsvText("");
+        setUnchecked(new Set());
       } catch (e) {
         setError(e instanceof Error ? e.message : "Excel oxunmadı");
       }
@@ -157,26 +183,78 @@ export default function ImportQuestionsPage() {
     }
     // CSV → read as text into the textarea
     const reader = new FileReader();
-    reader.onload = () => { setSheetRows(null); setSheetName(""); setCsvText(String(reader.result ?? "")); };
+    reader.onload = () => { setSheetRows(null); setSheetName(""); setCsvText(String(reader.result ?? "")); setUnchecked(new Set()); };
     reader.readAsText(file);
   };
 
-  const clearSheet = () => { setSheetRows(null); setSheetName(""); };
+  const clearSheet = () => { setSheetRows(null); setSheetName(""); setLinkWarnings([]); setUnchecked(new Set()); };
+
+  const onImportLink = async () => {
+    const url = linkUrl.trim();
+    if (!url) return;
+    setError("");
+    setLinkWarnings([]);
+    setLinkLoading(true);
+    try {
+      const res = await fetch("/api/forms-import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Link oxuna bilmədi");
+      setSheetRows(data.rows as string[][]);
+      setSheetName(data.provider === "google" ? "Google Forms idxalı" : "Microsoft Forms idxalı");
+      setCsvText("");
+      setUnchecked(new Set());
+      setLinkWarnings(data.warnings ?? []);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Link oxuna bilmədi");
+    } finally {
+      setLinkLoading(false);
+    }
+  };
+
+  const toggleCorrect = (d: Draft, letter: string) => {
+    if (!sheetRows) return;
+    const start = (sheetRows[0]?.[0] ?? "").trim().toLowerCase() === "type" ? 1 : 0;
+    const idx = start + d.row - 1;
+    const row = sheetRows[idx];
+    if (!row) return;
+    const next = row.slice();
+    while (next.length < 9) next.push("");
+    if (d.type === "TRUE_FALSE") {
+      next[8] = letter;
+    } else if (d.type === "SINGLE_CHOICE") {
+      next[8] = letter;
+    } else if (d.type === "MULTIPLE_CHOICE") {
+      const current = parseCorrect(next[8] ?? "");
+      if (current.has(letter)) current.delete(letter);
+      else current.add(letter);
+      next[8] = Array.from(current).sort().join(" ");
+    } else {
+      return;
+    }
+    const updated = sheetRows.slice();
+    updated[idx] = next;
+    setSheetRows(updated);
+  };
 
   const doImport = async () => {
-    if (topicId === "" || valid.length === 0) return;
+    if (topicId === "" || selected.length === 0) return;
     setSubmitting(true);
     setError("");
     try {
       const body = {
         topicId,
-        questions: valid.map((d) => ({
+        questions: selected.map((d) => ({
           topicId,
           type: d.type,
           text: d.text,
           score: d.score,
           difficulty: d.difficulty,
           options: d.options,
+          imageUrl: d.imageUrl,
         })),
       };
       const res = await apiFetch<BulkImportResult>("/api/v1/question-bank/questions/bulk", {
@@ -239,16 +317,28 @@ export default function ImportQuestionsPage() {
             </Select>
           </Card>
 
-          {/* Step 2: CSV */}
+          {/* Step 2: source */}
           <Card className="p-5">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-              <h3 className="text-[14px] font-semibold text-fg">2. Suallar (Excel tövsiyə olunur)</h3>
-              <div className="flex flex-wrap gap-2">
-                <Button icon={<FileSpreadsheet size={15} />} onClick={() => downloadExcelTemplate()}>Excel şablon</Button>
-                <Button variant="ghost" icon={<Download size={15} />} onClick={() => downloadCsv("ces-sual-shablon.csv", TEMPLATE)}>CSV şablon</Button>
-                <Button variant="outline" icon={<FileText size={15} />} onClick={() => fileRef.current?.click()}>Fayl seç</Button>
-                <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv,text/csv" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); e.target.value = ""; }} />
-              </div>
+              <h3 className="text-[14px] font-semibold text-fg">2. Suallar (Excel, CSV və ya Forms linki)</h3>
+              {!sheetRows && (
+                <div className="flex rounded-[9px] border border-line bg-surface-2 p-0.5 text-[12.5px]">
+                  <button
+                    type="button"
+                    onClick={() => setMode("file")}
+                    className={cn("rounded-[7px] px-3 py-1.5 font-medium transition-colors", mode === "file" ? "bg-surface text-fg shadow-sm" : "text-fg-muted")}
+                  >
+                    Fayl
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMode("link")}
+                    className={cn("rounded-[7px] px-3 py-1.5 font-medium transition-colors", mode === "link" ? "bg-surface text-fg shadow-sm" : "text-fg-muted")}
+                  >
+                    Google/MS Forms linki
+                  </button>
+                </div>
+              )}
             </div>
 
             {sheetRows ? (
@@ -259,20 +349,48 @@ export default function ImportQuestionsPage() {
                 </span>
                 <button onClick={clearSheet} className="shrink-0 text-[13px] font-medium text-fg-muted hover:text-danger">Təmizlə</button>
               </div>
+            ) : mode === "link" ? (
+              <div className="flex flex-col gap-2">
+                <div className="flex flex-wrap gap-2">
+                  <input
+                    className="field min-w-0 flex-1"
+                    placeholder="https://docs.google.com/forms/d/e/... və ya https://forms.office.com/..."
+                    value={linkUrl}
+                    onChange={(e) => setLinkUrl(e.target.value)}
+                  />
+                  <Button icon={<Link2 size={15} />} loading={linkLoading} disabled={!linkUrl.trim()} onClick={onImportLink}>
+                    Linki oxu
+                  </Button>
+                </div>
+                {linkWarnings.length > 0 && (
+                  <div className="rounded-[9px] border border-amber-200 bg-amber-50 px-3 py-2 text-[11.5px] leading-relaxed text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
+                    {linkWarnings.map((w, i) => <div key={i}>{w}</div>)}
+                  </div>
+                )}
+                <div className="rounded-[9px] bg-surface-2 px-3 py-2 text-[11.5px] leading-relaxed text-fg-muted">
+                  Formun paylaşım ayarında ictimai giriş aktiv olmalıdır. <b>Düzgün cavablar formdan çıxarıla bilmir</b> — aşağıdakı önizləmədə variant çipinə klikləyib işarələyin, ya da bunsuz idxal edin (belə suallar bankda “Cavabsız” işarəsi ilə görünür və imtahanda istifadə olunmur, sonra tamamlaya bilərsiniz). Checkbox ilə istəmədiyiniz sualları seçimdən çıxara bilərsiniz.
+                </div>
+              </div>
             ) : (
-              <textarea
-                className="field min-h-[150px] w-full font-mono text-[12.5px]"
-                placeholder="Excel faylı seçin (tövsiyə) — və ya CSV-ni bura yapışdırın…"
-                value={csvText}
-                onChange={(e) => setCsvText(e.target.value)}
-              />
+              <>
+                <div className="mb-3 flex flex-wrap gap-2">
+                  <Button icon={<FileSpreadsheet size={15} />} onClick={() => downloadExcelTemplate()}>Excel şablon</Button>
+                  <Button variant="outline" icon={<FileText size={15} />} onClick={() => fileRef.current?.click()}>Fayl seç</Button>
+                  <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv,text/csv" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); e.target.value = ""; }} />
+                </div>
+                <textarea
+                  className="field min-h-[150px] w-full font-mono text-[12.5px]"
+                  placeholder="Excel faylı seçin (tövsiyə) — və ya CSV-ni bura yapışdırın…"
+                  value={csvText}
+                  onChange={(e) => { setCsvText(e.target.value); setUnchecked(new Set()); }}
+                />
+                <div className="mt-2 rounded-[9px] bg-surface-2 px-3 py-2 text-[11.5px] leading-relaxed text-fg-muted">
+                  <b>Excel-də</b> hər sahə ayrı xanadır — sual mətnində vergül (,) problem yaratmır; <b>type</b> və <b>difficulty</b> açılan siyahıdan seçilir.<br />
+                  <b>Sütunlar:</b> type, text, difficulty, score, optionA–D, correct. <b>difficulty:</b> EASY/MEDIUM/HARD (boş = Orta).
+                  <b> correct:</b> seçim üçün hərf(lər) (A, və ya çoxlu seçimdə “A C”); Doğru/Yanlış üçün A=Doğru, B=Yanlış; mətn tipləri üçün boş. Boş buraxsanız sual “Cavabsız” işarəsi ilə əlavə olunur.
+                </div>
+              </>
             )}
-
-            <div className="mt-2 rounded-[9px] bg-surface-2 px-3 py-2 text-[11.5px] leading-relaxed text-fg-muted">
-              <b>Excel-də</b> hər sahə ayrı xanadır — sual mətnində vergül (,) problem yaratmır; <b>type</b> və <b>difficulty</b> açılan siyahıdan seçilir.<br />
-              <b>Sütunlar:</b> type, text, difficulty, score, optionA–D, correct. <b>difficulty:</b> EASY/MEDIUM/HARD (boş = Orta).
-              <b> correct:</b> seçim üçün hərf(lər) (A, və ya çoxlu seçimdə “A C”); Doğru/Yanlış üçün A=Doğru, B=Yanlış; mətn tipləri üçün boş.
-            </div>
           </Card>
 
           {/* Step 3: preview */}
@@ -281,7 +399,7 @@ export default function ImportQuestionsPage() {
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-4">
                 <h3 className="text-[14px] font-semibold text-fg">3. Önizləmə</h3>
                 <div className="flex items-center gap-3 text-[12.5px]">
-                  <span className="inline-flex items-center gap-1 text-success-fg"><Check size={14} /> {valid.length} hazır</span>
+                  <span className="inline-flex items-center gap-1 text-success-fg"><Check size={14} /> {selected.length} seçili</span>
                   {invalid.length > 0 && <span className="inline-flex items-center gap-1 text-danger-fg"><X size={14} /> {invalid.length} xəta</span>}
                 </div>
               </div>
@@ -289,25 +407,64 @@ export default function ImportQuestionsPage() {
                 <table className="w-full text-left text-[12.5px]">
                   <thead className="sticky top-0 bg-surface-2">
                     <tr>
-                      {["#", "Tip", "Sual", "Çətinlik", "Bal", "Variant", "Status"].map((h) => (
-                        <th key={h} className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-fg-faint">{h}</th>
+                      {["", "#", "Tip", "Sual", "Çətinlik", "Bal", "Variant", "Status"].map((h, i) => (
+                        <th key={i} className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-fg-faint">{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {drafts.map((d) => (
-                      <tr key={d.row} className={cn("border-b border-line", d.error && "bg-danger-bg/40")}>
+                      <tr key={d.row} className={cn("border-b border-line", d.error && "bg-danger-bg/40", !d.error && d.warning && "bg-amber-50/60 dark:bg-amber-500/5")}>
+                        <td className="px-4 py-2.5">
+                          <input
+                            type="checkbox"
+                            checked={!d.error && !unchecked.has(d.row)}
+                            disabled={!!d.error}
+                            onChange={() => toggleSelect(d.row)}
+                          />
+                        </td>
                         <td className="num px-4 py-2.5 text-fg-faint">{d.row}</td>
                         <td className="px-4 py-2.5">{d.type ? questionTypeLabel(d.type) : <span className="text-danger-fg">—</span>}</td>
-                        <td className="max-w-[280px] truncate px-4 py-2.5 text-fg">{d.text || <span className="text-fg-faint">(boş)</span>}</td>
+                        <td className="max-w-[280px] truncate px-4 py-2.5 text-fg">
+                          {d.text || <span className="text-fg-faint">(boş)</span>}
+                          {d.imageUrl && <ImageIcon size={12} className="ml-1.5 inline text-blue-500" aria-label={d.imageUrl} />}
+                        </td>
                         <td className="px-4 py-2.5">
                           <span className={cn("rounded-[5px] px-1.5 py-0.5 text-[11px] font-semibold", DIFFICULTY_META[d.difficulty]?.cls)}>{DIFFICULTY_META[d.difficulty]?.label}</span>
                         </td>
                         <td className="num px-4 py-2.5">{d.score}</td>
-                        <td className="num px-4 py-2.5 text-fg-muted">{d.options ? `${d.options.length} (${d.options.filter((o) => o.isCorrect).length}✓)` : "—"}</td>
+                        <td className="px-4 py-2.5">
+                          {d.options ? (
+                            <div className="flex flex-wrap gap-1">
+                              {d.options.map((o, i) => {
+                                const letter = String.fromCharCode(65 + i);
+                                return (
+                                  <button
+                                    key={i}
+                                    type="button"
+                                    disabled={!sheetRows}
+                                    title={o.text}
+                                    onClick={() => toggleCorrect(d, letter)}
+                                    className={cn(
+                                      "rounded-[5px] border px-1.5 py-0.5 text-[11px] font-semibold",
+                                      o.isCorrect ? "border-success-fg/40 bg-success-bg text-success-fg" : "border-line bg-surface-2 text-fg-muted",
+                                      sheetRows ? "cursor-pointer hover:opacity-80" : "cursor-default",
+                                    )}
+                                  >
+                                    {letter}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <span className="text-fg-muted">—</span>
+                          )}
+                        </td>
                         <td className="px-4 py-2.5">
                           {d.error
                             ? <span className="inline-flex items-center gap-1 text-danger-fg"><AlertTriangle size={12} /> {d.error}</span>
+                            : d.warning
+                            ? <span className="inline-flex items-center gap-1 text-amber-600" title={d.warning}><AlertTriangle size={12} /> Cavabsız</span>
                             : <span className="inline-flex items-center gap-1 text-success-fg"><Check size={12} /> Hazır</span>}
                         </td>
                       </tr>
@@ -317,10 +474,10 @@ export default function ImportQuestionsPage() {
               </div>
               <div className="flex items-center justify-between gap-3 border-t border-line px-5 py-4">
                 <p className="text-[12.5px] text-fg-muted">
-                  {topicId === "" ? "İdxal üçün əvvəlcə mövzu seçin." : `${valid.length} sual idxal olunacaq${invalid.length ? `, ${invalid.length} keçiləcək` : ""}.`}
+                  {topicId === "" ? "İdxal üçün əvvəlcə mövzu seçin." : `${selected.length} sual idxal olunacaq${invalid.length ? `, ${invalid.length} keçiləcək` : ""}.`}
                 </p>
-                <Button icon={<ArrowUpFromLine size={16} />} loading={submitting} disabled={topicId === "" || valid.length === 0} onClick={doImport}>
-                  İdxal et{valid.length > 0 ? ` (${valid.length})` : ""}
+                <Button icon={<ArrowUpFromLine size={16} />} loading={submitting} disabled={topicId === "" || selected.length === 0} onClick={doImport}>
+                  İdxal et{selected.length > 0 ? ` (${selected.length})` : ""}
                 </Button>
               </div>
             </Card>

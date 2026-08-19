@@ -79,3 +79,35 @@ export async function downloadExcelTemplate(filename = "ces-sual-shablon.xlsx") 
   link.click();
   URL.revokeObjectURL(url);
 }
+
+/** Build and download a simple .xlsx export (header row + data rows) — the
+ * generic replacement for CSV exports across the app. */
+export async function downloadRowsAsExcel(
+  filename: string,
+  headers: string[],
+  rows: (string | number)[][],
+  sheetName = "Sheet1",
+) {
+  const ExcelJS = (await import("exceljs")).default;
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet(sheetName);
+
+  ws.addRow(headers);
+  rows.forEach((r) => ws.addRow(r));
+
+  ws.getRow(1).font = { bold: true };
+  ws.getRow(1).alignment = { vertical: "middle" };
+  ws.columns = headers.map(() => ({ width: 20 }));
+  ws.views = [{ state: "frozen", ySplit: 1 }];
+
+  const buf = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}

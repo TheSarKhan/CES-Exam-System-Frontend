@@ -16,6 +16,7 @@ import { Segmented } from "@/components/ui/DataViz";
 import { Loading } from "@/components/ui/Feedback";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { formatDateTime } from "@/lib/format";
+import { downloadRowsAsExcel } from "@/lib/excel";
 import { cn } from "@/lib/cn";
 
 type StatusFilter = "all" | "pass" | "fail" | "survey";
@@ -32,22 +33,15 @@ function buildQuery(f: { departmentId: string; examId: string; startDate: string
   return qs ? `?${qs}` : "";
 }
 
-function exportCsv(rows: ExamReport[]) {
+function exportExcel(rows: ExamReport[]) {
   const headers = ["Əməkdaş", "E-poçt", "Şöbə", "İmtahan", "Növ", "Bal (%)", "Nəticə", "Başladı", "Bitdi"];
   const lines = rows.map((r) => [
     r.userName, r.userEmail, r.departmentName ?? "", r.examTitle, r.examType === "EXAM" ? "İmtahan" : "Sorğu",
-    r.score != null ? String(r.score) : "",
+    r.score ?? "",
     r.passed == null ? "Sorğu" : r.passed ? "Keçdi" : "Kəsildi",
     r.startTime, r.endTime,
   ]);
-  const csv = [headers, ...lines].map((row) => row.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
-  const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `ces-hesabat-${new Date().toISOString().slice(0, 10)}.csv`;
-  link.click();
-  URL.revokeObjectURL(url);
+  downloadRowsAsExcel(`ces-hesabat-${new Date().toISOString().slice(0, 10)}.xlsx`, headers, lines, "Hesabat");
 }
 
 export default function ReportsPage() {
@@ -133,8 +127,8 @@ export default function ReportsPage() {
         title="Hesabatlar"
         subtitle="Əməkdaş, şöbə və tarix üzrə imtahan nəticələri"
         action={
-          <Button variant="outline" icon={<Download size={16} />} disabled={view.length === 0} onClick={() => exportCsv(view)}>
-            CSV ixrac{view.length > 0 ? ` (${view.length})` : ""}
+          <Button variant="outline" icon={<Download size={16} />} disabled={view.length === 0} onClick={() => exportExcel(view)}>
+            Excel ixrac{view.length > 0 ? ` (${view.length})` : ""}
           </Button>
         }
       />

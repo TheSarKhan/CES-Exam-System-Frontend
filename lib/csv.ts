@@ -30,14 +30,3 @@ export function parseCsv(text: string): string[][] {
   // drop fully-empty rows
   return rows.filter((r) => r.some((c) => c.trim() !== ""));
 }
-
-/** Build a downloadable CSV string and trigger a browser download. */
-export function downloadCsv(filename: string, content: string) {
-  const blob = new Blob(["﻿" + content], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  link.click();
-  URL.revokeObjectURL(url);
-}
