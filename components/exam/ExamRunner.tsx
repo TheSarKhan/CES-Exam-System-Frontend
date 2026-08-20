@@ -32,7 +32,7 @@ import { cn } from "@/lib/cn";
 type AnswerState = Record<number, AnswerValue>;
 
 export interface SubmitPayload {
-  answers: { questionId: number; selectedOptionId: number | null; textAnswer: string | null }[];
+  answers: { questionId: number; selectedOptionId: number | null; selectedOptionIds: number[] | null; textAnswer: string | null }[];
   violations?: { type: string; label: string; severity: string; at: number }[];
 }
 

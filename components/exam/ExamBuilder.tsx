@@ -23,6 +23,9 @@ const TITLE_REQUIRED_MSG = "İmtahanın adını daxil edin";
 const TITLE_INVALID_MSG = `İmtahanın adı: ${MEANINGFUL_TEXT_MSG}`;
 const DESC_INVALID_MSG = `Təsvir: ${MEANINGFUL_TEXT_MSG}`;
 const NO_QUESTIONS_MSG = "Ən azı bir sual əlavə edin";
+// Lets /exams/create reconnect to its auto-saved backend draft after a refresh
+// instead of losing it — see ExamBuilder's persist()/submit()/cancel() below.
+const CREATE_DRAFT_ID_KEY = "ces_exam_create_draft_id";
 
 interface Draft {
   key: string;
@@ -189,6 +192,7 @@ export function ExamBuilder({ initial, submitLabel, mode, examId, initialStatus 
       if (savedIdRef.current == null) {
         const res = await apiFetch<{ id: number }>("/api/v1/exams", { method: "POST", body: JSON.stringify(body) });
         savedIdRef.current = res.id;
+        if (mode === "create") localStorage.setItem(CREATE_DRAFT_ID_KEY, String(res.id));
       } else {
         await apiFetch(`/api/v1/exams/${savedIdRef.current}`, { method: "PUT", body: JSON.stringify(body) });
       }
@@ -376,6 +380,7 @@ export function ExamBuilder({ initial, submitLabel, mode, examId, initialStatus 
     try {
       await savingRef.current;        // let any in-flight autosave settle so we reuse its id
       await persist("PUBLISHED");
+      if (mode === "create") localStorage.removeItem(CREATE_DRAFT_ID_KEY);
       router.push("/exams");
     } catch (e) {
       setError(humanizeError(e, "Yadda saxlanmadı"));
@@ -391,8 +396,24 @@ export function ExamBuilder({ initial, submitLabel, mode, examId, initialStatus 
     if (mode === "create" && savedIdRef.current != null) {
       try { await apiFetch(`/api/v1/exams/${savedIdRef.current}`, { method: "DELETE" }); } catch { /* best-effort */ }
     }
+    if (mode === "create") localStorage.removeItem(CREATE_DRAFT_ID_KEY);
     router.push("/exams");
   };
+
+  // Warn on an accidental refresh/close while there's unsaved-looking content — the backend
+  // autosave above covers most of it, but this catches the gap before the 800ms debounce fires
+  // and anything typed in the last instant. Skipped during a legitimate submit/cancel navigation.
+  useEffect(() => {
+    const hasContent = title.trim().length > 0 || drafts.some((d) => d.text.trim().length > 0);
+    if (!hasContent) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (stoppedRef.current) return;
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [title, drafts]);
 
   // ---- shared fragments (used by both the wizard and the single-page edit layout) ----
   const metaFieldsJsx = (

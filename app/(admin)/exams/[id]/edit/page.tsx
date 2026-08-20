@@ -38,7 +38,14 @@ export default function EditExamPage() {
           })),
         });
       })
-      .catch((e) => setError(e instanceof Error ? e.message : "İmtahan yüklənmədi"));
+      .catch((e) => {
+        setError(e instanceof Error ? e.message : "İmtahan yüklənmədi");
+        // If we got here via the create-page's "resume my draft" redirect and the draft
+        // no longer exists, drop the stale pointer so future creates don't loop back here.
+        if (localStorage.getItem("ces_exam_create_draft_id") === id) {
+          localStorage.removeItem("ces_exam_create_draft_id");
+        }
+      });
   }, [id]);
 
   const isDraft = status === "DRAFT";

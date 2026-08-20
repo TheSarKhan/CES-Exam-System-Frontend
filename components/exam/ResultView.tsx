@@ -15,7 +15,11 @@ export function ResultView({ result }: { result: SessionResult }) {
   const correct = result.answers.filter((a) => a.isCorrect === true).length;
   const wrong = result.answers.filter((a) => a.isCorrect === false && !a.needsGrading).length;
   const blank = result.answers.filter(
-    (a) => !a.needsGrading && a.selectedOptionId == null && (!a.textAnswer || !a.textAnswer.trim()),
+    (a) =>
+      !a.needsGrading &&
+      a.selectedOptionId == null &&
+      !(a.selectedOptionIds?.length) &&
+      (!a.textAnswer || !a.textAnswer.trim()),
   ).length;
 
   return (
@@ -105,7 +109,9 @@ export function ResultView({ result }: { result: SessionResult }) {
       <div className="flex flex-col gap-2.5">
         <h3 className="text-[15px] font-semibold text-fg">Cavabların təhlili</h3>
         {result.answers.map((a, i) => {
-          const answered = a.selectedOptionText || a.textAnswer;
+          const answered = a.selectedOptions?.length
+            ? a.selectedOptions.map((o) => o.text).join(", ")
+            : a.selectedOptionText || a.textAnswer;
           return (
             <div key={a.questionId} className="card p-4">
               <div className="flex items-start gap-3">

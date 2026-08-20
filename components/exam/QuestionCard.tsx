@@ -198,9 +198,11 @@ export function QuestionCard({
               <Textarea rows={3} value={text} onChange={(e) => onChange({ text: e.target.value })} placeholder="Sualın mətnini buraya yazın…" />
             </div>
 
-            {isImageQuestion && (
-              <ImageUploader value={imageUrl ?? null} onChange={(url) => onChange({ imageUrl: url })} label="Şəkil yüklə" />
-            )}
+            <ImageUploader
+              value={imageUrl ?? null}
+              onChange={(url) => onChange({ imageUrl: url })}
+              label={isImageQuestion ? "Şəkil yüklə" : "Şəkil yüklə (opsional)"}
+            />
 
             {isImageChoice && (
               <div className="rounded-[12px] bg-surface-2 p-4">

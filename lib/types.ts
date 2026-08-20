@@ -47,6 +47,8 @@ export interface SessionAnswerResult {
   type: string;
   selectedOptionId: number | null;
   selectedOptionText: string | null;
+  selectedOptionIds?: number[] | null;
+  selectedOptions?: { id: number; text: string }[] | null;
   textAnswer: string | null;
   isCorrect: boolean | null;
   score: number;                  // max points for the question

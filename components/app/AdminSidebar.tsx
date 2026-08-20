@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutGrid, ClipboardList, FolderTree, LineChart, BarChart3, Users, Building2,
-  Settings, LogOut, Sun, Moon, ChevronLeft, ChevronRight, ScrollText,
+  Settings, LogOut, Sun, Moon, ChevronLeft, ChevronRight, ScrollText, Menu, X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useAuth } from "@/lib/auth";
@@ -52,30 +52,69 @@ export function AdminSidebar() {
       return next;
     });
 
+  // Mobile/tablet (<lg): the sidebar becomes a slide-in overlay instead of a permanent
+  // flex sibling, so it never squeezes the content area on narrow viewports.
+  const [mobileOpen, setMobileOpen] = useState(false);
+  useEffect(() => { setMobileOpen(false); }, [pathname]);
+
   const justify = collapsed ? "justify-center" : "justify-start";
 
   return (
-    // The <aside> owns the surface (background + right border) and stretches to the full
-    // document height, so it is never cut off on pages taller than the viewport. The inner
-    // wrapper is what sticks, keeping the nav pinned within the viewport as the page scrolls.
-    <aside
-      className={cn(
-        "flex-none self-stretch border-r border-line bg-surface transition-[width] duration-200",
-        collapsed ? "w-[74px]" : "w-[238px]",
+    <>
+      {/* Mobile-only trigger — the sidebar itself is off-canvas below lg, so this is the
+          only way to open it. Desktop has no equivalent (the sidebar is always visible). */}
+      <button
+        onClick={() => setMobileOpen(true)}
+        aria-label="Menyunu aç"
+        className="fixed left-3 top-3 z-30 flex h-10 w-10 items-center justify-center rounded-[10px] border border-line bg-surface text-fg-muted shadow-[0_1px_4px_rgba(0,0,0,0.12)] lg:hidden"
+      >
+        <Menu size={19} />
+      </button>
+
+      {/* Backdrop — click to close, mobile only, only while open */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+          onClick={() => setMobileOpen(false)}
+          aria-hidden
+        />
       )}
-    >
+
+      {/* The <aside> owns the surface (background + right border) and stretches to the full
+          document height, so it is never cut off on pages taller than the viewport. On lg+ it's
+          a normal flex sibling whose width toggles with `collapsed`; below lg it's a fixed
+          off-canvas drawer (always full width, `collapsed` doesn't apply) driven by `mobileOpen`. */}
+      <aside
+        className={cn(
+          "border-r border-line bg-surface transition-[width,transform] duration-200",
+          "fixed inset-y-0 left-0 z-50 w-[238px] lg:static lg:z-auto",
+          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+          "lg:flex-none lg:self-stretch",
+          collapsed ? "lg:w-[74px]" : "lg:w-[238px]",
+        )}
+      >
     {/* `sticky` creates a stacking context, so the z-index that lifts the sidebar
         (and the notification popover overflowing out of it) above the page content
         must live on this element — page cards are positioned and paint later. */}
     <div className="sticky top-0 z-40 flex h-screen flex-col px-3 py-4">
-      {/* Collapse toggle — round button straddling the right border */}
+      {/* Collapse toggle — round button straddling the right border, desktop only
+          (collapsing is a lg+ concept; mobile always shows the full drawer). */}
       <button
         onClick={toggleCollapsed}
         title={collapsed ? "Genişlət" : "Daralt"}
         aria-label={collapsed ? "Genişlət" : "Daralt"}
-        className="absolute -right-3 top-[74px] z-30 flex h-6 w-6 items-center justify-center rounded-full border border-line bg-surface text-fg-muted shadow-[0_1px_4px_rgba(0,0,0,0.12)] transition-colors hover:border-blue-300 hover:text-blue-700 dark:hover:text-blue-400"
+        className="absolute -right-3 top-[74px] z-30 hidden h-6 w-6 items-center justify-center rounded-full border border-line bg-surface text-fg-muted shadow-[0_1px_4px_rgba(0,0,0,0.12)] transition-colors hover:border-blue-300 hover:text-blue-700 dark:hover:text-blue-400 lg:flex"
       >
         {collapsed ? <ChevronRight size={14} strokeWidth={2.4} /> : <ChevronLeft size={14} strokeWidth={2.4} />}
+      </button>
+
+      {/* Mobile-only close button, since the collapse toggle above is hidden here */}
+      <button
+        onClick={() => setMobileOpen(false)}
+        aria-label="Menyunu bağla"
+        className="absolute right-3 top-4 z-30 flex h-8 w-8 items-center justify-center rounded-[8px] text-fg-muted hover:bg-surface-2 hover:text-fg lg:hidden"
+      >
+        <X size={17} />
       </button>
 
       {/* Brand */}
@@ -85,10 +124,11 @@ export function AdminSidebar() {
       >
         {collapsed ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={markSrc} alt="CES" className="h-10 w-auto object-contain" />
-        ) : (
+          <img src={markSrc} alt="CES" className="hidden h-10 w-auto object-contain lg:block" />
+        ) : null}
+        <span className={collapsed ? "lg:hidden" : ""}>
           <BrandLogo className="h-[40px] w-auto max-w-[196px] object-contain" fallback={<CesBrand />} />
-        )}
+        </span>
       </Link>
 
       {/* Nav */}
@@ -148,6 +188,7 @@ export function AdminSidebar() {
       </div>
     </div>
     </aside>
+    </>
   );
 }
 

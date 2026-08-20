@@ -12,6 +12,7 @@ import { FieldGroup, Input } from "@/components/ui/Field";
 import { Button, buttonClasses } from "@/components/ui/Button";
 import { Loading, EmptyState, Modal } from "@/components/ui/Feedback";
 import { formatDate } from "@/lib/format";
+import { textError } from "@/lib/validate";
 
 export default function DepartmentsPage() {
   const toast = useToast();
@@ -40,9 +41,12 @@ export default function DepartmentsPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  const createError = textError(name, "Şöbə adı");
+  const editError = textError(editName, "Şöbə adı");
+
   const create = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!name.trim()) return;
+    if (createError) return;
     const newName = name.trim();
     setSubmitting(true);
     try {
@@ -61,7 +65,7 @@ export default function DepartmentsPage() {
   const openEdit = (d: Department) => { setEditTarget(d); setEditName(d.name); };
 
   const saveEdit = async () => {
-    if (!editTarget || !editName.trim()) return;
+    if (!editTarget || editError) return;
     setSavingEdit(true);
     try {
       await apiFetch(`/api/v1/departments/${editTarget.id}`, { method: "PUT", body: JSON.stringify({ name: editName.trim() }) });
@@ -172,13 +176,13 @@ export default function DepartmentsPage() {
         footer={
           <>
             <Button variant="secondary" onClick={() => setCreateOpen(false)} disabled={submitting} className="flex-1">Ləğv et</Button>
-            <Button onClick={() => create()} loading={submitting} className="flex-1">Yarat</Button>
+            <Button onClick={() => create()} loading={submitting} disabled={!!createError} className="flex-1">Yarat</Button>
           </>
         }
       >
         <form onSubmit={create} className="mt-1">
-          <FieldGroup label="Şöbənin adı">
-            <Input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="məs. Marketinq" required />
+          <FieldGroup label="Şöbənin adı" error={name.trim() ? createError ?? undefined : undefined}>
+            <Input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="məs. Marketinq" invalid={!!(name.trim() && createError)} required />
           </FieldGroup>
         </form>
       </Modal>
@@ -192,12 +196,20 @@ export default function DepartmentsPage() {
         footer={
           <>
             <Button variant="secondary" onClick={() => setEditTarget(null)} disabled={savingEdit} className="flex-1">Ləğv et</Button>
-            <Button onClick={saveEdit} loading={savingEdit} className="flex-1">Yadda saxla</Button>
+            <Button onClick={saveEdit} loading={savingEdit} disabled={!!editError} className="flex-1">Yadda saxla</Button>
           </>
         }
       >
         <div className="mt-1">
-          <Input autoFocus value={editName} onChange={(e) => setEditName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && saveEdit()} />
+          <FieldGroup label="Şöbənin adı" error={editName.trim() ? editError ?? undefined : undefined}>
+            <Input
+              autoFocus
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && !editError && saveEdit()}
+              invalid={!!(editName.trim() && editError)}
+            />
+          </FieldGroup>
         </div>
       </Modal>
 

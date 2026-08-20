@@ -132,9 +132,9 @@ export function Modal({
 /* ---------- Inline loading ---------- */
 export function Loading({ label = "Yüklənir…" }: { label?: string }) {
   return (
-    <div className="flex items-center gap-2.5 py-8 text-[14px] text-fg-muted">
+    <div className="flex w-full flex-col items-center justify-center gap-3 py-16 text-[14px] text-fg-muted">
       <span
-        className="h-4 w-4 rounded-full border-2 border-slate-300 border-t-blue-600"
+        className="h-8 w-8 rounded-full border-[3px] border-slate-300 border-t-blue-600"
         style={{ animation: "spin 0.7s linear infinite" }}
       />
       {label}

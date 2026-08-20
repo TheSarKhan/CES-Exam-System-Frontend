@@ -2,14 +2,30 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import type { AppSettings } from "@/lib/types";
 import { ExamBuilder } from "@/components/exam/ExamBuilder";
 import { Loading } from "@/components/ui/Feedback";
 
+const CREATE_DRAFT_ID_KEY = "ces_exam_create_draft_id";
+
 export default function CreateExamPage() {
+  const router = useRouter();
   const [defaults, setDefaults] = useState<{ passMark: number; duration: number } | null>(null);
+  // Reconnect to a backend draft auto-saved from a previous (e.g. refreshed-away) create
+  // session instead of starting blank — null while the localStorage check hasn't run yet.
+  const [resumeId, setResumeId] = useState<number | null | undefined>(undefined);
+
+  useEffect(() => {
+    const stored = localStorage.getItem(CREATE_DRAFT_ID_KEY);
+    if (stored) {
+      router.replace(`/exams/${stored}/edit`);
+      return;
+    }
+    setResumeId(null);
+  }, [router]);
 
   useEffect(() => {
     apiFetch<AppSettings>("/api/v1/admin/settings")
@@ -24,7 +40,7 @@ export default function CreateExamPage() {
       </Link>
       <h2 className="mb-4 text-[22px] font-bold tracking-[-0.4px] text-fg">Yeni imtahan</h2>
 
-      {!defaults ? (
+      {!defaults || resumeId === undefined ? (
         <Loading />
       ) : (
         <ExamBuilder

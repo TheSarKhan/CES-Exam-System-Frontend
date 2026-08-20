@@ -8,6 +8,7 @@ import type { TokenAssignment, SessionStart, PublicSettings } from "@/lib/types"
 import { Button } from "@/components/ui/Button";
 import { Loading } from "@/components/ui/Feedback";
 import { formatDateTime } from "@/lib/format";
+import { nameError } from "@/lib/validate";
 
 function fmt(iso: string | null) {
   return formatDateTime(iso);
@@ -47,7 +48,11 @@ export default function CandidateExamLandingPage() {
   // Anti-cheat applies to exams only, so surveys never show the monitoring notice.
   const proctoring = (settings?.proctoringEnabled ?? true) && info?.examType !== "SURVEY";
 
+  // Optional field — only validated once something is typed.
+  const nameInvalid = name.trim() ? nameError(name, "Ad") : null;
+
   const start = async () => {
+    if (nameInvalid) { setError(nameInvalid); return; }
     setStarting(true);
     setError("");
     try {
@@ -124,7 +129,13 @@ export default function CandidateExamLandingPage() {
           {info.status === "PENDING" && !info.candidateName && (
             <div className="mb-4">
               <label className="mb-1.5 block text-[13px] font-semibold text-fg-soft">Adınız (ixtiyari)</label>
-              <input className="field w-full" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ad Soyad" />
+              <input
+                className={`field w-full ${nameInvalid ? "field-error" : ""}`}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Ad Soyad"
+              />
+              {nameInvalid && <p className="mt-1.5 text-[12.5px] text-danger-fg">{nameInvalid}</p>}
             </div>
           )}
 

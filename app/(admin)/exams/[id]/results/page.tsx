@@ -16,7 +16,7 @@ import { Loading, EmptyState, Modal } from "@/components/ui/Feedback";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Field";
 import { ShareActions } from "@/components/exam/ShareActions";
-import { questionTypeLabel } from "@/components/exam/QuestionInput";
+import { questionTypeLabel, MANUAL_TYPES } from "@/components/exam/QuestionInput";
 import { formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/cn";
 
@@ -95,7 +95,7 @@ export default function ExamResultsPage() {
   const saveGrades = async () => {
     if (!answers) return;
     const payload = answers.result.answers
-      .filter((a) => a.needsGrading)
+      .filter((a) => MANUAL_TYPES.has(a.type))
       .map((a) => ({ questionId: a.questionId, raw: grades[a.questionId] }))
       .filter((g) => g.raw !== undefined && g.raw !== "")
       .map((g) => ({ questionId: g.questionId, awardedScore: Number(g.raw) }))
@@ -156,6 +156,11 @@ export default function ExamResultsPage() {
 
   const ready = exam && results;
   const pendingInModal = answers ? answers.result.answers.filter((a) => a.needsGrading).length : 0;
+  // Manually-gradable answers that can be scored/re-scored here (excludes ungraded surveys,
+  // which show as "neutral" and are never scored at all).
+  const gradableCount = answers
+    ? answers.result.answers.filter((a) => MANUAL_TYPES.has(a.type) && answerStatus(a) !== "neutral").length
+    : 0;
 
   return (
     <div className="mx-auto max-w-[1100px]">
@@ -419,9 +424,14 @@ export default function ExamResultsPage() {
                 <p className="py-6 text-center text-[13px] text-fg-muted">Cavab qeydə alınmayıb.</p>
               ) : (
                 answers.result.answers.map((a, i) => {
-                  const given = a.selectedOptionText ?? a.textAnswer;
+                  const given = a.selectedOptions?.length
+                    ? a.selectedOptions.map((o) => o.text).join(", ")
+                    : a.selectedOptionText ?? a.textAnswer;
                   const status = answerStatus(a);
                   const earned = a.awardedScore ?? (a.isCorrect ? a.score : 0);
+                  // Manually-gradable answers can always be (re)scored — auto-scored choice
+                  // questions never show the input, their correctness isn't overridable here.
+                  const editable = MANUAL_TYPES.has(a.type) && status !== "neutral";
                   return (
                     <div key={a.questionId} className={cn(
                       "rounded-[11px] border p-4",
@@ -456,7 +466,7 @@ export default function ExamResultsPage() {
                         <span className="font-medium">{given || "(cavabsız)"}</span>
                       </div>
 
-                      {status === "pending" ? (
+                      {editable ? (
                         <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-line pt-3">
                           <span className="text-[12px] text-fg-muted">Bal:</span>
                           <input
@@ -464,12 +474,15 @@ export default function ExamResultsPage() {
                             min={0}
                             max={a.score}
                             step="0.5"
-                            value={grades[a.questionId] ?? ""}
+                            value={grades[a.questionId] ?? (status === "pending" ? "" : String(earned))}
                             onChange={(e) => setGrade(a.questionId, e.target.value)}
                             placeholder="0"
                             className="num h-8 w-20 rounded-[8px] border border-line bg-surface px-2.5 text-[13px] text-fg focus:border-blue-400 focus:outline-none"
                           />
                           <span className="num text-[12px] text-fg-faint">/ {a.score}</span>
+                          {status !== "pending" && (
+                            <span className="text-[11px] text-fg-faint">(artıq qiymətləndirilib — dəyişə bilərsiniz)</span>
+                          )}
                           <div className="ml-auto flex gap-1.5">
                             <button
                               type="button"
@@ -498,7 +511,7 @@ export default function ExamResultsPage() {
               )}
             </div>
 
-            {pendingInModal > 0 && (
+            {gradableCount > 0 && (
               <div className="flex items-center justify-between gap-3 border-t border-line px-5 py-3.5">
                 <span className="text-[12px] text-danger-fg">{gradeError}</span>
                 <button

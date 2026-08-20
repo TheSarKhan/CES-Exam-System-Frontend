@@ -28,20 +28,21 @@ export function isAnswered(type: string, a?: AnswerValue): boolean {
   }
 }
 
-/** Map UI answer to the backend's {selectedOptionId, textAnswer} contract. */
+/** Map UI answer to the backend's {selectedOptionId, selectedOptionIds, textAnswer} contract. */
 export function toSubmitPayload(q: SessionQuestion, a?: AnswerValue) {
-  if (!a) return { questionId: q.id, selectedOptionId: null, textAnswer: null };
+  if (!a) return { questionId: q.id, selectedOptionId: null, selectedOptionIds: null, textAnswer: null };
   if (q.type === "MULTIPLE_CHOICE") {
-    // Backend stores a single field — encode chosen ids as a comma list in textAnswer.
     return {
       questionId: q.id,
       selectedOptionId: null,
-      textAnswer: a.optionIds && a.optionIds.length ? a.optionIds.join(",") : null,
+      selectedOptionIds: a.optionIds && a.optionIds.length ? a.optionIds : null,
+      textAnswer: null,
     };
   }
   return {
     questionId: q.id,
     selectedOptionId: a.selectedOptionId ?? null,
+    selectedOptionIds: null,
     textAnswer: a.textAnswer ?? null,
   };
 }
@@ -59,7 +60,31 @@ function ReviewChip() {
 const LIKERT_LABELS = ["Tam yox", "Yox", "Neytral", "Bəli", "Tam bəli"];
 const LIKERT_EMOJI = ["😠", "🙁", "😐", "🙂", "😀"];
 
-export function QuestionInput({
+/** Optional image attached to the question stem — shown for every type except
+ * IMAGE_QUESTION, which already renders its own (required) image inline below. */
+export function QuestionInput(props: {
+  question: SessionQuestion;
+  answer?: AnswerValue;
+  onChange: (a: AnswerValue) => void;
+}) {
+  const { question } = props;
+  const src = question.type !== "IMAGE_QUESTION" ? imageSrc(question.imageUrl) : null;
+  return (
+    <div>
+      {src && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={src}
+          alt="Sual şəkli"
+          className="mb-3 max-h-[320px] w-full rounded-[12px] border border-line object-contain"
+        />
+      )}
+      <QuestionInputBody {...props} />
+    </div>
+  );
+}
+
+function QuestionInputBody({
   question,
   answer,
   onChange,
